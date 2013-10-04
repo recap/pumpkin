@@ -1,8 +1,9 @@
 #! /usr/bin/python
 #####################################################################
 ##parameters to run local
-##--server localhost --queue global/config --user guest --pass NotABeetle --moduledir ./tasks/ --testmodule TestStart
+##--server localhost --queue global/config --user guest --pass ******* --moduledir ./tasks/ --testmodule TestStart
 #################################
+
 import time
 import os.path
 import sys
@@ -454,7 +455,7 @@ parser.add_argument('--vhost', action='store', dest='vhost', default="datafluo",
                    help='xchange server virtual host')
 parser.add_argument('--user', action='store', dest='user', default="guest",
                    help='username for xchange server')
-parser.add_argument('--password', action='store', dest='secret', default="NotABeetle",
+parser.add_argument('--password', action='store', dest='secret', default="******",
                    help='xchange password')
 parser.add_argument('--queue', action='store', dest='gqueue', default="global/config",
                    help='global configuration queue on xserver')
