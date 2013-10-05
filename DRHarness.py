@@ -33,10 +33,12 @@ context = MainContext(args.uid)
 
 log.info("Node assigned UID: "+context.getUuid())
 
-log.info("Establishing network connectivity...")
 
 udplisten = BroadcastListener(UDP_BROADCAST_PORT)
 udplisten.start()
+
+log.info("Establishing network connectivity...")
+
 
 s = socket(AF_INET, SOCK_DGRAM)
 s.bind(('', 0))
