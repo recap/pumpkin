@@ -22,7 +22,7 @@ import random
 import string
 #############################################
 
-import plugin
+import DRPluginbase
 import os
 import imp
 import pika
@@ -142,13 +142,13 @@ def plug_direct(modulename):
     module.version          = "000"
 
 
-    plugin.plugins = []
+    DRPluginbase.plugins = []
     try:
         imp.load_source(module.name,"./modules/"+module.name+".py")
     except Exception:
         print "Loading Error ", Exception
 
-    first_plugin = plugin.plugins[0]
+    first_plugin = DRPluginbase.plugins[0]
     if first_plugin.__class__.__name__ == "PluginType":
         current_module = first_plugin(module, exservers, servers, connection)
         #current_module.func(module)
@@ -183,7 +183,7 @@ def load_module(module):
                     os.chmod(epath, 0755)
                 break
 
-    plugin.plugins = []
+    DRPluginbase.plugins = []
 
     try:
         print "[DEBUG] Loading "+moduledir+"/"+module.pluginname
@@ -193,7 +193,7 @@ def load_module(module):
         sys.exit(1)
         return
 
-    first_plugin = plugin.plugins[0]
+    first_plugin = DRPluginbase.plugins[0]
     if first_plugin.__class__.__name__ == "PluginType":
         if(testing == True):
             current_module = first_plugin(module, exservers, servers,testmode=True)
