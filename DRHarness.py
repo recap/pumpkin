@@ -8,6 +8,7 @@ import socket
 import uuid
 import argparse
 import threading
+import signal
 
 from socket import *
 
@@ -18,6 +19,7 @@ from DRInfoclient import *
 VERSION = "0.1.9"
 
 supernodes = ["flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvlight.net"]
+threads = []
 
 
 parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
@@ -33,35 +35,37 @@ context = MainContext(args.uid)
 
 log.info("Node assigned UID: "+context.getUuid())
 
-
-udplisten = BroadcastListener(UDP_BROADCAST_PORT)
+udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
 udplisten.start()
 
-log.info("Establishing network connectivity...")
+threads.append(udplisten)
 
+broadcast = Broadcaster(context, UDP_BROADCAST_PORT, UDP_BROADCAST_RATE)
+broadcast.start()
 
-s = socket(AF_INET, SOCK_DGRAM)
-s.bind(('', 0))
-s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-
-data = repr(time.time()) + '\n'
-data = context.getUuid() + '\n'
-s.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
+threads.append(broadcast)
 
 
 
 
-#sr = socket(AF_INET, SOCK_DGRAM)
-#sr.bind(('', UDP_BROADCAST_PORT))
-
-#while 1:
-#    data, wherefrom = sr.recvfrom(1500, 0)
-#    sys.stderr.write(repr(wherefrom) + '\n')
-#    sys.stdout.write(data)
 
 
 
-#time.sleep(2)
+
+
+
+#Handle SIGINT
+def signal_handler(signal, frame):
+        for th in threads:
+            th.stop()
+            th.join()
+        log.info("Exiting DataRiver")
+        sys.exit(0)
+
+
+#Catch Ctrl+C
+signal.signal(signal.SIGINT, signal_handler)
+signal.pause()
 
 
 

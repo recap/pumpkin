@@ -4,6 +4,8 @@ import logging
 
 LOG_LEVEL = logging.NOTSET
 UDP_BROADCAST_PORT = 7700
+#Broadcast presence in intervals
+UDP_BROADCAST_RATE = 15
 
 
 
