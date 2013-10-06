@@ -1,0 +1,124 @@
+#JSON broadcast info
+{
+uid : harness_uid
+ring : ring_id
+comms : [
+            {
+                type : TFTP | P2PTFTP | RABBITMQ
+                host : ip | host
+                port : port
+                user : username
+                pass : password
+                aux1  :  randevouz_server | queue_name
+                aux2 : extra_parameters
+            },
+            {
+                type : TFTP | P2PTFTP | RABBITMQ
+                host : ip | host
+                port : port
+                user : username
+                pass : password
+                aux1  : randevouz_server | queue_name
+                aux2 : extra_parameters
+            }
+           ]
+functions : [
+                {
+                    poi: function process object identifier
+                    name: name
+                    input_type : raw type | rdf type
+                    output_type : raw_type | rdf_type
+                    semantic : inline semantic | url
+                },
+                {
+                    poi: function process object identifier
+                    name: name
+                    input_type : raw type | rdf type
+                    output_type : raw_type | rdf_type
+                    semantic : inline semantic | url
+                }
+
+peers : [  {
+            uid : harness_uid,
+            ring : ring_id,
+            comms : [
+                    {
+                        type : TFTP | P2PTFTP | RABBITMQ
+                        host : ip | host
+                        port : port
+                        user : username
+                        pass : password
+                        aux1  :  randevouz_server | queue_name
+                        aux2 : extra_parameters
+                    },
+                    {
+                        type : TFTP | P2PTFTP | RABBITMQ
+                        host : ip | host
+                        port : port
+                        user : username
+                        pass : password
+                        aux1  : randevouz_server | queue_name
+                        aux2 : extra_parameters
+                    }
+                    ],
+            functions : [
+                        {
+                            poi: function process object identifier
+                            name: name
+                            input_type : raw type | rdf type
+                            output_type : raw_type | rdf_type
+                            semantic : inline semantic | url
+                        },
+                        {
+                            poi: function process object identifier
+                            name: name
+                            input_type : raw type | rdf type
+                            output_type : raw_type | rdf_type
+                            semantic : inline semantic | url
+                        }
+                        ]
+
+            }, #end_peer
+            {
+            uid : harness_uid,
+            ring : ring_id,
+            comms : [
+                    {
+                        type : TFTP | P2PTFTP | RABBITMQ
+                        host : ip | host
+                        port : port
+                        user : username
+                        pass : password
+                        aux1  :  randevouz_server | queue_name
+                        aux2 : extra_parameters
+                    },
+                    {
+                        type : TFTP | P2PTFTP | RABBITMQ
+                        host : ip | host
+                        port : port
+                        user : username
+                        pass : password
+                        aux1  : randevouz_server | queue_name
+                        aux2 : extra_parameters
+                    }
+                    ],
+            functions : [
+                        {
+                            poi: function process object identifier
+                            name: name
+                            input_type : raw type | rdf type
+                            output_type : raw_type | rdf_type
+                            semantic : inline semantic | url
+                        },
+                        {
+                            poi: function process object identifier
+                            name: name
+                            input_type : raw type | rdf type
+                            output_type : raw_type | rdf_type
+                            semantic : inline semantic | url
+                        }
+                        ]
+
+            }, #end_peer
+
+}
