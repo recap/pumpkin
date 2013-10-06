@@ -4,6 +4,7 @@ import threading
 import socket, os
 import time
 import tftpy
+import json
 
 
 from socket import *
@@ -20,6 +21,7 @@ class BroadcastListener(Thread):
         self.__stop = Event()
         self.__port = port
         self.__context = context
+        self.tested = []
         pass
 
     def run(self):
@@ -30,6 +32,7 @@ class BroadcastListener(Thread):
         while 1:
             try:
                 data, wherefrom = sok.recvfrom(1500, 0)
+
             except(timeout):
                 log.debug("Timeout")
                 if self.stopped():
@@ -39,6 +42,22 @@ class BroadcastListener(Thread):
                     continue
             log.debug("Broadcast received from: "+repr(wherefrom))
             log.debug("Broadcast data: "+data)
+            if not (self.tested.__contains__(wherefrom[0])):
+                self.handle(data,wherefrom)
+
+    def handle(self, data, wherefrom):
+        try:
+            d = json.loads(data)
+            port = int(d["comms"][0]["port"])
+            client = tftpy.TftpClient(wherefrom[0], port)
+            filename = "sample_"+wherefrom[0]+".jpg"
+            client.download('sample.jpg', filename)
+            self.tested.append(wherefrom[0])
+
+        except:
+            log.error("Some error")
+
+
 
     def stop(self):
         self.__stop.set()
