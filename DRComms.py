@@ -21,7 +21,7 @@ class BroadcastListener(Thread):
         self.__stop = Event()
         self.__port = port
         self.__context = context
-        self.tested = []
+        self.tested = {}
         pass
 
     def run(self):
@@ -42,7 +42,7 @@ class BroadcastListener(Thread):
                     continue
             log.debug("Broadcast received from: "+repr(wherefrom))
             log.debug("Broadcast data: "+data)
-            if not (self.tested.__contains__(wherefrom[0])):
+            if not ( wherefrom[0] in self.tested):
                 self.handle(data,wherefrom)
 
     def handle(self, data, wherefrom):
@@ -52,7 +52,7 @@ class BroadcastListener(Thread):
             client = tftpy.TftpClient(wherefrom[0], port)
             filename = "sample_"+wherefrom[0]+".jpg"
             client.download('sample.jpg', filename)
-            self.tested.append(wherefrom[0])
+            self.tested[wherefrom[0]] = True
 
         except:
             log.error("Some error")
