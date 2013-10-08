@@ -42,17 +42,19 @@ class BroadcastListener(Thread):
                     continue
             log.debug("Broadcast received from: "+repr(wherefrom))
             log.debug("Broadcast data: "+data)
-            if not ( wherefrom[0] in self.tested):
-                self.handle(data,wherefrom)
+            #if not ( wherefrom[0] in self.tested):
+            #    self.handle(data,wherefrom)
 
     def handle(self, data, wherefrom):
         try:
-            d = json.loads(data)
-            port = int(d["comms"][0]["port"])
-            client = tftpy.TftpClient(wherefrom[0], port)
-            filename = "sample_"+wherefrom[0]+".jpg"
-            client.download('sample.jpg', filename)
-            self.tested[wherefrom[0]] = True
+            pass
+            #self.tested[wherefrom[0]] = True
+            #d = json.loads(data)
+            #port = int(d["comms"][0]["port"])
+            #client = tftpy.TftpClient(wherefrom[0], port)
+            #filename = "sample_"+wherefrom[0]+".jpg"
+            #client.download('sample.jpg', filename)
+            #self.tested[wherefrom[0]] = True
 
         except:
             log.error("Some error")
@@ -85,6 +87,9 @@ class Broadcaster(Thread):
         while 1:
             sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
             time.sleep(self.__rate)
+            for sn in self.__context.getSupernodeList():
+                sok.sendto(data, (sn, 7700) )
+                time.sleep(1)
             if self.stopped():
                 break
             else:
