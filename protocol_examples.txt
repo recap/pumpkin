@@ -1,3 +1,26 @@
+#JSON invoke ex
+
+{
+invoke : [
+            {
+                func : FUNCTION_NAME | URL | POI
+                state : bits
+            },
+            {
+                func : FUNCTION_NAME | URL | POI
+                state : bits
+            }
+        ]
+freeports : [
+                {
+
+                }
+            ]
+container-id : ID
+box-id : ID
+
+}
+
 #JSON broadcast info
 {
 uid : harness_uid

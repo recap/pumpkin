@@ -1,5 +1,7 @@
 __author__ = 'reggie'
 
+from DRPackets import *
+
 class MainContext(object):
     def __init__(self,uuid, peer=None):
         self.__uuid = uuid
@@ -7,6 +9,8 @@ class MainContext(object):
         self.__args = None
         self.__supernodes = []
         self.__threads = []
+        self.rx = rx()
+        self.tx = tx()
         pass
 
     def setArgs(self, args):
@@ -20,6 +24,9 @@ class MainContext(object):
 
     def isSupernode(self):
         return self.__args.supernode
+
+    def isWithNoPlugins(self):
+        return self.__args.noplugins
 
     def setSupernodeList(self, sn):
         self.__supernodes = sn
@@ -38,6 +45,12 @@ class MainContext(object):
 
     def getMePeer(self):
         return self.__peer
+
+    def getRx(self):
+        return self.rx
+
+    def getTx(self):
+        return self.tx
 
 
 

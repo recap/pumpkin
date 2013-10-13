@@ -36,6 +36,9 @@ class Function(object):
                     '}'
         return json_text
 
+    def getName(self):
+        return self.name
+
 class Communication(object):
 
     #type = ""       #TFTP | P2PTFTP | RABBITMQ
@@ -44,6 +47,7 @@ class Communication(object):
     #cred = ""       #username:password | token
     #aux1 = ""       #randevouz_server:port | queue_name
     #aux2 = ""       #extra_parameters
+    TFTP_TYPE = "TFTP"
 
     def __init__(self, type, host, port, cred=None, aux1=None, aux2=None):
         self.type = type
@@ -134,3 +138,18 @@ class Peer(object):
             self.peers.append(peer)
         else:
             log.warn("Trying to add wrong object type to peers")
+
+    def getPeerForFunc(self, function):
+        for p in self.peers:
+            for f in p.functions:
+                if f.getName() == function:
+                    return p
+        return None
+
+    def getTftpComm(self):
+        for c in self.comms:
+            if c.type == Communication.TFTP_TYPE:
+                return c
+
+        return None
+

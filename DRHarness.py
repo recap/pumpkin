@@ -3,6 +3,7 @@ __author__ = 'reggie'
 import time
 import os.path
 import sys
+import imp
 import subprocess
 import socket
 import uuid
@@ -11,13 +12,22 @@ import threading
 import signal
 import json
 
+import DRPlugin
+import pyinotify
+
+from os import listdir
+from os.path import isfile, join
 from socket import *
+from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
 
 
 from DRShared import *
 from DRContexts import *
 from DRComms import *
 from DRPeers import *
+from DRPackets import *
+from DRDispatch import *
+
 
 VERSION = "0.1.9"
 
@@ -27,19 +37,21 @@ supernodes = ["flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.
 
 
 parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
-parser.add_argument('--noplugin', action='store', dest="noplugin", default=False,
+parser.add_argument('--noplugins',action="store_true",
                    help='disable plugin hosting for this node.')
 parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
                    help='disable broadcasting.')
-#parser.add_argument('--supernode', action='store', dest="supernode", default=False,
-#                   help='run in supernode i.e. main role is information proxy.')
 parser.add_argument('--supernode',action="store_true",
                    help='run in supernode i.e. main role is information proxy.')
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
 
+######TMP TEST#############
 
+
+
+###########################
 #Get a UID for this harness
 args.uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
 
@@ -48,38 +60,71 @@ context = MainContext(args.uid, Peer(args.uid))
 context.setArgs(args)
 context.setSupernodeList(supernodes)
 
-
 log.info("Node assigned UID: "+context.getUuid())
 
 
-if not context.isSupernode() :
-    log.debug("Running as Peer")
-    tftpserver = FileServer(context, TFTP_FILE_SERVER_PORT)
-    tftpserver.start()
-    context.addThread(tftpserver)
-    context.getMePeer().addComm(Communication("TFTP","0.0.0.0", TFTP_FILE_SERVER_PORT))
+if not context.isWithNoPlugins():
+    #Loading local modules
+    onlyfiles = [ f for f in listdir("./plugins") if isfile(join("./plugins",f)) ]
 
-    broadcast = Broadcaster(context, UDP_BROADCAST_PORT, UDP_BROADCAST_RATE)
-    broadcast.start()
-    context.addThread(broadcast)
+    for fl in onlyfiles:
+        fullpath = "./plugins/"+fl
+        modname = fl[:-3]
+        #ext = fl[-2:]
 
-else:
-    log.info("Running as SuperNode")
+        if( fl[-2:] == "py"):
+            log.debug("Found: "+fullpath)
+            try:
+                imp.load_source(modname,fullpath)
+            except Exception:
+                print "Loading Error ", Exception
 
-udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
-udplisten.start()
-context.addThread(udplisten)
-
-
-
-
-
-
+    for x in DRPlugin.hplugins.keys():
+       klass = DRPlugin.hplugins[x](context)
+       klass.on_load()
+       func = Function(klass.getpoi(), x, ("int", "int"), "int")
+       context.getMePeer().addFunction(func)
 
 
+peer = context.getMePeer()
+#log.debug(peer.getJSON())
+pi = Peer("rasppi")
+pi.addComm(Communication("TFTP","192.168.1.51", TFTP_FILE_SERVER_PORT))
+pi.addFunction((Function("fuid", "sqr", "int", "int")))
+peer.addPeer(pi)
 
+fm = PacketFileMonitor(context)
+fm.start()
+context.addThread(fm)
 
+pktd = InternalDispatch(context)
+pktd.start()
+context.addThread(pktd)
 
+pkte = ExternalDispatch(context)
+pkte.start()
+context.addThread(pkte)
+
+#if not context.isSupernode() :
+#    log.debug("Running as Peer")
+#    tftpserver = FileServer(context, TFTP_FILE_SERVER_PORT)
+#    tftpserver.start()
+#    context.addThread(tftpserver)
+#    context.getMePeer().addComm(Communication("TFTP","0.0.0.0", TFTP_FILE_SERVER_PORT))
+#
+#    broadcast = Broadcaster(context, UDP_BROADCAST_PORT, UDP_BROADCAST_RATE)
+#    broadcast.start()
+#    context.addThread(broadcast)
+#
+#else:
+#    log.info("Running as SuperNode")
+#    #rzvs = RendezvousServer(context, RZV_SERVER_PORT)
+#    #rzvs.start()
+#    #context.addThread(rzvs)
+#
+#udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
+#udplisten.start()
+#context.addThread(udplisten)
 
 
 
