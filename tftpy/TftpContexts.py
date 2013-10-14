@@ -284,6 +284,7 @@ class TftpContextClientUpload(TftpContext):
         pkt.filename = self.file_to_transfer
         pkt.mode = "octet" # FIXME - shouldn't hardcode this
         pkt.options = self.options
+        log.warn(str(pkt))
         self.sock.sendto(pkt.encode().buffer, (self.host, self.port))
         self.next_block = 1
         self.last_pkt = pkt

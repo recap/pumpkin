@@ -40,14 +40,15 @@ class PacketFileMonitor(Thread):
         wm = WatchManager()
 
         #mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE  # watched events
-        mask = pyinotify.IN_CREATE  # watched events
+        #mask = pyinotify.IN_CREATE  # watched events
+        mask = pyinotify.IN_CLOSE_WRITE  # watched events
 
         class PTmp(ProcessEvent):
             def __init__(self,context):
                 self.context = context
                 pass
 
-            def process_IN_CREATE(self, event):
+            def process_IN_CLOSE_WRITE(self, event):
                 #print "Create: %s" %  os.path.join(event.path, event.name)
                 pkt = os.path.join(event.path, event.name)
                 rx = self.context.getRx()

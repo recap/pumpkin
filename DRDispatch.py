@@ -49,9 +49,10 @@ class InternalDispatch(Thread):
                             rt = klass.run(pkt_data)
                             fc["state"] = DRPackets.READY_STATE
                             strg = "##START-CONF" + json.dumps(d) + "##END-CONF\n"+str(rt)
-                            foutname = "./tx/"+d["container-id"]+"-"+d["box-id"]+".pkt"
+                            foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
                             fout = open(foutname, "w")
                             fout.write(strg)
+                            fout.flush()
                             fout.close()
                             log.debug("HERE 1")
                             tx.put(d,True)
@@ -81,8 +82,8 @@ class ExternalDispatch(Thread):
         log.debug("HERE 3")
         d = tx.get(True)
         log.debug("HERE 4")
-        foutname = "./tx/"+d["container-id"]+"-"+d["box-id"]+".pkt"
-        foutnames = d["container-id"]+"-"+d["box-id"]+".pkt"
+        foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
+        foutnames = d["container-id"]+d["box-id"]+".pkt"
         for fc in d["invoke"]:
             state = fc["state"]
             if not ((int(state) & DRPackets.READY_STATE) == 1):
@@ -95,7 +96,13 @@ class ExternalDispatch(Thread):
                     if not comm == None:
                         log.debug("Comm to "+comm.host+" "+str(comm.port))
                         client = tftpy.TftpClient(str(comm.host), int(comm.port))
-                        client.upload(foutnames,foutname)
+                        log.debug("Files: "+foutnames+" "+foutname)
+                        tmpf = open(foutname, "r")
+                        fstr = tmpf.read()
+                        log.debug("File: "+fstr)
+                        tmpf.close()
+                        client.upload(foutnames.encode('utf-8'),foutname.encode('utf-8'))
+                        #client.upload("test.pkt","./tx/test.pkt")
                         break
                 else:
                     log.warn("No peer found for function "+func)

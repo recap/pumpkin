@@ -77,7 +77,7 @@ if not context.isWithNoPlugins():
             try:
                 imp.load_source(modname,fullpath)
             except Exception:
-                print "Loading Error ", Exception
+                log.error("Loading Error "+ str(Exception))
 
     for x in DRPlugin.hplugins.keys():
        klass = DRPlugin.hplugins[x](context)
@@ -96,6 +96,8 @@ peer.addPeer(pi)
 fm = PacketFileMonitor(context)
 fm.start()
 context.addThread(fm)
+
+
 
 pktd = InternalDispatch(context)
 pktd.start()
