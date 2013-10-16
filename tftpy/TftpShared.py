@@ -19,6 +19,7 @@ logging.basicConfig()
 # The logger used by this library. Feel free to clobber it with your own, if you like, as
 # long as it conforms to Python's logging.
 log = logging.getLogger('tftpy')
+log.setLevel(logging.ERROR)
 
 def tftpassert(condition, msg):
     """This function is a simple utility that will check the condition

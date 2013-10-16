@@ -27,6 +27,7 @@ from DRComms import *
 from DRPeers import *
 from DRPackets import *
 from DRDispatch import *
+from DRHTTPServer import *
 
 
 VERSION = "0.1.9"
@@ -49,6 +50,16 @@ args = parser.parse_args()
 
 ######TMP TEST#############
 
+
+
+
+#header = "POST /add/run?a=1,b=2 HTTP/1.1\r\nHost: www.google.com\r\nConnection: keep-alive\r\nAccept: application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5\r\nUser-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.45 Safari/534.13\r\nAccept-Encoding: gzip,deflate,sdch\r\nAvail-Dictionary: GeNLY2f-\r\nAccept-Language: en-US,en;q=0.8\r\n"
+#hd = re.findall(r"(GET|POST) (?P<value>.*?)\s", header)
+#pla = hd[0][1].split("?")[1]
+#plb = pla[0].split("/")
+#plc = pla[1].split(",")
+##hd = re.findall(r"(?P<name>.*?): (?P<value>.*?)\r\n", header)
+#print pla
 
 
 ###########################
@@ -86,12 +97,18 @@ if not context.isWithNoPlugins():
        context.getMePeer().addFunction(func)
 
 
+
 peer = context.getMePeer()
 #log.debug(peer.getJSON())
-pi = Peer("rasppi")
-pi.addComm(Communication("TFTP","192.168.1.51", TFTP_FILE_SERVER_PORT))
-pi.addFunction((Function("fuid", "sqr", "int", "int")))
-peer.addPeer(pi)
+#pi = Peer("rasppi")
+#pi.addComm(Communication("TFTP","192.168.1.51", TFTP_FILE_SERVER_PORT))
+#pi.addFunction((Function("fuid", "square", "int", "int")))
+#peer.addPeer(pi)
+
+
+httpserv = HttpServer(context)
+httpserv.start()
+context.addThread(httpserv)
 
 fm = PacketFileMonitor(context)
 fm.start()
@@ -107,11 +124,11 @@ pkte = ExternalDispatch(context)
 pkte.start()
 context.addThread(pkte)
 
-#if not context.isSupernode() :
-#    log.debug("Running as Peer")
-#    tftpserver = FileServer(context, TFTP_FILE_SERVER_PORT)
-#    tftpserver.start()
-#    context.addThread(tftpserver)
+if not context.isSupernode() :
+    log.debug("Running as Peer")
+    tftpserver = FileServer(context, TFTP_FILE_SERVER_PORT)
+    tftpserver.start()
+    context.addThread(tftpserver)
 #    context.getMePeer().addComm(Communication("TFTP","0.0.0.0", TFTP_FILE_SERVER_PORT))
 #
 #    broadcast = Broadcaster(context, UDP_BROADCAST_PORT, UDP_BROADCAST_RATE)

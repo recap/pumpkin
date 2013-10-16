@@ -115,7 +115,7 @@ class Broadcaster(Thread):
 
 
 class FileServer(Thread):
-    def __init__(self, context, port, root="./serverroot/"):
+    def __init__(self, context, port, root="./rx/"):
         Thread.__init__(self)
         self.__stop = Event()
         self.__port = port
@@ -127,6 +127,7 @@ class FileServer(Thread):
 
     def run(self):
         log.info("Starting file server on port "+str(self.__port)+" at root "+str(self.__root))
+
         self.__server = tftpy.TftpServer(self.__root)
         self.__server.listen("0.0.0.0", TFTP_FILE_SERVER_PORT, 10)
 
