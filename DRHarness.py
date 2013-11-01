@@ -124,11 +124,11 @@ pkte = ExternalDispatch(context)
 pkte.start()
 context.addThread(pkte)
 
-if not context.isSupernode() :
-    log.debug("Running as Peer")
-    tftpserver = FileServer(context, TFTP_FILE_SERVER_PORT)
-    tftpserver.start()
-    context.addThread(tftpserver)
+#if not context.isSupernode() :
+#    log.debug("Running as Peer")
+#    tftpserver = FileServer(context, TFTP_FILE_SERVER_PORT)
+#    tftpserver.start()
+#    context.addThread(tftpserver)
 #    context.getMePeer().addComm(Communication("TFTP","0.0.0.0", TFTP_FILE_SERVER_PORT))
 #
 #    broadcast = Broadcaster(context, UDP_BROADCAST_PORT, UDP_BROADCAST_RATE)

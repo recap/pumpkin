@@ -47,6 +47,8 @@ class InternalDispatch(Thread):
                             klass = DRPlugin.hplugins[func](self.context)
                             klass.on_load()
                             rt = klass.run(pkt_data)
+                            xf = klass()
+                            log.debug("RESULT: "+str(xf))
                             fc["state"] = DRPackets.READY_STATE
                             strg = "##START-CONF" + json.dumps(d) + "##END-CONF\n"+str(rt)
                             foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"

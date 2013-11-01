@@ -28,10 +28,9 @@ class PluginBase(object):
         return self.poi
 
     def on_load(self):
-        pass
-
-    def run(self, *args):
+        log.warn("Class \""+self.__class__.__name__+"\" called on_load but not implimented.")
         pass
 
     def on_unload(self):
+        log.warn("Class \""+self.__class__.__name__+"\" called on_unload but not implimented.")
         pass
