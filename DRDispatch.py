@@ -30,9 +30,10 @@ class InternalDispatch(Thread):
         rx = self.context.getRx()
         tx = self.context.getTx()
         while 1:
-            fname = rx.get(True)
-            fh = open(fname, "r")
-            pkt = fh.read()
+            #fname = rx.get(True)
+            #fh = open(fname, "r")
+            #pkt = fh.read()
+            pkt = rx.get(True)
             m = re.search('##START-CONF(.+?)##END-CONF(.*)', pkt, re.S)
             if m:
                 pkt_header = m.group(1)
@@ -42,28 +43,34 @@ class InternalDispatch(Thread):
                     state = fc["state"]
                     if not ((int(state) & DRPackets.READY_STATE) == 1):
                         func = fc["func"]
-                        log.debug("Invoking function: "+str(func))
+                        log.debug("Trying invoking local function: "+str(func))
                         if func in DRPlugin.hplugins:
                             klass = DRPlugin.hplugins[func](self.context)
                             klass.on_load()
                             rt = klass.run(pkt_data)
-                            xf = klass()
-                            log.debug("RESULT: "+str(xf))
+                            pkt_data = rt
+                            #xf = klass()
+                            log.debug("RESULT: "+str(rt))
                             fc["state"] = DRPackets.READY_STATE
-                            strg = "##START-CONF" + json.dumps(d) + "##END-CONF\n"+str(rt)
-                            foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
-                            fout = open(foutname, "w")
-                            fout.write(strg)
-                            fout.flush()
-                            fout.close()
-                            log.debug("HERE 1")
-                            tx.put(d,True)
-                            log.debug("HERE 2")
-                            break
+                            opkt = "##START-CONF" + json.dumps(d) + "##END-CONF\n"+str(rt)
+                            log.debug("Out PKT: "+ str(opkt))
+                            #tx.put(opkt)
+
+                            #foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
+                            #fout = open(foutname, "w")
+                            #fout.write(strg)
+                            #fout.flush()
+                            #fout.close()
+                            #log.debug("HERE 1")
+                            #tx.put(d,True)
+                            #log.debug("HERE 2")
+                            #break
 
                             #log.debug("Return result: "+str(strg))
                         else:
-                            log.error("No function "+func+" found")
+                            log.debug("No local function "+func+" found")
+
+
                     else:
                         log.debug("Ready moving on")
 

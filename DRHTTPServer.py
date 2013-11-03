@@ -33,21 +33,31 @@ class Head(object):
 
 
 
-class HttpServer(Thread):
+class HttpServer(SThread):
 
 
     def __init__(self, context):
-        Thread.__init__(self)
+        SThread.__init__(self)
         self.context = context
         pass
 
     def run(self):
 
         s = socket(AF_INET, SOCK_STREAM)
+        s.settimeout(5)
         s.bind((HTTP_TCP_IP, HTTP_TCP_PORT))
         s.listen(1)
         while 1:
-            conn, addr = s.accept()
+            try:
+                conn, addr = s.accept()
+            except timeout:
+                log.debug("Timeout")
+                if self.stopped():
+                    log.debug("Exiting thread "+self.__class__.__name__)
+                    break
+                else:
+                    log.debug("HTTP timeout")
+                    continue
             log.debug('HTTP Connection address:'+ str(addr))
 
             data = conn.recv(HTTP_BUFFER_SIZE)

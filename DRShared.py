@@ -1,6 +1,9 @@
 __author__ = 'reggie'
 
 import logging
+import threading
+
+from threading import *
 
 LOG_LEVEL = logging.NOTSET
 UDP_BROADCAST_PORT = 7700
@@ -22,3 +25,14 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 log = logging.getLogger('datariver')
 
 
+class SThread(Thread):
+
+    def __init__(self):
+        Thread.__init__(self)
+        self.__stop = Event()
+
+    def stop(self):
+        self.__stop.set()
+
+    def stopped(self):
+        return self.__stop.isSet()

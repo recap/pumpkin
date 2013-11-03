@@ -11,6 +11,8 @@ import argparse
 import threading
 import signal
 import json
+import zmq
+
 
 import DRPlugin
 import pyinotify
@@ -73,6 +75,14 @@ context.setSupernodeList(supernodes)
 
 log.info("Node assigned UID: "+context.getUuid())
 
+######################TMP TEST 2########################
+
+
+
+
+
+########################################################
+
 
 if not context.isWithNoPlugins():
     #Loading local modules
@@ -106,23 +116,42 @@ peer = context.getMePeer()
 #peer.addPeer(pi)
 
 
-httpserv = HttpServer(context)
-httpserv.start()
-context.addThread(httpserv)
+#httpserv = HttpServer(context)
+#httpserv.start()
+#context.addThread(httpserv)
 
-fm = PacketFileMonitor(context)
-fm.start()
-context.addThread(fm)
+#fm = PacketFileMonitor(context)
+#fm.start()
+#context.addThread(fm)
+
+zmq_context = zmq.Context()
+
+tcpm = ZMQPacketMonitor(context, zmq_context, "tcp://*:5687")
+tcpm.start()
+context.addThread(tcpm)
+
+time.sleep(2)
+
+dsp = ZMQPacketDispatch(context, zmq_context, "tcp://127.0.0.1:5687")
+dsp.start()
+context.addThread(dsp)
 
 
+
+#context.getTx().put(pkt)
 
 pktd = InternalDispatch(context)
 pktd.start()
 context.addThread(pktd)
 
-pkte = ExternalDispatch(context)
-pkte.start()
-context.addThread(pkte)
+fh = open("./d1.pkt", "r")
+pkt = fh.read()
+
+context.getRx().put(pkt)
+
+#pkte = ExternalDispatch(context)
+#pkte.start()
+#context.addThread(pkte)
 
 #if not context.isSupernode() :
 #    log.debug("Running as Peer")
