@@ -1,5 +1,7 @@
 __author__ = 'reggie'
 
+import inspect
+
 from DRShared import *
 
 plugins = []
@@ -16,12 +18,16 @@ class PluginType(type):
             #log.debug("Adding: "+name)
             hplugins[name] = cls
 
+
 class PluginBase(object):
     __metaclass__ = PluginType
 
     def __init__(self, context, poi="Unset"):
         self.context = context
         self.poi = poi
+        self.istate = {}
+        self.ostate = {}
+
         pass
 
     def getpoi(self):
