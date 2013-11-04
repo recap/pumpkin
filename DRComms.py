@@ -66,12 +66,14 @@ class BroadcastListener(Thread):
             pass
             #self.tested[wherefrom[0]] = True
             d = json.loads(data)
-            uid = d["uid"]
-            if not uid in self.bclist:
-                log.info("Discovered new peer: "+uid)
-                log.debug("New peer data: "+data)
+            for t in d:
+                log.info("Discovered new peer: "+t["name"]+" at "+t["zmq_endpoint"])
+            #uid = d["uid"]
+            #if not uid in self.bclist:
+            #    log.info("Discovered new peer: "+uid)
+            #    log.debug("New peer data: "+data)
 
-            self.bclist[uid] = d
+            #self.bclist[uid] = d
             #port = int(d["comms"][0]["port"])
             #client = tftpy.TftpClient(wherefrom[0], port)
             #filename = "sample_"+wherefrom[0]+".jpg"
