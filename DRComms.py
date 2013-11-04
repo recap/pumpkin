@@ -16,7 +16,16 @@ from threading import *
 from DRShared import *
 
 
+def announce(msg):
+    sok = socket(AF_INET, SOCK_DGRAM)
+    sok.bind(('', 0))
+    sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 
+
+    for sn in SUPERNODES:
+        sok.sendto(msg, (sn, UDP_BROADCAST_PORT) )
+        time.sleep(1)
+    pass
 
 class BroadcastListener(Thread):
 

@@ -12,7 +12,10 @@ import threading
 import signal
 import json
 import zmq
-import pydot
+import networkx as nx
+from networkx.readwrite import json_graph
+
+import jsonpickle as jpickle
 
 
 import DRPlugin
@@ -37,9 +40,6 @@ VERSION = "0.1.9"
 
 
 
-supernodes = ["flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]
-
-
 parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
 parser.add_argument('--noplugins',action="store_true",
                    help='disable plugin hosting for this node.')
@@ -52,6 +52,25 @@ parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
 
 ######TMP TEST#############
+
+#G = nx.DiGraph()
+
+#x = {}
+#x["state"] = "Tes"
+
+#G.add_edge("a","b")
+#G.add_edge("b","c")
+#print json.dumps(G.nodes(data=True))
+#strg = json_graph.dumps(G)
+
+#GD = json_graph.loads(strg)
+
+#for x in GD.neighbors("b"):
+#    print x
+
+#print json_graph.dumps(GD)
+
+#sys.exit(0)
 
 ##graph = pydot.Dot(graph_type='graph')
 
@@ -104,7 +123,7 @@ args.uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
 #Create a context
 context = MainContext(args.uid, Peer(args.uid))
 context.setArgs(args)
-context.setSupernodeList(supernodes)
+context.setSupernodeList(SUPERNODES)
 
 log.info("Node assigned UID: "+context.getUuid())
 
@@ -113,11 +132,48 @@ log.info("Node assigned UID: "+context.getUuid())
 
 
 
-
 ########################################################
 
 
-if not context.isWithNoPlugins():
+if context.isSupernode():
+    log.debug("In supernode mode")
+    udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
+    udplisten.start()
+    context.addThread(udplisten)
+
+if not context.isWithNoPlugins() and not context.isSupernode():
+
+    onlyfiles = [ f for f in listdir("./injectors") if isfile(join("./injectors",f)) ]
+
+    for fl in onlyfiles:
+        fullpath = "./injectors/"+fl
+        modname = fl[:-3]
+        #ext = fl[-2:]
+
+        if( fl[-2:] == "py"):
+            log.debug("Found injector: "+fullpath)
+            file_header = ""
+            try:
+                imp.load_source(modname,fullpath)
+                fh = open(fullpath, "r")
+                fhd = fh.read()
+                m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+                if m:
+                    file_header = m.group(1).replace("##","")
+
+
+            except Exception:
+                log.error("Loading Injector Error "+ str(Exception))
+            if file_header:
+                #print "HEADER: " +file_header
+                d = json.loads(file_header)
+                print "DUMP: " + json.dumps(d)
+
+    for x in DRPlugin.hplugins.keys():
+       klass = DRPlugin.hplugins[x](context)
+       klass.on_load()
+       klass()
+
     #Loading local modules
     onlyfiles = [ f for f in listdir("./plugins") if isfile(join("./plugins",f)) ]
 
@@ -127,14 +183,15 @@ if not context.isWithNoPlugins():
         #ext = fl[-2:]
 
         if( fl[-2:] == "py"):
-            log.debug("Found: "+fullpath)
+            log.debug("Found module: "+fullpath)
             file_header = ""
             try:
                 imp.load_source(modname,fullpath)
                 fh = open(fullpath, "r")
                 fhd = fh.read()
                 m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
-                file_header = m.group(1).replace("##","")
+                if m:
+                    file_header = m.group(1).replace("##","")
 
 
             except Exception:
@@ -144,16 +201,22 @@ if not context.isWithNoPlugins():
                 d = json.loads(file_header)
                 #print "DUMP: " + json.dumps(d)
 
-    #sys.exit(0)
+    msg = "["
     for x in DRPlugin.hplugins.keys():
        klass = DRPlugin.hplugins[x](context)
        klass.on_load()
-       func = Function(klass.getpoi(), x, ("int", "int"), "int")
-       context.getMePeer().addFunction(func)
+       js = '{ "name" : "'+klass.getname()+'", "zmq_endpoint" : "'+ZMQ_ENDPOINTS[0]+'"}'
+       msg = msg + js +","
+
+    msg = msg[0:len(msg)-1] + "]"
+    announce(msg)
 
 
+       #func = Function(klass.getpoi(), x, ("int", "int"), "int")
+       #context.getMePeer().addFunction(func)
 
-peer = context.getMePeer()
+
+#peer = context.getMePeer()
 #log.debug(peer.getJSON())
 #pi = Peer("rasppi")
 #pi.addComm(Communication("TFTP","192.168.1.51", TFTP_FILE_SERVER_PORT))
@@ -169,30 +232,30 @@ peer = context.getMePeer()
 #fm.start()
 #context.addThread(fm)
 
-zmq_context = zmq.Context()
+#    zmq_context = zmq.Context()
 
-tcpm = ZMQPacketMonitor(context, zmq_context, "tcp://*:5687")
-tcpm.start()
-context.addThread(tcpm)
+#    tcpm = ZMQPacketMonitor(context, zmq_context, "inproc://backbus")
+#    tcpm.start()
+#    context.addThread(tcpm)
 
-time.sleep(2)
+#    time.sleep(2)
 
-dsp = ZMQPacketDispatch(context, zmq_context, "tcp://127.0.0.1:5687")
-dsp.start()
-context.addThread(dsp)
+#    dsp = ZMQPacketDispatch(context, zmq_context, "inproc://backbus")
+#    dsp.start()
+#    context.addThread(dsp)
 
 
 
 #context.getTx().put(pkt)
 
-pktd = InternalDispatch(context)
-pktd.start()
-context.addThread(pktd)
+#    pktd = InternalDispatch(context)
+#    pktd.start()
+#    context.addThread(pktd)
 
-fh = open("./d1.pkt", "r")
-pkt = fh.read()
+#fh = open("./d1.pkt", "r")
+#pkt = fh.read()
 
-context.getRx().put(pkt)
+#context.getRx().put(pkt)
 
 #pkte = ExternalDispatch(context)
 #pkte.start()

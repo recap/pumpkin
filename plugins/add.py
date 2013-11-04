@@ -10,24 +10,18 @@ __author__ = 'reggie'
 ##                      "description": "csv of numbers",
 ##                      "required": true,
 ##                      "type": "CSVStringNumbers",
-##                      "format": "csv"
+##                      "format": "csv",
+##                      "istate" : "ANY"
 ##                  }
 ##              ],
 ##"return": [
 ##            {
 ##              "name": "summed_numbers",
 ##              "description": "summed number list",
-##              "type" : "StringNumber"
+##              "type" : "StringNumber",
+##              "ostate": "BIG|SMALL"
 ##            }
-##          ],
-##"istate" : {
-##          "sequence_size" : "ANY"
-##          },
-##"ostate": {
-##      "error": "None",
-##		"number_size": "BIG|SMALL"
-##	    }
-##}
+##          ] }
 ##END-CONF
 
 import DRPlugin

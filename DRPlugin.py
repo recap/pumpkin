@@ -33,9 +33,15 @@ class PluginBase(object):
     def getpoi(self):
         return self.poi
 
+
+    def getname(self):
+        return self.__class__.__name__
+
+
     def on_load(self):
         log.warn("Class \""+self.__class__.__name__+"\" called on_load but not implimented.")
         pass
+
 
     def on_unload(self):
         log.warn("Class \""+self.__class__.__name__+"\" called on_unload but not implimented.")

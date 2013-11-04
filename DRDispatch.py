@@ -46,7 +46,7 @@ class InternalDispatch(Thread):
                         log.debug("Trying invoking local function: "+str(func))
                         if func in DRPlugin.hplugins:
                             klass = DRPlugin.hplugins[func](self.context)
-                            klass.on_load()
+                            #klass.on_load()
                             rt = klass.run(pkt_data)
                             pkt_data = rt
                             #xf = klass()
