@@ -15,7 +15,7 @@ import zmq
 import networkx as nx
 from networkx.readwrite import json_graph
 
-import jsonpickle as jpickle
+
 
 
 import DRPlugin
