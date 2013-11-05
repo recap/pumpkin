@@ -62,12 +62,15 @@ class BroadcastListener(Thread):
             #    self.handle(data,wherefrom)
 
     def handle(self, data, wherefrom):
-        try:
+        #try:
             pass
             #self.tested[wherefrom[0]] = True
             d = json.loads(data)
             for t in d:
-                log.info("Discovered new peer: "+t["name"]+" at "+t["zmq_endpoint"])
+                self.__context.updateRegistry(t)
+
+            print self.__context.dumpRegistry()
+
             #uid = d["uid"]
             #if not uid in self.bclist:
             #    log.info("Discovered new peer: "+uid)
@@ -80,8 +83,8 @@ class BroadcastListener(Thread):
             #client.download('sample.jpg', filename)
             #self.tested[wherefrom[0]] = True
 
-        except:
-            log.error("Some error")
+        #except:
+        #    log.error("Some error")
 
 
 

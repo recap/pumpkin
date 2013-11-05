@@ -18,7 +18,7 @@ HTTP_BUFFER_SIZE = 1024
 
 ZMQ_ENDPOINTS = ["tcp://127.0.0.1:7900"]
 
-SUPERNODES = ["flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]
+SUPERNODES = ["127.0.0.1", "flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]
 
 
 

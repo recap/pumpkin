@@ -1,5 +1,28 @@
 __author__ = 'reggie'
 
+###START-CONF
+##{
+##"object_name": "square",
+##"object_poi": "qpwo-2345-qw-25",
+##"parameters": [
+##                  {
+##                      "name": "number",
+##                      "description": "number entry",
+##                      "required": true,
+##                      "type": "StringNumber",
+##                      "format": "string",
+##                      "state" : "SMALL"
+##                  }
+##              ],
+##"return": [
+##            {
+##              "name": "squared_number",
+##              "description": "squared number",
+##              "type" : "StringNumber",
+##              "state": "OK|ERROR"
+##            }
+##          ] }
+##END-CONF
 
 import DRPlugin
 

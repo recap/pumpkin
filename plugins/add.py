@@ -11,7 +11,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "CSVStringNumbers",
 ##                      "format": "csv",
-##                      "istate" : "ANY"
+##                      "state" : "ANY"
 ##                  }
 ##              ],
 ##"return": [
@@ -19,7 +19,7 @@ __author__ = 'reggie'
 ##              "name": "summed_numbers",
 ##              "description": "summed number list",
 ##              "type" : "StringNumber",
-##              "ostate": "BIG|SMALL"
+##              "state": "BIG|SMALL"
 ##            }
 ##          ] }
 ##END-CONF

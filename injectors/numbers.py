@@ -14,7 +14,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "CSVStringNumbers",
 ##                      "format": "csv",
-##                      "ostate" : "SEQ_LEN"
+##                      "state" : "SEQ_LEN"
 ##                  }
 ##
 ##          ] }

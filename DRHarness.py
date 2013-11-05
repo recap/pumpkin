@@ -167,7 +167,7 @@ if not context.isWithNoPlugins() and not context.isSupernode():
             if file_header:
                 #print "HEADER: " +file_header
                 d = json.loads(file_header)
-                print "DUMP: " + json.dumps(d)
+                #print "DUMP: " + json.dumps(d)
 
     for x in DRPlugin.hplugins.keys():
        klass = DRPlugin.hplugins[x](context)
@@ -191,24 +191,38 @@ if not context.isWithNoPlugins() and not context.isSupernode():
                 fhd = fh.read()
                 m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
                 if m:
-                    file_header = m.group(1).replace("##","")
+                    conf = m.group(1).replace("##","")
+                    if conf:
+                        d = json.loads(conf)
+                        klass = DRPlugin.hplugins[modname](context)
+                        DRPlugin.iplugins[modname] = klass
+                        klass.on_load()
+                        klass.setconf(d)
+                        #print klass.getparameters()
+                        #print klass.getreturn()
 
 
             except Exception:
                 log.error("Loading Error "+ str(Exception))
-            if file_header:
+            #if file_header:
                 #print "HEADER: " +file_header
-                d = json.loads(file_header)
+             #   d = json.loads(file_header)
                 #print "DUMP: " + json.dumps(d)
 
     msg = "["
-    for x in DRPlugin.hplugins.keys():
-       klass = DRPlugin.hplugins[x](context)
-       klass.on_load()
-       js = '{ "name" : "'+klass.getname()+'", "zmq_endpoint" : "'+ZMQ_ENDPOINTS[0]+'"}'
+    for x in DRPlugin.iplugins.keys():
+       klass = DRPlugin.iplugins[x]
+
+       js = '{ "name" : "'+klass.getname()+'", \
+       "zmq_endpoint" : ["'+ZMQ_ENDPOINTS[0]+'"],' \
+       ''+klass.getparameters()+',' \
+       ''+klass.getreturn()+'}'
        msg = msg + js +","
 
     msg = msg[0:len(msg)-1] + "]"
+
+    hj = json.loads(msg)
+    #print hj[0]["zmq_endpoint"][0]
     announce(msg)
 
 
