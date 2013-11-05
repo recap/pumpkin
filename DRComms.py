@@ -7,6 +7,7 @@ import tftpy
 import json
 import hashlib
 import struct
+import fcntl
 
 from select import select
 from socket import *
@@ -15,6 +16,32 @@ from threading import *
 
 from DRShared import *
 
+def get_interface_ip(ifname):
+        s = socket(AF_INET, SOCK_DGRAM)
+        return inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
+                                ifname[:15]))[20:24])
+
+def get_lan_ip():
+    ip = gethostbyname(gethostname())
+    if ip.startswith("127.") and os.name != "nt":
+        interfaces = [
+            "eth0",
+            "eth1",
+            "eth2",
+            "wlan0",
+            "wlan1",
+            "wifi0",
+            "ath0",
+            "ath1",
+            "ppp0",
+            ]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                break
+            except IOError:
+                pass
+    return ip
 
 def announce(msg):
     sok = socket(AF_INET, SOCK_DGRAM)
@@ -47,7 +74,7 @@ class BroadcastListener(Thread):
                 data, wherefrom = sok.recvfrom(1500, 0)
 
             except(timeout):
-                log.debug("Timeout")
+                #log.debug("Timeout")
                 if self.stopped():
                     log.debug("Exiting thread")
                     break
@@ -66,8 +93,9 @@ class BroadcastListener(Thread):
             pass
             #self.tested[wherefrom[0]] = True
             d = json.loads(data)
-            for t in d:
-                self.__context.updateRegistry(t)
+            for k in d.keys():
+
+                self.__context.updateRegistry(d[k])
 
             print self.__context.dumpRegistry()
 

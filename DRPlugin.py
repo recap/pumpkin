@@ -39,11 +39,10 @@ class PluginBase(object):
         pass
 
     def getparameters(self):
-        print self.getname()
         for p in self.conf["parameters"]:
 
             sret =  '"itype" : "'+p["type"]+'", "istate" : "'+p["state"]+'"'
-            print sret
+
 
         return sret
 

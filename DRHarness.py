@@ -124,12 +124,12 @@ args.uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
 context = MainContext(args.uid, Peer(args.uid))
 context.setArgs(args)
 context.setSupernodeList(SUPERNODES)
+context.setLocalIP(get_lan_ip())
 
 log.info("Node assigned UID: "+context.getUuid())
+log.info("Node bound to IP: "+context.getLocalIP())
 
 ######################TMP TEST 2########################
-
-
 
 
 ########################################################
@@ -209,21 +209,30 @@ if not context.isWithNoPlugins() and not context.isSupernode():
              #   d = json.loads(file_header)
                 #print "DUMP: " + json.dumps(d)
 
-    msg = "["
+    #msg = "["
     for x in DRPlugin.iplugins.keys():
        klass = DRPlugin.iplugins[x]
 
        js = '{ "name" : "'+klass.getname()+'", \
-       "zmq_endpoint" : ["'+ZMQ_ENDPOINTS[0]+'"],' \
+       "zmq_endpoint" : [ {"ep" : "'+context.endpoints[0]+'", "cuid" : "'+context.getUuid()+'"} ],' \
        ''+klass.getparameters()+',' \
        ''+klass.getreturn()+'}'
-       msg = msg + js +","
+       context.updateRegistry(json.loads(js))
+    #   msg = msg + js +","
 
-    msg = msg[0:len(msg)-1] + "]"
 
-    hj = json.loads(msg)
+    dstr = context.dumpRegistry()
+    #djson = json.loads(dstr)
+
+    #print djson["add"]
+
+    #for t in djson.keys():
+    #    print djson[t]["itype"]
+    #msg = msg[0:len(msg)-1] + "]"
+    #log.debug(msg)
+    #hj = json.loads(msg)
     #print hj[0]["zmq_endpoint"][0]
-    announce(msg)
+    announce(dstr)
 
 
        #func = Function(klass.getpoi(), x, ("int", "int"), "int")

@@ -14,7 +14,17 @@ class MainContext(object):
         self.rx = rx()
         self.tx = tx()
         self.registry = {}
+        self.__ip = "127.0.0.1"
+        self.endpoints = []
         pass
+
+    def setLocalIP(self,ip):
+        self.__ip = ip
+        self.endpoints.append("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT))
+        pass
+
+    def getLocalIP(self):
+        return self.__ip
 
     def funcExists(self, func_name):
         if func_name in self.registry.keys():
@@ -31,13 +41,13 @@ class MainContext(object):
             d = self.registry[e["name"]]
             epb = False
             for ep in d["zmq_endpoint"]:
-                if ep == e["zmq_endpoint"][0]:
+                if ep == e["zmq_endpoint"][0]["ep"]:
                     epb = True
                     break
             if epb == False:
                 d["zmq_endpoint"].append(e["zmq_endpoint"][0])
         else:
-            log.info("Discovered new peer: "+e["name"]+" at "+e["zmq_endpoint"][0])
+            log.info("Discovered new peer: "+e["name"]+" at "+e["zmq_endpoint"][0]["ep"])
             self.registry[e["name"]] = e
 
     def dumpRegistry(self):
