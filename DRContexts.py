@@ -46,7 +46,7 @@ class MainContext(object):
             d = self.registry[e["name"]]
             epb = False
             for ep in d["zmq_endpoint"]:
-                if ep == e["zmq_endpoint"][0]["ep"]:
+                if ep["ep"] == e["zmq_endpoint"][0]["ep"]:
                     epb = True
                     break
             if epb == False:

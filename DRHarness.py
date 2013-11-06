@@ -13,7 +13,7 @@ import signal
 import json
 import zmq
 import networkx as nx
-from networkx.readwrite import json_graph
+#from networkx.readwrite import json_graph
 
 
 
@@ -150,7 +150,8 @@ if context.isSupernode():
 
 if not context.isWithNoPlugins() and not context.isSupernode():
 
-    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "tcp://flightcees.lab.uvalight.net:"+str(ZMQ_PUB_PORT))
+    #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "tcp://flightcees.lab.uvalight.net:"+str(ZMQ_PUB_PORT))
+    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "tcp://127.0.0.1:"+str(ZMQ_PUB_PORT))
     zmqsub.start()
     context.addThread(zmqsub)
 
@@ -322,8 +323,11 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 def signal_handler(signal, frame):
         for th in context.getThreads():
             th.stop()
-            th.join()
+            #th.join()
+
+        time.sleep(5)
         log.info("Exiting DataRiver")
+        #os.system("./forcekill")
         sys.exit(0)
 
 
