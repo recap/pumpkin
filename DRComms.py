@@ -8,6 +8,7 @@ import json
 import hashlib
 import struct
 import fcntl
+import zmq
 
 from select import select
 from socket import *
@@ -54,6 +55,48 @@ def announce(msg):
         time.sleep(1)
     pass
 
+class ZMQBroadcaster(SThread):
+    def __init__(self, context, zmq_context,  port):
+        SThread.__init__(self)
+        self.context = context
+        self.port = port
+        self.zmq_cntx = zmq_context
+
+    def run(self):
+        log.info("Starting thread: "+self.__class__.__name__)
+        sock = self.zmq_cntx.socket(zmq.PUB)
+        sock.bind("tcp://*:"+str(self.port))
+
+        while True:
+            time.sleep(10)
+            if self.context.isRegistryModified():
+                data = self.context.dumpRegistry()
+                self.context.ackRegistryUpdate()
+                log.debug("Publishing new registry data")
+                sock.send(data)
+                if self.stopped():
+                    log.debug("Exiting thread: "+self.__class__.__name__)
+                    break
+                else:
+                    continue
+
+class ZMQBroadcastSubscriber(SThread):
+    def __init__(self, context, zmq_context, zmq_endpoint):
+        SThread.__init__(self)
+        self.context =  context
+        self.zmq_endpoint = zmq_endpoint
+        self.zmq_cntx = zmq_context
+
+
+    def run(self):
+        sock = self.zmq_cntx.socket(zmq.SUB)
+        sock.setsockopt(zmq.SUBSCRIBE, '')
+        sock.connect(self.zmq_endpoint)
+        while True:
+            data = sock.recv()
+            print data
+
+
 class BroadcastListener(Thread):
 
     def __init__(self, context, port):
@@ -80,11 +123,14 @@ class BroadcastListener(Thread):
                     break
                 else:
                     continue
-            #log.debug("Broadcast received from: "+repr(wherefrom))
-            log.debug("Broadcast data: "+data)
+            log.debug("Broadcast received from: "+repr(wherefrom))
+            #log.debug("Broadcast data: "+data)
             #datam = hashlib.md5(data).hexdigest()
             #log.debug("MD5 data: "+datam)
             self.handle(data,wherefrom)
+
+            #reply = self.__context.dumpRegistry()
+            #sok.sendto(reply, wherefrom)
             #if not ( wherefrom[0] in self.tested):
             #    self.handle(data,wherefrom)
 
@@ -96,8 +142,6 @@ class BroadcastListener(Thread):
             for k in d.keys():
 
                 self.__context.updateRegistry(d[k])
-
-            print self.__context.dumpRegistry()
 
             #uid = d["uid"]
             #if not uid in self.bclist:
@@ -138,13 +182,16 @@ class Broadcaster(Thread):
         sok.bind(('', 0))
         sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
         #data = self.__context.getUuid() + '\n'
-        data = self.__context.getPeer().getJSON()
-
+        #data = self.__context.getPeer().getJSON()
+        data = self.__context.dumpRegistry()
+        self.__context.ackRegistryUpdate()
         while 1:
-            sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
-            time.sleep(self.__rate)
+            #sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
+            #time.sleep(self.__rate)
             for sn in self.__context.getSupernodeList():
                 sok.sendto(data, (sn, 7700) )
+                msg, wherefrom = sok.recvfrom(1500, 0)
+                log.debug("RECV: "+msg)
                 time.sleep(1)
             if self.stopped():
                 break

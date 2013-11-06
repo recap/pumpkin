@@ -16,6 +16,10 @@ class MainContext(object):
         self.registry = {}
         self.__ip = "127.0.0.1"
         self.endpoints = []
+        self.__reg_update = False
+        self.rlock = threading.RLock()
+
+
         pass
 
     def setLocalIP(self,ip):
@@ -36,6 +40,7 @@ class MainContext(object):
     def updateRegistry(self, entry):
         e = entry
         a = []
+        self.rlock.acquire()
         if e["name"] in self.registry.keys():
             log.info("Updating peer: "+e["name"])
             d = self.registry[e["name"]]
@@ -46,12 +51,27 @@ class MainContext(object):
                     break
             if epb == False:
                 d["zmq_endpoint"].append(e["zmq_endpoint"][0])
+                self.__reg_update = True
         else:
             log.info("Discovered new peer: "+e["name"]+" at "+e["zmq_endpoint"][0]["ep"])
             self.registry[e["name"]] = e
+            self.__reg_update = True
+        self.rlock.release()
+
+    def isRegistryModified(self):
+        return self.__reg_update
+
+    def ackRegistryUpdate(self):
+        self.rlock.acquire()
+        self.__reg_update = False
+        self.rlock.release()
+        pass
+
 
     def dumpRegistry(self):
+        self.rlock.acquire()
         d = json.dumps(self.registry)
+        self.rlock.release()
         return d
 
     def printRegistry(self):

@@ -126,6 +126,9 @@ context.setArgs(args)
 context.setSupernodeList(SUPERNODES)
 context.setLocalIP(get_lan_ip())
 
+zmq_context = zmq.Context()
+
+
 log.info("Node assigned UID: "+context.getUuid())
 log.info("Node bound to IP: "+context.getLocalIP())
 
@@ -141,7 +144,15 @@ if context.isSupernode():
     udplisten.start()
     context.addThread(udplisten)
 
+    zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
+    zmqbc.start()
+    context.addThread(zmqbc)
+
 if not context.isWithNoPlugins() and not context.isSupernode():
+
+    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "tcp://flightcees.lab.uvalight.net:"+str(ZMQ_PUB_PORT))
+    zmqsub.start()
+    context.addThread(zmqsub)
 
     onlyfiles = [ f for f in listdir("./injectors") if isfile(join("./injectors",f)) ]
 

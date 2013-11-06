@@ -5,10 +5,10 @@ import pyinotify
 import os
 import thread
 import zmq
-try:
-    import cPickle as pickle
-except:
-    import pickle
+#try:
+#    import cPickle as pickle
+#except:
+#    import pickle
 
 from Queue import *
 from collections import *
