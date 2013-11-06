@@ -44,16 +44,12 @@ def get_lan_ip():
                 pass
     return ip
 
-def announce(msg):
-    sok = socket(AF_INET, SOCK_DGRAM)
-    sok.bind(('', 0))
-    sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-
-
-    for sn in SUPERNODES:
-        sok.sendto(msg, (sn, UDP_BROADCAST_PORT) )
-        time.sleep(1)
-    pass
+def get_zmq_supernodes(node_list):
+    ret = []
+    for sn in node_list:
+        s = "tcp://"+sn+":"+str(ZMQ_PUB_PORT)
+        ret.append(s)
+    return ret
 
 class ZMQBroadcaster(SThread):
     def __init__(self, context, zmq_context,  port):
@@ -68,10 +64,19 @@ class ZMQBroadcaster(SThread):
         sock.bind("tcp://*:"+str(self.port))
 
         while True:
-            time.sleep(10)
-            if self.context.isRegistryModified():
-                data = self.context.dumpRegistry()
-                self.context.ackRegistryUpdate()
+            if not self.context.getProcGraph().isRegistryModified():
+                time.sleep(30)
+                data = self.context.getProcGraph().dumpRegistry()
+                sock.send(data)
+                if self.stopped():
+                    log.debug("Exiting thread: "+self.__class__.__name__)
+                    break
+                else:
+                    continue
+
+            if self.context.getProcGraph().isRegistryModified():
+                data = self.context.getProcGraph().dumpRegistry()
+                self.context.getProcGraph().ackRegistryUpdate()
                 log.debug("Publishing new registry data")
                 sock.send(data)
                 if self.stopped():
@@ -94,7 +99,11 @@ class ZMQBroadcastSubscriber(SThread):
         sock.connect(self.zmq_endpoint)
         while True:
             data = sock.recv()
-            print data
+            log.debug("Incomming data: "+data)
+            d = json.loads(data)
+            for k in d.keys():
+                self.context.getProcGraph().updateRegistry(d[k])
+
 
 
 class BroadcastListener(Thread):
@@ -103,7 +112,7 @@ class BroadcastListener(Thread):
         Thread.__init__(self)
         self.__stop = Event()
         self.__port = port
-        self.__context = context
+        self.context = context
         self.bclist = {}
         pass
 
@@ -136,12 +145,11 @@ class BroadcastListener(Thread):
 
     def handle(self, data, wherefrom):
         #try:
-            pass
+            #pass
             #self.tested[wherefrom[0]] = True
             d = json.loads(data)
             for k in d.keys():
-
-                self.__context.updateRegistry(d[k])
+                self.context.getProcGraph().updateRegistry(d[k])
 
             #uid = d["uid"]
             #if not uid in self.bclist:
@@ -167,42 +175,53 @@ class BroadcastListener(Thread):
         return self.__stop.isSet()
 
 
-class Broadcaster(Thread):
-    def __init__(self, context, port, rate):
-        Thread.__init__(self)
-        self.__stop = Event()
+class Broadcaster(SThread):
+    def __init__(self, context, port=UDP_BROADCAST_PORT, rate=30):
+        SThread.__init__(self)
         self.__port = port
         self.__rate = rate
-        self.__context = context
+        self.context = context
         pass
 
     def run(self):
         log.info("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
-        sok = socket(AF_INET, SOCK_DGRAM)
-        sok.bind(('', 0))
-        sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+        #sok = socket(AF_INET, SOCK_DGRAM)
+        #sok.bind(('', 0))
+        #sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
         #data = self.__context.getUuid() + '\n'
         #data = self.__context.getPeer().getJSON()
-        data = self.__context.dumpRegistry()
-        self.__context.ackRegistryUpdate()
+
+
         while 1:
             #sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
             #time.sleep(self.__rate)
-            for sn in self.__context.getSupernodeList():
-                sok.sendto(data, (sn, 7700) )
-                msg, wherefrom = sok.recvfrom(1500, 0)
-                log.debug("RECV: "+msg)
-                time.sleep(1)
+
+            data = self.context.getProcGraph().dumpRegistry()
+            if self.context.getProcGraph().isRegistryModified():
+                self.context.getProcGraph().ackRegistryUpdate()
+                self.announce(data)
+                time.sleep(2)
+            else:
+                time.sleep(self.__rate)
+
+
             if self.stopped():
                 break
             else:
                 continue
 
-    def stop(self):
-        self.__stop.set()
+    def announce(self, msg, port=UDP_BROADCAST_PORT):
+        sok = socket(AF_INET, SOCK_DGRAM)
+        sok.bind(('', 0))
+        sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 
-    def stopped(self):
-        return self.__stop.isSet()
+
+        for sn in self.context.getSupernodeList():
+            sok.sendto(msg, (sn, port) )
+            time.sleep(1)
+        pass
+
+
 
 
 class FileServer(Thread):

@@ -45,6 +45,8 @@ parser.add_argument('--noplugins',action="store_true",
                    help='disable plugin hosting for this node.')
 parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
                    help='disable broadcasting.')
+parser.add_argument('--taskdir', action='store', dest="taskdir", default="./plugins",
+                   help='directory for loading tasks.')
 parser.add_argument('--supernode',action="store_true",
                    help='run in supernode i.e. main role is information proxy.')
 
@@ -150,12 +152,12 @@ if context.isSupernode():
 
 if not context.isWithNoPlugins() and not context.isSupernode():
 
-    zmqsub1 = ZMQBroadcastSubscriber(context, zmq_context, "tcp://flightcees.lab.uvalight.net:"+str(ZMQ_PUB_PORT))
-    zmqsub2 = ZMQBroadcastSubscriber(context, zmq_context, "tcp://127.0.0.1:"+str(ZMQ_PUB_PORT))
-    zmqsub1.start()
-    zmqsub2.start()
-    context.addThread(zmqsub1)
-    context.addThread(zmqsub2)
+    for sn in get_zmq_supernodes(SUPERNODES):
+        zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
+        zmqsub.start()
+        context.addThread(zmqsub)
+
+
 
     onlyfiles = [ f for f in listdir("./injectors") if isfile(join("./injectors",f)) ]
 
@@ -223,19 +225,23 @@ if not context.isWithNoPlugins() and not context.isSupernode():
              #   d = json.loads(file_header)
                 #print "DUMP: " + json.dumps(d)
 
-    #msg = "["
+
     for x in DRPlugin.iplugins.keys():
        klass = DRPlugin.iplugins[x]
-
        js = '{ "name" : "'+klass.getname()+'", \
        "zmq_endpoint" : [ {"ep" : "'+context.endpoints[0]+'", "cuid" : "'+context.getUuid()+'"} ],' \
        ''+klass.getparameters()+',' \
        ''+klass.getreturn()+'}'
-       context.updateRegistry(json.loads(js))
+       context.getProcGraph().updateRegistry(json.loads(js))
+
+
+    udpbc = Broadcaster(context)
+    udpbc.start()
+    context.addThread(udpbc)
     #   msg = msg + js +","
 
 
-    dstr = context.dumpRegistry()
+    dstr = context.getProcGraph().dumpRegistry()
     #djson = json.loads(dstr)
 
     #print djson["add"]
@@ -246,7 +252,7 @@ if not context.isWithNoPlugins() and not context.isSupernode():
     #log.debug(msg)
     #hj = json.loads(msg)
     #print hj[0]["zmq_endpoint"][0]
-    announce(dstr)
+    #announce(dstr)
 
 
        #func = Function(klass.getpoi(), x, ("int", "int"), "int")
@@ -327,8 +333,10 @@ def signal_handler(signal, frame):
             th.stop()
             #th.join()
 
-        time.sleep(5)
+        time.sleep(2)
         log.info("Exiting DataRiver")
+        ##Ugly kill because threads zmq are not behaving
+        os.system("kill -9 "+str(os.getpid()))
         #os.system("./forcekill")
         sys.exit(0)
 
