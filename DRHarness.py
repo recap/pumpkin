@@ -153,6 +153,7 @@ if context.isSupernode():
 if not context.isWithNoPlugins() and not context.isSupernode():
 
     for sn in get_zmq_supernodes(SUPERNODES):
+        log.debug("Subscribing to: "+sn)
         zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
         zmqsub.start()
         context.addThread(zmqsub)
