@@ -80,7 +80,7 @@ class InternalDispatch(Thread):
 
 
 
-class ExternalDispatch(Thread):
+class ExternalDispatch2(Thread):
     def __init__(self, context):
         Thread.__init__(self)
         self.context = context
@@ -115,5 +115,24 @@ class ExternalDispatch(Thread):
                         break
                 else:
                     log.warn("No peer found for function "+func)
+
+
+class ExternalDispatch(SThread):
+    def __init__(self, context):
+        SThread.__init__(self)
+        self.context = context
+        pass
+
+    def run(self):
+        tx = self.context.getTx()
+        while True:
+            state, otype, msg = tx.get(True)
+            log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+msg)
+            if self.stopped():
+                log.debug("Exiting thread "+self.__class__.__name__)
+                break
+            else:
+                continue
+
 
 

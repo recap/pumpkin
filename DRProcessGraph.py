@@ -1,6 +1,8 @@
 __author__ = 'reggie'
 
 import json
+import networkx as nx
+import matplotlib.pyplot as plt
 
 from DRPackets import *
 
@@ -9,6 +11,7 @@ class ProcessGraph(object):
         self.registry = {}
         self.__reg_update = False
         self.rlock = threading.RLock()
+        self.graph = nx.DiGraph()
     pass
 
     def updateRegistry(self, entry):
@@ -32,6 +35,24 @@ class ProcessGraph(object):
             self.__reg_update = True
         self.rlock.release()
 
+    def buildGraph(self):
+        G = self.graph
+        for xo in self.registry.keys():
+            eo = self.registry[xo]
+
+
+            for isp in eo["istate"].split('|'):
+                for osp in eo["ostate"].split('|'):
+                    istype = eo["itype"]+":"+isp
+                    if istype == "NONE:NONE":
+                           istype = "RAW"
+                    ostype = eo["otype"]+":"+osp
+                    G.add_edge(istype, ostype, function=eo["name"])
+
+        nx.draw(G)
+        plt.show()
+
+
     def isRegistryModified(self):
         return self.__reg_update
 
@@ -40,7 +61,6 @@ class ProcessGraph(object):
         self.__reg_update = False
         self.rlock.release()
         pass
-
 
     def dumpRegistry(self):
         self.rlock.acquire()

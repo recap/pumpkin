@@ -38,19 +38,31 @@ class PluginBase(object):
         self.conf = jconf
         pass
 
+    def hasInputs(self):
+        if len(self.conf["parameters"]) > 0:
+            return True
+
+        return False
+
     def getparameters(self):
-        for p in self.conf["parameters"]:
-
-            sret =  '"itype" : "'+p["type"]+'", "istate" : "'+p["state"]+'"'
-
-
-        return sret
+        if len(self.conf["parameters"]) > 0:
+            for p in self.conf["parameters"]:
+                sret =  '"itype" : "'+p["type"]+'", "istate" : "'+p["state"]+'"'
+            return sret
+        return ' "itype" : "NONE", "istate" : "NONE" '
 
     def getreturn(self):
-        for p in self.conf["return"]:
-            sret =  '"otype" : "'+p["type"]+'", "ostate" : "'+p["state"]+'"'
+        if len(self.conf["return"]) > 0:
+            for p in self.conf["return"]:
+                sret =  '"otype" : "'+p["type"]+'", "ostate" : "'+p["state"]+'"'
+            return sret
+        return ' "otype" : "NONE", "ostate" : "NONE" '
 
-        return sret
+    def dispatch(self, msg, state):
+        #log.debug(self.conf)
+        otype = self.conf["return"][0]["type"]
+        self.context.getTx().put((state,otype,msg))
+        pass
 
     def getname(self):
         return self.__class__.__name__

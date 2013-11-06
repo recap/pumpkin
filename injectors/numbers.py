@@ -14,7 +14,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "CSVStringNumbers",
 ##                      "format": "csv",
-##                      "state" : "SEQ_LEN"
+##                      "state" : "LONG|SHORT|MEDIUM|NOSTATE"
 ##                  }
 ##
 ##          ] }
@@ -32,7 +32,11 @@ class numbers(DRPlugin.PluginBase):
         #self.ostate["number_size"] = "SMALL|BIG"
         pass
 
-    def __call__(self, *args, **kwargs):
+    def on_load(self):
+        print "Loading: " + self.__class__.__name__
+        pass
+
+    def run(self):
         automaton = "##START-CONF{\
                         \"invoke\": [\
 	                        {\
@@ -52,7 +56,7 @@ class numbers(DRPlugin.PluginBase):
             \"box-id\": \"1\"\
 } ##END-CONF"
 
-        for p in range (1,100):
+        for p in range (1,5):
             seq = ""
             for j in range(1,10):
                 x = randint(2,100)
@@ -60,7 +64,7 @@ class numbers(DRPlugin.PluginBase):
 
             seq = seq[0:len(seq)-1]
             pkt = automaton + seq
-
+            self.dispatch(seq,"ANY")
             #print pkt
-            self.context.getRx().put(pkt)
+            #self.context.getRx().put(pkt)
         pass

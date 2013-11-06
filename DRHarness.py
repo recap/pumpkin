@@ -12,7 +12,7 @@ import threading
 import signal
 import json
 import zmq
-import networkx as nx
+
 #from networkx.readwrite import json_graph
 
 
@@ -158,44 +158,9 @@ if not context.isWithNoPlugins() and not context.isSupernode():
         zmqsub.start()
         context.addThread(zmqsub)
 
-
-
-    onlyfiles = [ f for f in listdir("./injectors") if isfile(join("./injectors",f)) ]
-
+    onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
     for fl in onlyfiles:
-        fullpath = "./injectors/"+fl
-        modname = fl[:-3]
-        #ext = fl[-2:]
-
-        if( fl[-2:] == "py"):
-            log.debug("Found injector: "+fullpath)
-            file_header = ""
-            try:
-                imp.load_source(modname,fullpath)
-                fh = open(fullpath, "r")
-                fhd = fh.read()
-                m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
-                if m:
-                    file_header = m.group(1).replace("##","")
-
-
-            except Exception:
-                log.error("Loading Injector Error "+ str(Exception))
-            if file_header:
-                #print "HEADER: " +file_header
-                d = json.loads(file_header)
-                #print "DUMP: " + json.dumps(d)
-
-    for x in DRPlugin.hplugins.keys():
-       klass = DRPlugin.hplugins[x](context)
-       klass.on_load()
-       klass()
-
-    #Loading local modules
-    onlyfiles = [ f for f in listdir("./plugins") if isfile(join("./plugins",f)) ]
-
-    for fl in onlyfiles:
-        fullpath = "./plugins/"+fl
+        fullpath = context.getTaskDir()+"/"+fl
         modname = fl[:-3]
         #ext = fl[-2:]
 
@@ -204,9 +169,11 @@ if not context.isWithNoPlugins() and not context.isSupernode():
             file_header = ""
             try:
                 imp.load_source(modname,fullpath)
+
                 fh = open(fullpath, "r")
                 fhd = fh.read()
                 m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+
                 if m:
                     conf = m.group(1).replace("##","")
                     if conf:
@@ -220,11 +187,8 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 
 
             except Exception:
-                log.error("Loading Error "+ str(Exception))
-            #if file_header:
-                #print "HEADER: " +file_header
-             #   d = json.loads(file_header)
-                #print "DUMP: " + json.dumps(d)
+                log.error("Import error "+ str(Exception))
+
 
 
     for x in DRPlugin.iplugins.keys():
@@ -233,16 +197,35 @@ if not context.isWithNoPlugins() and not context.isSupernode():
        "zmq_endpoint" : [ {"ep" : "'+context.endpoints[0]+'", "cuid" : "'+context.getUuid()+'"} ],' \
        ''+klass.getparameters()+',' \
        ''+klass.getreturn()+'}'
+       log.debug(js)
        context.getProcGraph().updateRegistry(json.loads(js))
+
+    context.getProcGraph().buildGraph()
+
+    sys.exit(0)
+
+
 
 
     udpbc = Broadcaster(context)
     udpbc.start()
     context.addThread(udpbc)
-    #   msg = msg + js +","
+
+    edispatch = ExternalDispatch(context)
+    edispatch.start()
+    context.addThread(edispatch)
 
 
-    dstr = context.getProcGraph().dumpRegistry()
+    ##############START TASKS WITH NO INPUTS#############################
+    for x in DRPlugin.iplugins.keys():
+        klass = DRPlugin.iplugins[x]
+        if not klass.hasInputs():
+            klass.run()
+    #####################################################################
+
+
+
+    #dstr = context.getProcGraph().dumpRegistry()
     #djson = json.loads(dstr)
 
     #print djson["add"]
