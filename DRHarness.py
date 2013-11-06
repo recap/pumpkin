@@ -150,10 +150,12 @@ if context.isSupernode():
 
 if not context.isWithNoPlugins() and not context.isSupernode():
 
-    #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "tcp://flightcees.lab.uvalight.net:"+str(ZMQ_PUB_PORT))
-    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "tcp://127.0.0.1:"+str(ZMQ_PUB_PORT))
-    zmqsub.start()
-    context.addThread(zmqsub)
+    zmqsub1 = ZMQBroadcastSubscriber(context, zmq_context, "tcp://flightcees.lab.uvalight.net:"+str(ZMQ_PUB_PORT))
+    zmqsub2 = ZMQBroadcastSubscriber(context, zmq_context, "tcp://127.0.0.1:"+str(ZMQ_PUB_PORT))
+    zmqsub1.start()
+    zmqsub2.start()
+    context.addThread(zmqsub1)
+    context.addThread(zmqsub2)
 
     onlyfiles = [ f for f in listdir("./injectors") if isfile(join("./injectors",f)) ]
 
