@@ -49,6 +49,8 @@ parser.add_argument('--taskdir', action='store', dest="taskdir", default="./plug
                    help='directory for loading tasks.')
 parser.add_argument('--supernode',action="store_true",
                    help='run in supernode i.e. main role is information proxy.')
+parser.add_argument('--showgraph',action="store_true",
+                   help='show data state graph.')
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
@@ -200,9 +202,9 @@ if not context.isWithNoPlugins() and not context.isSupernode():
        log.debug(js)
        context.getProcGraph().updateRegistry(json.loads(js))
 
-    context.getProcGraph().buildGraph()
 
-    sys.exit(0)
+
+
 
 
 
@@ -217,10 +219,9 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 
 
     ##############START TASKS WITH NO INPUTS#############################
-    for x in DRPlugin.iplugins.keys():
-        klass = DRPlugin.iplugins[x]
-        if not klass.hasInputs():
-            klass.run()
+    inj = Injector(context)
+    inj.start()
+    context.addThread(inj)
     #####################################################################
 
 
@@ -309,7 +310,8 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 #udplisten.start()
 #context.addThread(udplisten)
 
-
+if context.showGraph():
+        context.getProcGraph().showGraph()
 
 #Handle SIGINT
 def signal_handler(signal, frame):

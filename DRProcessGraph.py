@@ -33,6 +33,10 @@ class ProcessGraph(object):
             log.info("Discovered new peer: "+e["name"]+" at "+e["zmq_endpoint"][0]["ep"])
             self.registry[e["name"]] = e
             self.__reg_update = True
+
+        if self.__reg_update ==True:
+            self.graph = self.buildGraph()
+
         self.rlock.release()
 
     def buildGraph(self):
@@ -48,9 +52,12 @@ class ProcessGraph(object):
                            istype = "RAW"
                     ostype = eo["otype"]+":"+osp
                     G.add_edge(istype, ostype, function=eo["name"])
+        return G
 
-        nx.draw(G)
+    def showGraph(self):
+        nx.draw(self.graph)
         plt.show()
+        pass
 
 
     def isRegistryModified(self):

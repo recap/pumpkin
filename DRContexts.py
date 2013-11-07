@@ -55,6 +55,9 @@ class MainContext(object):
     def getTaskDir(self):
         return self.__args.taskdir
 
+    def showGraph(self):
+        return self.__args.showgraph
+
     def isSupernode(self):
         return self.__args.supernode
 

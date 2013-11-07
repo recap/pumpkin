@@ -116,6 +116,22 @@ class ExternalDispatch2(Thread):
                 else:
                     log.warn("No peer found for function "+func)
 
+class Injector(SThread):
+    def __init__(self, context):
+        SThread.__init__(self)
+        self.context = context
+
+    def run(self):
+        for x in DRPlugin.iplugins.keys():
+            klass = DRPlugin.iplugins[x]
+            if not klass.hasInputs():
+                klass.run()
+            if self.stopped():
+                log.debug("Exiting thread "+self.__class__.__name__)
+                break
+            else:
+                continue
+
 
 class ExternalDispatch(SThread):
     def __init__(self, context):

@@ -22,6 +22,7 @@ __author__ = 'reggie'
 
 import DRPlugin
 import DRShared
+import time
 
 from random import randint
 
@@ -55,6 +56,8 @@ class numbers(DRPlugin.PluginBase):
             \"container-id\": \"qazwsx\",\
             \"box-id\": \"1\"\
 } ##END-CONF"
+
+        #time.sleep(10)
 
         for p in range (1,5):
             seq = ""

@@ -103,6 +103,8 @@ class ZMQBroadcastSubscriber(SThread):
             d = json.loads(data)
             for k in d.keys():
                 self.context.getProcGraph().updateRegistry(d[k])
+        if self.context.showGraph():
+            self.context.getProcGraph().showGraph()
 
 
 
