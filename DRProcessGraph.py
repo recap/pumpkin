@@ -2,16 +2,28 @@ __author__ = 'reggie'
 
 import json
 import networkx as nx
-import matplotlib.pyplot as plt
+import time
+import thread
+
+
 
 from DRPackets import *
 
+
+
+
 class ProcessGraph(object):
+
     def __init__(self):
+
         self.registry = {}
         self.__reg_update = False
+        self.__display_graph = False
         self.rlock = threading.RLock()
         self.graph = nx.DiGraph()
+        self.tagroute = {}
+
+
     pass
 
     def updateRegistry(self, entry):
@@ -29,17 +41,31 @@ class ProcessGraph(object):
             if epb == False:
                 d["zmq_endpoint"].append(e["zmq_endpoint"][0])
                 self.__reg_update = True
+                self.__display_graph = True
         else:
             log.info("Discovered new peer: "+e["name"]+" at "+e["zmq_endpoint"][0]["ep"])
             self.registry[e["name"]] = e
             self.__reg_update = True
+            self.__display_graph = True
 
-        if self.__reg_update ==True:
+        if self.__reg_update == True:
             self.graph = self.buildGraph()
 
         self.rlock.release()
 
+    def displayGraph(self):
+        return self.__display_graph
+
+    def resetDisplay(self):
+        self.__display_graph = False
+
+    def getRoutes(self, tag):
+        log.debug("Finding route for "+ tag)
+        if tag in self.tagroute:
+            return self.tagroute[tag]
+
     def buildGraph(self):
+        self.tagroute = {}
         G = self.graph
         for xo in self.registry.keys():
             eo = self.registry[xo]
@@ -52,9 +78,15 @@ class ProcessGraph(object):
                            istype = "RAW"
                     ostype = eo["otype"]+":"+osp
                     G.add_edge(istype, ostype, function=eo["name"])
+                if istype in self.tagroute.keys():
+                    self.tagroute[istype].append(eo)
+                else:
+                    self.tagroute[istype] = []
+                    self.tagroute[istype].append(eo)
         return G
 
     def showGraph(self):
+        import matplotlib.pyplot as plt
         nx.draw(self.graph)
         plt.show()
         pass

@@ -94,17 +94,18 @@ class ZMQBroadcastSubscriber(SThread):
 
 
     def run(self):
+
+
         sock = self.zmq_cntx.socket(zmq.SUB)
         sock.setsockopt(zmq.SUBSCRIBE, '')
         sock.connect(self.zmq_endpoint)
         while True:
             data = sock.recv()
-            log.debug("Incomming data: "+data)
+            #log.debug("Incomming data: "+data)
             d = json.loads(data)
             for k in d.keys():
                 self.context.getProcGraph().updateRegistry(d[k])
-        if self.context.showGraph():
-            self.context.getProcGraph().showGraph()
+
 
 
 

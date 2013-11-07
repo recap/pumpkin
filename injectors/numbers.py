@@ -24,6 +24,8 @@ import DRPlugin
 import DRShared
 import time
 
+
+
 from random import randint
 
 class numbers(DRPlugin.PluginBase):
@@ -37,27 +39,7 @@ class numbers(DRPlugin.PluginBase):
         print "Loading: " + self.__class__.__name__
         pass
 
-    def run(self):
-        automaton = "##START-CONF{\
-                        \"invoke\": [\
-	                        {\
-		    \"func\": \"add\", \
-		    \"state\": \"0000\"\
-	                        },\
-	                    {\
-		    \"func\": \"square\", \
-		    \"state\": \"0000\" \
-	            },\
-	            {\
-		    \"func\": \"root\",\
-		    \"state\": \"0000\"\
-	            }\
-	            ],\
-            \"container-id\": \"qazwsx\",\
-            \"box-id\": \"1\"\
-} ##END-CONF"
-
-        #time.sleep(10)
+    def run(self, pkt):
 
         for p in range (1,5):
             seq = ""
@@ -66,8 +48,7 @@ class numbers(DRPlugin.PluginBase):
                 seq = seq +str(x)+","
 
             seq = seq[0:len(seq)-1]
-            pkt = automaton + seq
-            self.dispatch(seq,"ANY")
+            self.dispatch(pkt, seq,"SHORT")
             #print pkt
             #self.context.getRx().put(pkt)
         pass

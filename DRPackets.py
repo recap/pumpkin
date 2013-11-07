@@ -33,6 +33,7 @@ class tx(Queue):
         pass
 
 
+
 class ZMQPacketMonitor(SThread):
     def __init__(self, context, zmqcontext, bind_to):
         SThread.__init__ (self)
@@ -46,7 +47,7 @@ class ZMQPacketMonitor(SThread):
 
     def run(self):
         #context = zmq.Context()
-        soc = self.zmq_cntx.socket(zmq.REP)
+        soc = self.zmq_cntx.socket(zmq.PULL)
         soc.bind(self.bind_to)
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
@@ -56,7 +57,7 @@ class ZMQPacketMonitor(SThread):
             try:
                 msg = soc.recv()
                 self.rx.put(msg)
-                #log.debug("Message: "+str(msg))
+                log.debug("Message: "+str(msg))
             except zmq.ZMQError as e:
                 if self.stopped():
                     log.debug("Exiting thread "+  self.__class__.__name__)
@@ -70,8 +71,31 @@ class ZMQPacketMonitor(SThread):
         pass
 
 
+class ZMQPacketDispatch(object):
+    def __init__(self, context, zmqcontext=None):
+        self.context = context
+        self.soc = None
+        if (zmqcontext == None):
+            self.zmq_cntx = zmq.Context()
+        else:
+            self.zmq_cntx = zmqcontext
 
-class ZMQPacketDispatch(SThread):
+    def connect(self, connect_to):
+        self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        self.soc.connect(connect_to)
+
+    def dispatch(self, pkt):
+
+        try:
+            self.soc.send(pkt)
+        except zmq.ZMQError as e:
+            log.error(str(e))
+
+    def close(self):
+        self.soc.close()
+
+
+class ZMQPacketDispatch2(SThread):
     def __init__(self, context, zmqcontext,connect_to):
         SThread.__init__(self)
         self.context = context

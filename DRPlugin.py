@@ -1,13 +1,16 @@
 __author__ = 'reggie'
 
 import inspect
-
+import uuid
+import copy
 from DRShared import *
 
 plugins = []
 hplugins = {}
 iplugins = {}
 
+PKT_NEWBOX = 01
+PKT_OLDBOX = 02
 
 class PluginType(type):
     def __init__(cls, name, bases, attrs):
@@ -23,12 +26,29 @@ class PluginType(type):
 class PluginBase(object):
     __metaclass__ = PluginType
 
+
+
     def __init__(self, context, poi="Unset"):
         self.context = context
         self.poi = poi
         self.conf = None
 
 
+        pass
+
+    def __rawpacket(self):
+        pkt = []
+        ship_id = self.context.getExecContext()
+        cont_id =  str(uuid.uuid4())[:8]
+        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "e" : "E"})
+        pkt.append( {"stag" : "RAW", "exstate" : "0001"} )
+        return pkt
+
+    def rawrun(self):
+        self.run(self.__rawpacket())
+        pass
+
+    def run(self, pkt, *args):
         pass
 
     def getpoi(self):
@@ -44,6 +64,14 @@ class PluginBase(object):
 
         return False
 
+    def getConfEntry(self):
+        js = '{ "name" : "'+self.getname()+'", \
+       "zmq_endpoint" : [ {"ep" : "'+self.context.endpoints[0]+'", "cuid" : "'+self.context.getUuid()+'"} ],' \
+       ''+self.getparameters()+',' \
+       ''+self.getreturn()+'}'
+        return js
+
+
     def getparameters(self):
         if len(self.conf["parameters"]) > 0:
             for p in self.conf["parameters"]:
@@ -58,10 +86,26 @@ class PluginBase(object):
             return sret
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
-    def dispatch(self, msg, state):
-        #log.debug(self.conf)
+    def dispatch(self, pkt, msg, state, boxing = PKT_OLDBOX):
+        if boxing == PKT_NEWBOX:
+            lpkt = copy.deepcopy(pkt)
+            header = lpkt[0]
+            box = int(header["box"])
+            box = box + 1
+            header["box"] = str(box)
+            pkt[0]["box"] = str(box)
+        else:
+            lpkt = copy.copy(pkt)
+
         otype = self.conf["return"][0]["type"]
-        self.context.getTx().put((state,otype,msg))
+        stag = otype + ":"  + state
+        pkt_e = {}
+        pkt_e["stag"] = stag
+        pkt_e["func"] = self.__class__.__name__
+        pkt_e["exstate"] = "0001"
+        pkt_e["data"] = msg
+        lpkt.append(pkt_e)
+        self.context.getTx().put((state,otype,lpkt))
         pass
 
     def getname(self):

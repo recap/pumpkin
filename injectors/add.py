@@ -11,7 +11,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "CSVStringNumbers",
 ##                      "format": "csv",
-##                      "state" : "SHORT|LONG"
+##                      "state" : "SHORT"
 ##                  }
 ##              ],
 ##"return": [
@@ -69,7 +69,7 @@ class add(DRPlugin.PluginBase):
         return count
         pass
 
-    def run(self, *args):
+    def run(self,pkt, *args):
         THRESHOLD = 999
         print "Running: " + self.__class__.__name__
         sp = args[0].split(",")
@@ -79,10 +79,10 @@ class add(DRPlugin.PluginBase):
         for s in sp:
             count = count + int(s)
 
-        if count > THRESHOLD:
-            self.ostate["number_size"] = "BIG"
-        else:
-            self.ostate["number_size"] = "SMALL"
+        #if count > THRESHOLD:
+        #    self.ostate["number_size"] = "BIG"
+        #else:
+        #    self.ostate["number_size"] = "SMALL"
 
         return count
         pass

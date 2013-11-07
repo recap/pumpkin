@@ -18,8 +18,28 @@ from DRPackets import *
 from DRPlugin import *
 
 
+class InternalDispatch(SThread):
+    def __init__(self, context):
+        SThread.__init__(self)
+        self.context = context
+        pass
 
-class InternalDispatch(Thread):
+    def run(self):
+        rx = self.context.getRx()
+        while 1:
+            pkt = json.loads(rx.get(True))
+            l = len(pkt)
+            func = pkt[l-1]["func"]
+            data = pkt[l-2]["data"]
+            log.debug(data)
+            if func in DRPlugin.iplugins.keys():
+                klass = DRPlugin.iplugins[func]
+                rt = klass.run(pkt, data)
+                log.debug("RESULT: "+str(rt))
+
+
+
+class InternalDispatch2(Thread):
     def __init__(self, context):
         Thread.__init__(self)
         self.context = context
@@ -121,11 +141,16 @@ class Injector(SThread):
         SThread.__init__(self)
         self.context = context
 
+
+
+
     def run(self):
         for x in DRPlugin.iplugins.keys():
             klass = DRPlugin.iplugins[x]
             if not klass.hasInputs():
-                klass.run()
+                #klass.run(klass.__rawpacket())
+                klass.rawrun()
+
             if self.stopped():
                 log.debug("Exiting thread "+self.__class__.__name__)
                 break
@@ -134,16 +159,54 @@ class Injector(SThread):
 
 
 class ExternalDispatch(SThread):
+
+
     def __init__(self, context):
         SThread.__init__(self)
         self.context = context
+        self.dispatchers = {}
         pass
 
+
     def run(self):
+        graph = self.context.getProcGraph()
         tx = self.context.getTx()
         while True:
-            state, otype, msg = tx.get(True)
-            log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+msg)
+            state, otype, pkt = tx.get(True)
+            #log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
+            otag = otype+":"+state
+
+            while 1:
+                routes = graph.getRoutes(otag)
+                if routes:
+                    break
+                else:
+                    log.debug("No route found for: "+otag)
+                    time.sleep(5)
+
+            for r in routes:
+                #log.debug("Route: "+str(r))
+
+                #TODO make it more flexible not bound to zmq
+                if r["zmq_endpoint"][0]:
+                    ep = r["zmq_endpoint"][0]["ep"]
+                    #log.debug(r["zmq_endpoint"][0]["ep"])
+                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["zmq_endpoint"][0]["ep"] }
+                    pkt.append(next_hop)
+                    #pkt.remove( pkt[len(pkt)-1] )
+                    #log.debug(json.dumps(pkt))
+                    if ep in self.dispatchers.keys():
+                        disp = self.dispatchers[ep]
+                        disp.dispatch(json.dumps(pkt))
+                    else:
+                        disp = ZMQPacketDispatch(self.context)
+                        self.dispatchers[ep] = disp
+                        disp.connect(ep)
+                        disp.dispatch(json.dumps(pkt))
+
+
+
+
             if self.stopped():
                 log.debug("Exiting thread "+self.__class__.__name__)
                 break

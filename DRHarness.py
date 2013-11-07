@@ -34,6 +34,7 @@ from DRPeers import *
 from DRPackets import *
 from DRDispatch import *
 from DRHTTPServer import *
+from DRShell import *
 
 
 VERSION = "0.1.9"
@@ -49,8 +50,8 @@ parser.add_argument('--taskdir', action='store', dest="taskdir", default="./plug
                    help='directory for loading tasks.')
 parser.add_argument('--supernode',action="store_true",
                    help='run in supernode i.e. main role is information proxy.')
-parser.add_argument('--showgraph',action="store_true",
-                   help='show data state graph.')
+parser.add_argument('--shell',action="store_true",
+                   help='start a shell prompt.')
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
@@ -123,9 +124,10 @@ args = parser.parse_args()
 ###########################
 #Get a UID for this harness
 args.uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
-
+ex_cntx = str(uuid.uuid4())[:8]
 #Create a context
 context = MainContext(args.uid, Peer(args.uid))
+context.setExecContext(ex_cntx)
 context.setArgs(args)
 context.setSupernodeList(SUPERNODES)
 context.setLocalIP(get_lan_ip())
@@ -134,6 +136,7 @@ zmq_context = zmq.Context()
 
 
 log.info("Node assigned UID: "+context.getUuid())
+log.info("Exec context: "+context.getExecContext())
 log.info("Node bound to IP: "+context.getLocalIP())
 
 ######################TMP TEST 2########################
@@ -195,10 +198,7 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 
     for x in DRPlugin.iplugins.keys():
        klass = DRPlugin.iplugins[x]
-       js = '{ "name" : "'+klass.getname()+'", \
-       "zmq_endpoint" : [ {"ep" : "'+context.endpoints[0]+'", "cuid" : "'+context.getUuid()+'"} ],' \
-       ''+klass.getparameters()+',' \
-       ''+klass.getreturn()+'}'
+       js = klass.getConfEntry()
        log.debug(js)
        context.getProcGraph().updateRegistry(json.loads(js))
 
@@ -211,11 +211,18 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 
     udpbc = Broadcaster(context)
     udpbc.start()
+
     context.addThread(udpbc)
 
     edispatch = ExternalDispatch(context)
     edispatch.start()
     context.addThread(edispatch)
+
+    idispatch = InternalDispatch(context)
+    idispatch.start()
+    context.addThread(idispatch)
+
+    #context.startDisplay()
 
 
     ##############START TASKS WITH NO INPUTS#############################
@@ -260,11 +267,11 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 #fm.start()
 #context.addThread(fm)
 
-#    zmq_context = zmq.Context()
+    zmq_context = zmq.Context()
 
-#    tcpm = ZMQPacketMonitor(context, zmq_context, "inproc://backbus")
-#    tcpm.start()
-#    context.addThread(tcpm)
+    tcpm = ZMQPacketMonitor(context, zmq_context, "ipc://"+context.getUuid())
+    tcpm.start()
+    context.addThread(tcpm)
 
 #    time.sleep(2)
 
@@ -310,8 +317,9 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 #udplisten.start()
 #context.addThread(udplisten)
 
-if context.showGraph():
-        context.getProcGraph().showGraph()
+if context.hasShell():
+    cmdp = Shell(context)
+    cmdp.cmdloop()
 
 #Handle SIGINT
 def signal_handler(signal, frame):

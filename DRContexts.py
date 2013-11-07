@@ -2,6 +2,7 @@ __author__ = 'reggie'
 
 import json
 
+
 from DRPackets import *
 from DRProcessGraph import *
 
@@ -20,15 +21,21 @@ class MainContext(object):
         self.__reg_update = False
         self.rlock = threading.RLock()
         self.proc_graph = ProcessGraph()
-
+        self.__exec_context = None
 
         pass
 
 
+    def setExecContext(self, cntx):
+        self.__exec_contex = cntx
+        pass
+    def getExecContext(self):
+        return self.__exec_contex
 
     def setLocalIP(self,ip):
         self.__ip = ip
-        self.endpoints.append("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT))
+        #self.endpoints.append("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT))
+        self.endpoints.append("ipc://"+self.getUuid())
         pass
 
     def getLocalIP(self):
@@ -55,8 +62,8 @@ class MainContext(object):
     def getTaskDir(self):
         return self.__args.taskdir
 
-    def showGraph(self):
-        return self.__args.showgraph
+    def hasShell(self):
+        return self.__args.shell
 
     def isSupernode(self):
         return self.__args.supernode
