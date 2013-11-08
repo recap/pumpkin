@@ -172,27 +172,27 @@ if not context.isWithNoPlugins() and not context.isSupernode():
         if( fl[-2:] == "py"):
             log.debug("Found module: "+fullpath)
             file_header = ""
-            try:
-                imp.load_source(modname,fullpath)
+            #try:
+            imp.load_source(modname,fullpath)
 
-                fh = open(fullpath, "r")
-                fhd = fh.read()
-                m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+            fh = open(fullpath, "r")
+            fhd = fh.read()
+            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
 
-                if m:
-                    conf = m.group(1).replace("##","")
-                    if conf:
-                        d = json.loads(conf)
-                        klass = DRPlugin.hplugins[modname](context)
-                        DRPlugin.iplugins[modname] = klass
-                        klass.on_load()
-                        klass.setconf(d)
-                        #print klass.getparameters()
-                        #print klass.getreturn()
+            if m:
+                conf = m.group(1).replace("##","")
+                if conf:
+                    d = json.loads(conf)
+                    klass = DRPlugin.hplugins[modname](context)
+                    DRPlugin.iplugins[modname] = klass
+                    klass.on_load()
+                    klass.setconf(d)
+                    #print klass.getparameters()
+                    #print klass.getreturn()
 
 
-            except Exception:
-                log.error("Import error "+ str(Exception))
+            #except Exception:
+            #    log.error("Import error "+ str(Exception))
 
 
 

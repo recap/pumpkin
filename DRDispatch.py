@@ -35,7 +35,7 @@ class InternalDispatch(SThread):
             if func in DRPlugin.iplugins.keys():
                 klass = DRPlugin.iplugins[func]
                 rt = klass.run(pkt, data)
-                log.debug("RESULT: "+str(rt))
+                #log.debug("RESULT: "+str(rt))
 
 
 
@@ -186,29 +186,32 @@ class ExternalDispatch(SThread):
 
             for r in routes:
                 #log.debug("Route: "+str(r))
-
+                dcpkt = copy.copy(pkt)
                 #TODO make it more flexible not bound to zmq
                 if r["zmq_endpoint"][0]:
                     ep = r["zmq_endpoint"][0]["ep"]
                     #log.debug(r["zmq_endpoint"][0]["ep"])
                     next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["zmq_endpoint"][0]["ep"] }
-                    pkt.append(next_hop)
+                    dcpkt.append(next_hop)
                     #pkt.remove( pkt[len(pkt)-1] )
                     #log.debug(json.dumps(pkt))
                     if ep in self.dispatchers.keys():
                         disp = self.dispatchers[ep]
-                        disp.dispatch(json.dumps(pkt))
+                        disp.dispatch(json.dumps(dcpkt))
                     else:
                         disp = ZMQPacketDispatch(self.context)
                         self.dispatchers[ep] = disp
                         disp.connect(ep)
-                        disp.dispatch(json.dumps(pkt))
+                        disp.dispatch(json.dumps(dcpkt))
 
 
 
 
             if self.stopped():
                 log.debug("Exiting thread "+self.__class__.__name__)
+                for ep in self.dispatchers.keys():
+                    disp = disp = self.dispatchers[ep]
+                    disp.close()
                 break
             else:
                 continue
