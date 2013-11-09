@@ -25,11 +25,10 @@ SUPERNODES = [ "elab.lab.uvalight.net", "flightcees.lab.uvalight.net"]
 
 
 # Initialize the logger.
-#RR#logging.basicConfig()
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
-log = logging.getLogger('datariver')
-
+#logging.basicConfig()
+#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+log = logging.getLogger('pumpkin')
+log.setLevel(logging.DEBUG)
 
 
 class SThread(Thread):

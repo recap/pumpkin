@@ -3,9 +3,9 @@ import re
 import threading
 from threading import *
 from socket import *
-import DRPlugin
+import PmkSeed
 
-from DRShared import *
+from PmkShared import *
 
 
 class Head(object):
@@ -68,8 +68,8 @@ class HttpServer(SThread):
                 continue
 
             h = Head(data)
-            if h.module in DRPlugin.hplugins.keys():
-                klass = DRPlugin.hplugins[h.module](self.context)
+            if h.module in PmkSeed.hplugins.keys():
+                klass = PmkSeed.hplugins[h.module](self.context)
                 klass.on_load()
                 if not h.params_string:
                     rt = getattr(klass, h.method)()

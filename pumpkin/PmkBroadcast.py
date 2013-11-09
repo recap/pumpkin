@@ -15,7 +15,7 @@ from socket import *
 from threading import *
 
 
-from DRShared import *
+from PmkShared import *
 
 def get_interface_ip(ifname):
         s = socket(AF_INET, SOCK_DGRAM)

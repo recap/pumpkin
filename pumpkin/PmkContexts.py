@@ -2,15 +2,16 @@ __author__ = 'reggie'
 
 import json
 
+from PmkExternalDispatch import *
+from PmkInternalDispatch import *
 
-from DRPackets import *
-from DRProcessGraph import *
+from PmkProcessGraph import *
 
 class MainContext(object):
     def __init__(self,uuid, peer=None):
         self.__uuid = uuid
         self.__peer = peer
-        self.__args = None
+        self.__attrs = None
         self.__supernodes = []
         self.__threads = []
         self.rx = rx()
@@ -50,8 +51,8 @@ class MainContext(object):
 
         return False
 
-    def setArgs(self, args):
-        self.__args = args
+    def setAttributes(self, attributes):
+        self.__attrs = attributes
 
     def getUuid(self):
         return self.__uuid
@@ -60,16 +61,16 @@ class MainContext(object):
         return self.__peer
 
     def getTaskDir(self):
-        return self.__args.taskdir
+        return self.__attrs.taskdir
 
     def hasShell(self):
-        return self.__args.shell
+        return self.__attrs.shell
 
     def isSupernode(self):
-        return self.__args.supernode
+        return self.__attrs.supernode
 
     def isWithNoPlugins(self):
-        return self.__args.noplugins
+        return self.__attrs.noplugins
 
     def setSupernodeList(self, sn):
         self.__supernodes = sn

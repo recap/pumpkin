@@ -3,7 +3,7 @@ __author__ = 'reggie'
 import inspect
 import uuid
 import copy
-from DRShared import *
+from PmkShared import *
 
 plugins = []
 hplugins = {}
@@ -12,19 +12,19 @@ iplugins = {}
 PKT_NEWBOX = 01
 PKT_OLDBOX = 02
 
-class PluginType(type):
+class SeedType(type):
     def __init__(cls, name, bases, attrs):
-        super(PluginType, cls).__init__(name, bases, attrs)
+        super(SeedType, cls).__init__(name, bases, attrs)
 
         #print(cls, name, cls.__module__)
-        if name != "PluginBase":
+        if name != "Seed":
             plugins.append(cls)
             #log.debug("Adding: "+name)
             hplugins[name] = cls
 
 
-class PluginBase(object):
-    __metaclass__ = PluginType
+class Seed(object):
+    __metaclass__ = SeedType
 
 
 
@@ -87,6 +87,7 @@ class PluginBase(object):
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
     def dispatch(self, pkt, msg, state, boxing = PKT_OLDBOX):
+
         if boxing == PKT_NEWBOX:
             lpkt = copy.deepcopy(pkt)
             header = lpkt[0]
