@@ -21,8 +21,8 @@ __author__ = 'reggie'
 ##END-CONF
 
 
-import DRPlugin
-import DRShared
+import PmkSeed
+import PmkShared
 import time
 import os
 import json
@@ -35,10 +35,10 @@ from os.path import isfile, join
 
 from random import randint
 
-class collectorhaiku(DRPlugin.PluginBase):
+class collectorhaiku(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
-        DRPlugin.PluginBase.__init__(self, context,poi)
+        PmkSeed.Seed.__init__(self, context,poi)
         self.d = None
         pass
 

@@ -29,8 +29,8 @@ __author__ = 'reggie'
 ##END-CONF
 
 
-import DRPlugin
-import DRShared
+import PmkSeed
+import PmkShared
 import time
 import os
 import json
@@ -44,10 +44,10 @@ from nltk.corpus import cmudict
 
 from random import randint
 
-class filterenglish(DRPlugin.PluginBase):
+class filterenglish(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
-        DRPlugin.PluginBase.__init__(self, context,poi)
+        PmkSeed.Seed.__init__(self, context,poi)
 
         pass
 

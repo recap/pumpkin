@@ -22,8 +22,7 @@ __author__ = 'reggie'
 ##END-CONF
 
 
-import DRPlugin
-import DRShared
+
 import time
 import os
 import json
@@ -32,7 +31,7 @@ from os import listdir
 from os.path import isfile, join
 
 
-
+from pumpkin import *
 from random import randint
 
 
@@ -47,10 +46,10 @@ from nltk.corpus import cmudict
 import re
 ###
 
-class tweetinject(DRPlugin.PluginBase):
+class tweetinject(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
-        DRPlugin.PluginBase.__init__(self, context,poi)
+        PmkSeed.Seed.__init__(self, context,poi)
 
         pass
 

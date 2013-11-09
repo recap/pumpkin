@@ -1,44 +1,16 @@
 __author__ = 'reggie'
 
-import time
-import os.path
+
 import sys
-import imp
-import subprocess
-import socket
-import uuid
 import argparse
-import threading
-import signal
-import json
-import zmq
+import logging
 
-#from networkx.readwrite import json_graph
+from pumpkin import *
 
 
 
-
-import DRPlugin
-import pyinotify
-
-from os import listdir
-from os.path import isfile, join
-from socket import *
-from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
-
-
-from DRShared import *
-from DRContexts import *
-from DRComms import *
-from DRPeers import *
-from DRPackets import *
-from DRDispatch import *
-from DRHTTPServer import *
-from DRShell import *
-
-
-VERSION = "0.1.9"
-
+log = logging.getLogger("root")
+log.setLevel(logging.DEBUG)
 
 
 parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
@@ -55,6 +27,74 @@ parser.add_argument('--shell',action="store_true",
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
+
+
+P = Pumpkin()
+context = P.getContext()
+context.setAttributes(args)
+#
+log.info("Node assigned UID: "+context.getUuid())
+log.info("Exec context: "+context.getExecContext())
+log.info("Node bound to IP: "+context.getLocalIP())
+
+P.startContext()
+
+
+#Handle SIGINT
+def signal_handler(signal, frame):
+        P.stopContext()
+
+
+        log.info("Exiting Bye Bye")
+        ##Ugly kill because threads zmq are not behaving
+        os.system("kill -9 "+str(os.getpid()))
+
+        sys.exit(0)
+
+
+#Catch Ctrl+C
+signal.signal(signal.SIGINT, signal_handler)
+signal.pause()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ######TMP TEST#############
 
@@ -123,21 +163,20 @@ args = parser.parse_args()
 
 ###########################
 #Get a UID for this harness
-args.uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
-ex_cntx = str(uuid.uuid4())[:8]
-#Create a context
-context = MainContext(args.uid, Peer(args.uid))
-context.setExecContext(ex_cntx)
-context.setArgs(args)
-context.setSupernodeList(SUPERNODES)
-context.setLocalIP(get_lan_ip())
+#args.uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
+#ex_cntx = str(uuid.uuid4())[:8]
+##Create a context
+#context = MainContext(args.uid, Peer(args.uid))
+#context.setExecContext(ex_cntx)
+#context.setArgs(args)
+#context.setSupernodeList(SUPERNODES)
+#context.setLocalIP(get_lan_ip())
+#
+#zmq_context = zmq.Context()
 
-zmq_context = zmq.Context()
 
-
-log.info("Node assigned UID: "+context.getUuid())
-log.info("Exec context: "+context.getExecContext())
-log.info("Node bound to IP: "+context.getLocalIP())
+#
+#print "HERE"
 
 ######################TMP TEST 2########################
 
@@ -145,91 +184,91 @@ log.info("Node bound to IP: "+context.getLocalIP())
 ########################################################
 
 
-if context.isSupernode():
-    log.debug("In supernode mode")
-    udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
-    udplisten.start()
-    context.addThread(udplisten)
-
-    zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
-    zmqbc.start()
-    context.addThread(zmqbc)
-
-if not context.isWithNoPlugins() and not context.isSupernode():
-
-    for sn in get_zmq_supernodes(SUPERNODES):
-        log.debug("Subscribing to: "+sn)
-        zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
-        zmqsub.start()
-        context.addThread(zmqsub)
-
-    onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
-    for fl in onlyfiles:
-        fullpath = context.getTaskDir()+"/"+fl
-        modname = fl[:-3]
-        #ext = fl[-2:]
-
-        if( fl[-2:] == "py"):
-            log.debug("Found module: "+fullpath)
-            file_header = ""
-            #try:
-            imp.load_source(modname,fullpath)
-
-            fh = open(fullpath, "r")
-            fhd = fh.read()
-            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
-
-            if m:
-                conf = m.group(1).replace("##","")
-                if conf:
-                    d = json.loads(conf)
-                    klass = DRPlugin.hplugins[modname](context)
-                    DRPlugin.iplugins[modname] = klass
-                    klass.on_load()
-                    klass.setconf(d)
-                    #print klass.getparameters()
-                    #print klass.getreturn()
-
-
-            #except Exception:
-            #    log.error("Import error "+ str(Exception))
-
-
-
-    for x in DRPlugin.iplugins.keys():
-       klass = DRPlugin.iplugins[x]
-       js = klass.getConfEntry()
-       log.debug(js)
-       context.getProcGraph().updateRegistry(json.loads(js))
-
-
-
-
-
-
-
-
-    udpbc = Broadcaster(context)
-    udpbc.start()
-
-    context.addThread(udpbc)
-
-    edispatch = ExternalDispatch(context)
-    edispatch.start()
-    context.addThread(edispatch)
-
-    idispatch = InternalDispatch(context)
-    idispatch.start()
-    context.addThread(idispatch)
-
-    #context.startDisplay()
-
-
-    ##############START TASKS WITH NO INPUTS#############################
-    inj = Injector(context)
-    inj.start()
-    context.addThread(inj)
-    #####################################################################
+#if context.isSupernode():
+#    log.debug("In supernode mode")
+#    udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
+#    udplisten.start()
+#    context.addThread(udplisten)
+#
+#    zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
+#    zmqbc.start()
+#    context.addThread(zmqbc)
+#
+#if not context.isWithNoPlugins() and not context.isSupernode():
+#
+#    for sn in get_zmq_supernodes(SUPERNODES):
+#        log.debug("Subscribing to: "+sn)
+#        zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
+#        zmqsub.start()
+#        context.addThread(zmqsub)
+#
+#    onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
+#    for fl in onlyfiles:
+#        fullpath = context.getTaskDir()+"/"+fl
+#        modname = fl[:-3]
+#        #ext = fl[-2:]
+#
+#        if( fl[-2:] == "py"):
+#            log.debug("Found module: "+fullpath)
+#            file_header = ""
+#            #try:
+#            imp.load_source(modname,fullpath)
+#
+#            fh = open(fullpath, "r")
+#            fhd = fh.read()
+#            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+#
+#            if m:
+#                conf = m.group(1).replace("##","")
+#                if conf:
+#                    d = json.loads(conf)
+#                    klass = Seed.hplugins[modname](context)
+#                    Seed.iplugins[modname] = klass
+#                    klass.on_load()
+#                    klass.setconf(d)
+#                    #print klass.getparameters()
+#                    #print klass.getreturn()
+#
+#
+#            #except Exception:
+#            #    log.error("Import error "+ str(Exception))
+#
+#
+#
+#    for x in Seed.iplugins.keys():
+#       klass = Seed.iplugins[x]
+#       js = klass.getConfEntry()
+#       log.debug(js)
+#       context.getProcGraph().updateRegistry(json.loads(js))
+#
+#
+#
+#
+#
+#
+#
+#
+#    udpbc = Broadcaster(context)
+#    udpbc.start()
+#
+#    context.addThread(udpbc)
+#
+#    edispatch = ExternalDispatch(context)
+#    edispatch.start()
+#    context.addThread(edispatch)
+#
+#    idispatch = InternalDispatch(context)
+#    idispatch.start()
+#    context.addThread(idispatch)
+#
+#    #context.startDisplay()
+#
+#
+#    ##############START TASKS WITH NO INPUTS#############################
+#    inj = Injector(context)
+#    inj.start()
+#    context.addThread(inj)
+#    #####################################################################
 
 
 
@@ -267,11 +306,11 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 #fm.start()
 #context.addThread(fm)
 
-    zmq_context = zmq.Context()
-
-    tcpm = ZMQPacketMonitor(context, zmq_context, "ipc://"+context.getUuid())
-    tcpm.start()
-    context.addThread(tcpm)
+    #zmq_context = zmq.Context()
+    #
+    #tcpm = ZMQPacketMonitor(context, zmq_context, "ipc://"+context.getUuid())
+    #tcpm.start()
+    #context.addThread(tcpm)
 
 #    time.sleep(2)
 
@@ -317,27 +356,8 @@ if not context.isWithNoPlugins() and not context.isSupernode():
 #udplisten.start()
 #context.addThread(udplisten)
 
-if context.hasShell():
-    cmdp = Shell(context)
-    cmdp.cmdloop()
-
-#Handle SIGINT
-def signal_handler(signal, frame):
-        for th in context.getThreads():
-            th.stop()
-            #th.join()
-
-        time.sleep(2)
-        log.info("Exiting DataRiver")
-        ##Ugly kill because threads zmq are not behaving
-        os.system("kill -9 "+str(os.getpid()))
-        #os.system("./forcekill")
-        sys.exit(0)
 
 
-#Catch Ctrl+C
-signal.signal(signal.SIGINT, signal_handler)
-signal.pause()
 
 
 
