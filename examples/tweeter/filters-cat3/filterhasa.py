@@ -29,8 +29,7 @@ __author__ = 'reggie'
 ##END-CONF
 
 
-import PmkSeed
-import PmkShared
+
 import time
 import os
 import json
@@ -42,7 +41,7 @@ from nltk.corpus import cmudict
 from curses.ascii import isdigit
 import re
 
-
+from pumpkin import PmkSeed
 
 from random import randint
 
