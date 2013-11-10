@@ -66,10 +66,23 @@ class Seed(object):
 
     def getConfEntry(self):
         js = '{ "name" : "'+self.getname()+'", \
-       "zmq_endpoint" : [ {"ep" : "'+self.context.endpoints[0]+'", "cuid" : "'+self.context.getUuid()+'"} ],' \
+       "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.getparameters()+',' \
        ''+self.getreturn()+'}'
+
+       # js = '{ "name" : "'+self.getname()+'", \
+       #"zmq_endpoint" : [ {"ep" : "'+self.context.endpoints[0]+'", "cuid" : "'+self.context.getUuid()+'"} ],' \
+       #''+self.getparameters()+',' \
+       #''+self.getreturn()+'}'
         return js
+
+    def __getEps(self):
+        aep = ""
+        for ep in self.context.endpoints:
+            s =  '{"ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'"}'
+            aep = aep + s + ","
+        aep = aep[:len(aep)-1]
+        return aep
 
 
     def getparameters(self):

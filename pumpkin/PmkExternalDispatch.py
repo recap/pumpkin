@@ -24,6 +24,7 @@ import time
 import PmkSeed
 import Queue
 import zmq
+import copy
 
 from Queue import *
 from PmkShared import *
@@ -102,10 +103,11 @@ class ExternalDispatch(SThread):
                 #log.debug("Route: "+str(r))
                 dcpkt = copy.copy(pkt)
                 #TODO make it more flexible not bound to zmq
-                if r["zmq_endpoint"][0]:
-                    ep = r["zmq_endpoint"][0]["ep"]
+                if r["endpoints"][0]:
+                    entry = r["endpoints"][0]
+                    ep = r["endpoints"][0]["ep"]
                     #log.debug(r["zmq_endpoint"][0]["ep"])
-                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["zmq_endpoint"][0]["ep"] }
+                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
                     dcpkt.append(next_hop)
                     #pkt.remove( pkt[len(pkt)-1] )
                     #log.debug(json.dumps(pkt))
@@ -113,10 +115,16 @@ class ExternalDispatch(SThread):
                         disp = self.dispatchers[ep]
                         disp.dispatch(json.dumps(dcpkt))
                     else:
-                        disp = ZMQPacketDispatch(self.context)
-                        self.dispatchers[ep] = disp
-                        disp.connect(ep)
-                        disp.dispatch(json.dumps(dcpkt))
+                        disp = None
+                        if entry["mode"] == "zmq.PULL":
+                            disp = ZMQPacketDispatch(self.context)
+
+                        if not disp == None:
+                            self.dispatchers[ep] = disp
+                            disp.connect(ep)
+                            disp.dispatch(json.dumps(dcpkt))
+                        else:
+                            log.error("No dispatchers found for: "+ep)
 
 
 
@@ -132,10 +140,41 @@ class ExternalDispatch(SThread):
 
 
 
+class Dispatch(object):
+    def connect(self, connect_to):
+        pass
+    def dispatch(self, pkt):
+        pass
+    def close(self):
+        pass
 
-
-class ZMQPacketDispatch(object):
+class ZMQPacketPublish(Dispatch):
     def __init__(self, context, zmqcontext=None):
+        Dispatch.__init__(self)
+        self.context = context
+        self.soc = None
+        if (zmqcontext == None):
+            self.zmq_cntx = zmq.Context()
+        else:
+            self.zmq_cntx = zmqcontext
+
+    def connect(self, connect_to):
+        self.soc = self.zmq_cntx.socket(zmq.PUB)
+        self.soc.bind(connect_to)
+
+    def dispatch(self, pkt):
+        try:
+            self.soc.send(pkt)
+        except zmq.ZMQError as e:
+            log.error(str(e))
+
+    def close(self):
+        self.soc.close()
+
+
+class ZMQPacketDispatch(Dispatch):
+    def __init__(self, context, zmqcontext=None):
+        Dispatch.__init__(self)
         self.context = context
         self.soc = None
         if (zmqcontext == None):

@@ -3,7 +3,7 @@ __author__ = 'reggie'
 
 ###START-CONF
 ##{
-##"object_name": "tweetinject",
+##"object_name": "tweetreinject",
 ##"object_poi": "qpwo-2345",
 ##"parameters": [
 ##
@@ -48,52 +48,51 @@ import re
 
 import zmq
 
-class tweetinject(PmkSeed.Seed):
+class tweetreinject(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
         self.zmq_cntx = zmq.Context()
-        self.sock = self.zmq_cntx.socket(zmq.PUSH)
-        self.sock.bind("tcp://*:7885")
+        self.sock = self.zmq_cntx.socket(zmq.PULL)
+        #self.sock.setsockopt(zmq.SUBSCRIBE, '')
+        self.sock.connect("tcp://127.0.0.1:7885")
         pass
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
+        while 1:
+            msg = self.sock.recv()
+            log.debug("receiving..."+msg)
         #print os.getcwd()
         #self._pre()
 
         pass
 
     def run(self, pkt):
-        dir = "./scratch/"
-        onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
-        for fl in onlyfiles:
-            fullpath = dir+fl
-            if( fl[-3:] == "txt"):
-                print "File: "+str(fl)
-                tweet = ""
-                with open(fullpath) as f:
-                    for line in f:
-                        if line.startswith('T'):
-                            tweet = line
-                        if line.startswith("U"):
-                            tweet = tweet + line
-                        if line.startswith("W"):
-                            if line == "No Post Title":
-                                line =""
-                            else:
-                                tweet = tweet + line
-                                self.publish(tweet)
-                            #self.__testfilter(tweet)
-                            #self.dispatch(pkt, tweet,"RAW")
-
-                            #time.sleep(2)
+        #dir = "./examples/tweeter/"
+        #onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
+        #for fl in onlyfiles:
+        #    fullpath = dir+fl
+        #    if( fl[-3:] == "txt"):
+        #        print "File: "+str(fl)
+        #        tweet = ""
+        #        with open(fullpath) as f:
+        #            for line in f:
+        #                if line.startswith('T'):
+        #                    tweet = line
+        #                if line.startswith("U"):
+        #                    tweet = tweet + line
+        #                if line.startswith("W"):
+        #                    tweet = tweet + line
+        #                    #self.__testfilter(tweet)
+        #                    #self.dispatch(pkt, tweet,"RAW")
+        #                    self.publish(tweet)
 
 
         pass
 
     def publish(self, tweet):
-        log.debug("Sending...")
+        #log.debug("Sending...")
         self.sock.send(tweet)
 
     def _pre(self):

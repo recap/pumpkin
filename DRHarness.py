@@ -22,6 +22,10 @@ parser.add_argument('--taskdir', action='store', dest="taskdir", default="./plug
                    help='directory for loading tasks.')
 parser.add_argument('--supernode',action="store_true",
                    help='run in supernode i.e. main role is information proxy.')
+parser.add_argument('--endpoint.mode', action='store', dest="epmode", default="zmq.PULL",
+                   help='endpoint mode e.x. zmq.PULL|zmq.PUB')
+parser.add_argument('--endpoint.type', action='store', dest="eptype", default="zmq.TCP",
+                   help='endpoint type e.x. zmq.TCP|zmq.IPC|zmq.INPROC')
 parser.add_argument('--shell',action="store_true",
                    help='start a shell prompt.')
 

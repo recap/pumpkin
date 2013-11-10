@@ -31,16 +31,16 @@ class ProcessGraph(object):
             log.info("Updating peer: "+e["name"])
             d = self.registry[e["name"]]
             epb = False
-            for ep in d["zmq_endpoint"]:
-                if ep["ep"] == e["zmq_endpoint"][0]["ep"]:
+            for ep in d["endpoints"]:
+                if ep["ep"] == e["endpoints"][0]["ep"]:
                     epb = True
                     break
             if epb == False:
-                d["zmq_endpoint"].append(e["zmq_endpoint"][0])
+                d["endpoints"].append(e["endpoints"][0])
                 self.__reg_update = True
                 self.__display_graph = True
         else:
-            log.info("Discovered new peer: "+e["name"]+" at "+e["zmq_endpoint"][0]["ep"])
+            log.info("Discovered new peer: "+e["name"]+" at "+e["endpoints"][0]["ep"])
             self.registry[e["name"]] = e
             self.__reg_update = True
             self.__display_graph = True

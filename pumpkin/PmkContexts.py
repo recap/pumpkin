@@ -1,6 +1,7 @@
 __author__ = 'reggie'
 
 import json
+import sys
 
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
@@ -35,8 +36,12 @@ class MainContext(object):
 
     def setLocalIP(self,ip):
         self.__ip = ip
-        #self.endpoints.append("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT))
-        self.endpoints.append("ipc://"+self.getUuid())
+
+        #FIXME dynamic configuration
+        #self.endpoints.append( ("ipc://"+self.getUuid(), "zmq.ipc", "zmq.PULL" ) )
+        #self.endpoints.append( ("ipc://"+self.getUuid(), "zmq.ipc", "zmq.PUB" ) )
+        #self.endpoints.append(("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT), "zmq.tcp", "zmq.PULL"))
+
         pass
 
     def getLocalIP(self):
@@ -53,6 +58,17 @@ class MainContext(object):
 
     def setAttributes(self, attributes):
         self.__attrs = attributes
+        epm = attributes.epmode
+        ept = attributes.eptype
+        prot = ept.split('.')[1].lower()
+        if prot == "tcp":
+            s = prot+"://"+self.__ip+":"+str(ZMQ_ENDPOINT_PORT)
+        if prot == "ipc":
+            s = prot+":///tmp/"+self.getUuid()
+        if prot == "inproc":
+            s = prot+"://"+self.getUuid()
+
+        self.endpoints.append( (s, ept, epm) )
 
     def getUuid(self):
         return self.__uuid
