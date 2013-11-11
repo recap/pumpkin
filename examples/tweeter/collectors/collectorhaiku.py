@@ -22,17 +22,13 @@ __author__ = 'reggie'
 
 
 
-import time
-import os
-import json
 import re
-from os import listdir
-from os.path import isfile, join
+
 
 from pumpkin import PmkSeed
 
 
-from random import randint
+
 
 class collectorhaiku(PmkSeed.Seed):
 

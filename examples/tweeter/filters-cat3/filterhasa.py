@@ -30,20 +30,13 @@ __author__ = 'reggie'
 
 
 
-import time
-import os
-import json
+
 import re
-from os import listdir
-from os.path import isfile, join
-import nltk
-from nltk.corpus import cmudict
-from curses.ascii import isdigit
-import re
+
 
 from pumpkin import PmkSeed
 
-from random import randint
+
 
 class filterhasa(PmkSeed.Seed):
 
@@ -64,10 +57,7 @@ class filterhasa(PmkSeed.Seed):
                 pass
             else:
                 self.dispatch(pkt, self.has_a(tw), "HASA")
-            #if self.is_haiku(tw):
-            #    self.dispatch(pkt, tweet, "HAIKU")
-            #else:
-            #    self.dispatch(pkt, tweet, "RUBBSIH")
+
         pass
 
 

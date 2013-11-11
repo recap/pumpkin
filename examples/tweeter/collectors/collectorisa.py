@@ -21,17 +21,12 @@ __author__ = 'reggie'
 ##END-CONF
 
 
-import time
-import os
-import json
-import re
-from os import listdir
-from os.path import isfile, join
+
 
 from pumpkin import PmkSeed
 
 
-from random import randint
+
 
 class collectorisa(PmkSeed.Seed):
 
@@ -47,10 +42,7 @@ class collectorisa(PmkSeed.Seed):
 
 
     def run(self, pkt, tweet):
-        #print "RECEIVED TWEET: "+tweet
-        #m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
-        #if m:
-        #    tw = m.group(2)
+
         print "ISA: "+str(tweet)
 
         pass
