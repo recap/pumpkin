@@ -55,20 +55,22 @@ class tweetreinject(PmkSeed.Seed):
         self.zmq_cntx = zmq.Context()
         self.sock = self.zmq_cntx.socket(zmq.PULL)
         #self.sock.setsockopt(zmq.SUBSCRIBE, '')
-        self.sock.connect("tcp://127.0.0.1:7885")
+        self.sock.connect("tcp://elab.lab.uvalight.net:7885")
         pass
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
-        while 1:
-            msg = self.sock.recv()
-            log.debug("receiving..."+msg)
+
         #print os.getcwd()
         #self._pre()
 
         pass
 
     def run(self, pkt):
+        while 1:
+            tweet = self.sock.recv()
+            #log.debug("receiving..."+tweet)
+            self.dispatch(pkt,tweet,"RAW")
         #dir = "./examples/tweeter/"
         #onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
         #for fl in onlyfiles:

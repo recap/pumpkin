@@ -3,7 +3,7 @@ __author__ = 'reggie'
 
 ###START-CONF
 ##{
-##"object_name": "filterhasa",
+##"object_name": "filterisa",
 ##"object_poi": "qpwo-2345",
 ##"parameters": [
 ##                 {
@@ -22,7 +22,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "HASA|RUBBISH"
+##                      "state" : "ISA|RUBBISH"
 ##                  }
 ##
 ##          ] }
@@ -63,7 +63,7 @@ class filterhasa(PmkSeed.Seed):
             if not self.has_a(tw):
                 pass
             else:
-                self.dispatch(pkt, self.has_a(tw), "HASA")
+                self.dispatch(pkt, self.has_a(tw), "ISA")
             #if self.is_haiku(tw):
             #    self.dispatch(pkt, tweet, "HAIKU")
             #else:
@@ -72,7 +72,7 @@ class filterhasa(PmkSeed.Seed):
 
 
     def has_a(self,text):
-        m = re.search('([A-Z]+[A-Za-z]+\s*[A-Za-z]*\s(has an|has a)\s[A-Z]+[A-Za-z]+\s[A-Z]*[A-Za-z]*)', text, re.S)
+        m = re.search('([A-Z]+[A-Za-z]+\s*[A-Za-z]*\s(is an|is a)\s[A-Z]+[A-Za-z]+\s[A-Z]*[A-Za-z]*)', text, re.S)
         if m:
             tw = m.group(0)
             return tw

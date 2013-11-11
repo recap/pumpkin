@@ -15,7 +15,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "RAW"
+##                      "state" : "NOTINUSE"
 ##                  }
 ##
 ##          ] }
@@ -65,7 +65,7 @@ class tweetinject(PmkSeed.Seed):
         pass
 
     def run(self, pkt):
-        dir = "./scratch/"
+        dir = "/home/reggie/scratch/"
         onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
         for fl in onlyfiles:
             fullpath = dir+fl
@@ -93,7 +93,7 @@ class tweetinject(PmkSeed.Seed):
         pass
 
     def publish(self, tweet):
-        log.debug("Sending...")
+        #log.debug("Sending...")
         self.sock.send(tweet)
 
     #def _pre(self):
@@ -172,7 +172,6 @@ class tweetinject(PmkSeed.Seed):
     #            if len(str_tmp) > 0:
     #                final_lines.append(str_tmp.strip())
     #            return True
-    #
     #        except Exception as e:
     #            print e
     #            return False
