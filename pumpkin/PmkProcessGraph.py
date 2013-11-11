@@ -6,6 +6,7 @@ import time
 import thread
 import threading
 
+from networkx.readwrite import json_graph
 from PmkShared import *
 
 
@@ -97,6 +98,11 @@ class ProcessGraph(object):
         self.__reg_update = False
         self.rlock.release()
         pass
+
+    def dumpGraph(self):
+        d = json_graph.node_link_data(self.graph)
+        return json.dumps(d)
+        #return str(nx.generate_graphml(self.graph))
 
     def dumpRegistry(self):
         self.rlock.acquire()

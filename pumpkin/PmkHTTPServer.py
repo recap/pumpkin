@@ -51,12 +51,12 @@ class HttpServer(SThread):
             try:
                 conn, addr = s.accept()
             except timeout:
-                log.debug("Timeout")
+                #log.debug("Timeout")
                 if self.stopped():
                     log.debug("Exiting thread "+self.__class__.__name__)
                     break
                 else:
-                    log.debug("HTTP timeout")
+                    #log.debug("HTTP timeout")
                     continue
             log.debug('HTTP Connection address:'+ str(addr))
 
@@ -67,9 +67,10 @@ class HttpServer(SThread):
                 conn.close()
                 continue
 
-            h = Head(data)
+            #h = Head(data)
+            d = self.context.getProcGraph().dumpGraph()
 
-            conn.send(str(h))
+            conn.send(str(d))
             #if h.module in PmkSeed.hplugins.keys():
             #    klass = PmkSeed.hplugins[h.module](self.context)
             #    klass.on_load()
