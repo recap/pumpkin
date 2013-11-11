@@ -104,6 +104,13 @@ class ProcessGraph(object):
         return json.dumps(d)
         #return str(nx.generate_graphml(self.graph))
 
+    def dumpGraphToFile(self, filename):
+        d = json_graph.node_link_data(self.graph)
+        json.dump(d, filename)
+        pass
+
+
+
     def dumpRegistry(self):
         self.rlock.acquire()
         d = json.dumps(self.registry)

@@ -3,7 +3,7 @@ __author__ = 'reggie'
 
 ###START-CONF
 ##{
-##"object_name": "collectorisa",
+##"object_name": "collectorhasa",
 ##"object_poi": "qpwo-2345",
 ##"parameters": [
 ##                 {
@@ -12,7 +12,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "ISA"
+##                      "state" : "HASA"
 ##                  }
 ##              ],
 ##"return": [
@@ -25,18 +25,14 @@ __author__ = 'reggie'
 
 from pumpkin import PmkSeed
 
-import json
-import re
-import networkx as nx
-from networkx.readwrite import json_graph
 
 
-class collectorisa(PmkSeed.Seed):
+
+class collectorhasa(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
         self.d = None
-        self.G = nx.Graph()
         pass
 
     def on_load(self):
@@ -46,12 +42,8 @@ class collectorisa(PmkSeed.Seed):
 
 
     def run(self, pkt, tweet):
-        st = tweet.replace("is an", "is a")
-        sta = st.split("is a")
-        self.G.add_edge(sta[0].strip(),sta[1].strip())
+
+        print "HASA: "+str(tweet)
 
         pass
 
-    def serve(self):
-        d = json_graph.node_link_data(self.G)
-        return json.dumps(d)

@@ -28,6 +28,8 @@ parser.add_argument('--endpoint.type', action='store', dest="eptype", default="z
                    help='endpoint type e.x. zmq.TCP|zmq.IPC|zmq.INPROC')
 parser.add_argument('--shell',action="store_true",
                    help='start a shell prompt.')
+parser.add_argument('--rest',action="store_true",
+                   help='start rest interface for seeds.')
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()

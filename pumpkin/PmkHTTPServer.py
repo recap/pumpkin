@@ -6,6 +6,9 @@ from socket import *
 import PmkSeed
 
 from PmkShared import *
+import sys
+
+
 
 
 class Head(object):
@@ -41,6 +44,13 @@ class HttpServer(SThread):
         self.context = context
         pass
 
+    def getSize(self, filestr):
+        fileobject = open(filestr, 'rb')
+        fileobject.seek(0,2) # move the cursor to the end of the file
+        size = fileobject.tell()
+        fileobject.close()
+        return size
+
     def run(self):
 
         s = socket(AF_INET, SOCK_STREAM)
@@ -62,15 +72,43 @@ class HttpServer(SThread):
 
             data = conn.recv(HTTP_BUFFER_SIZE)
             if not data: break
-            log.debug("HTTP data: "+data)
+            #log.debug("HTTP data: "+data)
             if "favicon" in data:
                 conn.close()
                 continue
 
-            #h = Head(data)
-            d = self.context.getProcGraph().dumpGraph()
+            rep = ""
+            h = Head(data)
+            if not h.module:
+                rep = self.context.getProcGraph().dumpGraph()
+            else:
+                if h.module in PmkSeed.iplugins.keys():
+                    klass = PmkSeed.iplugins[h.module]
 
-            conn.send(str(d))
+                    if not h.params_string:
+                        rep = getattr(klass, h.method)()
+                    else:
+                        rep = getattr(klass, h.method)(h.params_string)
+                    #rt = klass.run(h.params_string)
+                    print rep
+            #    conn.send(str(rt))
+            #else:
+            #    log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
+            #self.context.getProcGraph().dumpGraphToFile("./pumpkin/miserables.json")
+            #s = self.getSize("./pumpkin/force.html")
+            #data1 = "HTTP/1.1 200 OK\n" \
+            #        "Content-Type: text/plain; charset=utf-8\n"\
+            #        "Content-Length:"+str(len(data))+"\n"
+            #data = ""
+            #with open ("./pumpkin/force.html", "r") as myfile:
+            #    data = str(myfile.readlines())
+
+
+
+            #data = str(data1) + str(data)
+            #print data
+
+            conn.send(str(rep))
             #if h.module in PmkSeed.hplugins.keys():
             #    klass = PmkSeed.hplugins[h.module](self.context)
             #    klass.on_load()
@@ -86,6 +124,5 @@ class HttpServer(SThread):
 
             conn.close()
         pass
-
 
 

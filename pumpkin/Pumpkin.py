@@ -59,6 +59,10 @@ class Pumpkin(object):
         context = self.context
         zmq_context = self.zmq_context
 
+        http = HttpServer(context)
+        http.start()
+        context.addThread(http)
+
         if context.isSupernode():
             log.debug("In supernode mode")
             udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
@@ -69,11 +73,9 @@ class Pumpkin(object):
             zmqbc.start()
             context.addThread(zmqbc)
 
-            http = HttpServer(context)
-            http.start()
-            context.addThread(http)
 
-        if not context.isWithNoPlugins() and not context.isSupernode():
+
+        if not context.isWithNoPlugins():# and not context.isSupernode():
 
             for sn in get_zmq_supernodes(SUPERNODES):
                 log.debug("Subscribing to: "+sn)
