@@ -78,34 +78,36 @@ class HttpServer(SThread):
                 continue
 
             rep = ""
+            #log.debug(data)
             h = Head(data)
             if not h.module:
+             #   sf = self.getSize("./pumpkin/force.html")
+             #   prot = "HTTP/1.1 200 OK\n" \
+             #       "Content-Type: text/html; charset=utf-8\n"\
+             #       "Content-Length:"+str(sf)+"\n"
+             #   data = ""
+             #   with open ("./pumpkin/force.html", "r") as myfile:
+             #       data = str(myfile.readlines())
+             #   rep = str(prot) + str(data)
+             #   log.debug(rep)
                 rep = self.context.getProcGraph().dumpGraph()
+                self.context.getProcGraph().dumpGraphToFile("state.json")
             else:
+
                 if h.module in PmkSeed.iplugins.keys():
                     klass = PmkSeed.iplugins[h.module]
-
                     if not h.params_string:
                         rep = getattr(klass, h.method)()
                     else:
                         rep = getattr(klass, h.method)(h.params_string)
                     #rt = klass.run(h.params_string)
-                    print rep
+                    #print rep
             #    conn.send(str(rt))
             #else:
             #    log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
             #self.context.getProcGraph().dumpGraphToFile("./pumpkin/miserables.json")
-            #s = self.getSize("./pumpkin/force.html")
-            #data1 = "HTTP/1.1 200 OK\n" \
-            #        "Content-Type: text/plain; charset=utf-8\n"\
-            #        "Content-Length:"+str(len(data))+"\n"
-            #data = ""
-            #with open ("./pumpkin/force.html", "r") as myfile:
-            #    data = str(myfile.readlines())
 
 
-
-            #data = str(data1) + str(data)
             #print data
 
             conn.send(str(rep))
@@ -122,7 +124,7 @@ class HttpServer(SThread):
             #else:
             #    log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
 
-            conn.close()
+            #conn.close()
         pass
 
 

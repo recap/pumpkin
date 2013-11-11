@@ -59,9 +59,7 @@ class Pumpkin(object):
         context = self.context
         zmq_context = self.zmq_context
 
-        http = HttpServer(context)
-        http.start()
-        context.addThread(http)
+
 
         if context.isSupernode():
             log.debug("In supernode mode")
@@ -72,6 +70,10 @@ class Pumpkin(object):
             zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
             zmqbc.start()
             context.addThread(zmqbc)
+
+            http = HttpServer(context)
+            http.start()
+            context.addThread(http)
 
 
 

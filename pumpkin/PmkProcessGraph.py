@@ -106,7 +106,8 @@ class ProcessGraph(object):
 
     def dumpGraphToFile(self, filename):
         d = json_graph.node_link_data(self.graph)
-        json.dump(d, filename)
+        json.dump(d, open(filename,'w'))
+
         pass
 
 

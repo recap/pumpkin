@@ -35,7 +35,7 @@ import re
 from pumpkin import PmkSeed
 
 
-class filterhasa(PmkSeed.Seed):
+class filterisa(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)

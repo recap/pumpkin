@@ -148,7 +148,7 @@ class BroadcastListener(Thread):
             #    self.handle(data,wherefrom)
 
     def handle(self, data, wherefrom):
-        #try:
+        try:
             #pass
             #self.tested[wherefrom[0]] = True
             d = json.loads(data)
@@ -167,8 +167,9 @@ class BroadcastListener(Thread):
             #client.download('sample.jpg', filename)
             #self.tested[wherefrom[0]] = True
 
-        #except:
-        #    log.error("Some error")
+        except:
+            log.error("Broadcast receiving JSON error.")
+            pass
 
 
 
