@@ -68,18 +68,20 @@ class HttpServer(SThread):
                 continue
 
             h = Head(data)
-            if h.module in PmkSeed.hplugins.keys():
-                klass = PmkSeed.hplugins[h.module](self.context)
-                klass.on_load()
-                if not h.params_string:
-                    rt = getattr(klass, h.method)()
-                else:
-                    rt = getattr(klass, h.method)(h.params_string)
-                #rt = klass.run(h.params_string)
-                print rt
-                conn.send(str(rt))
-            else:
-                log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
+
+            conn.send(str(h))
+            #if h.module in PmkSeed.hplugins.keys():
+            #    klass = PmkSeed.hplugins[h.module](self.context)
+            #    klass.on_load()
+            #    if not h.params_string:
+            #        rt = getattr(klass, h.method)()
+            #    else:
+            #        rt = getattr(klass, h.method)(h.params_string)
+            #    #rt = klass.run(h.params_string)
+            #    print rt
+            #    conn.send(str(rt))
+            #else:
+            #    log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
 
             conn.close()
         pass

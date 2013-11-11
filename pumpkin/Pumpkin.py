@@ -17,6 +17,7 @@ from PmkContexts import *
 from PmkBroadcast import *
 from PmkSeed import *
 from PmkShell import *
+from PmkHTTPServer import *
 #from PmkPeers import *
 #from PmkPackets import *
 #from PmkExternalDispatch import *
@@ -67,6 +68,10 @@ class Pumpkin(object):
             zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
             zmqbc.start()
             context.addThread(zmqbc)
+
+            http = HttpServer(context)
+            http.start()
+            context.addThread(http)
 
         if not context.isWithNoPlugins() and not context.isSupernode():
 
