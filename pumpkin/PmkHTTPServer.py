@@ -19,20 +19,24 @@ class Head(object):
         self.params_list = []
         self.params_string = ""
         hd = re.findall(r"(GET|POST) (?P<value>.*?)\s", header)
-        if len(hd[0][1].split("?")) > 1:
-            parlist = hd[0][1].split("?")[1].split("&")
-            for p in parlist:
-                key = p.split("=")[0]
-                value = p.split("=")[1]
-                self.params_hash[key] = value
-                self.params_list.append(value)
-                self.params_string += str(value)+","
+        try:
+            if len(hd[0][1].split("?")) > 1:
+                parlist = hd[0][1].split("?")[1].split("&")
+                for p in parlist:
+                    key = p.split("=")[0]
+                    value = p.split("=")[1]
+                    self.params_hash[key] = value
+                    self.params_list.append(value)
+                    self.params_string += str(value)+","
 
-            self.params_string = self.params_string[:-1]
+                self.params_string = self.params_string[:-1]
 
-        serv = hd[0][1].split("?")[0].split("/")
-        self.module = serv[len(serv)-2]
-        self.method = serv[len(serv)-1]
+            serv = hd[0][1].split("?")[0].split("/")
+            self.module = serv[len(serv)-2]
+            self.method = serv[len(serv)-1]
+        except:
+            self.module = None
+            self.method = None
 
 
 
