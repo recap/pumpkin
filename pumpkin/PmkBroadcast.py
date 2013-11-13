@@ -127,7 +127,7 @@ class BroadcastListener(Thread):
         sok.settimeout(5)
         while 1:
             try:
-                data, wherefrom = sok.recvfrom(1500, 0)
+                data, wherefrom = sok.recvfrom(4096, 0)
 
             except(timeout):
                 #log.debug("Timeout")
