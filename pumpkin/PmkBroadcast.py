@@ -169,6 +169,9 @@ class BroadcastListener(Thread):
 
         except:
             log.error("Broadcast receiving JSON error.")
+            log.debug("##############")
+            log.debug(data)
+            log.debug("##############")
             pass
 
 

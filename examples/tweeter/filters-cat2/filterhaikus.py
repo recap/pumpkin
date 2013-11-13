@@ -56,12 +56,15 @@ class filterhaikus(PmkSeed.Seed):
     def run(self, pkt, tweet):
         #print "RECEIVED TWEET: "+tweet
         m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
-        if m:
-            tw = m.group(2)
-            if self.is_haiku(tw):
-                self.dispatch(pkt, tweet, "HAIKU")
-            #else:
-            #    self.dispatch(pkt, tweet, "RUBBSIH")
+        try:
+            if m:
+                tw = m.group(2)
+                if self.is_haiku(tw):
+                    self.dispatch(pkt, tweet, "HAIKU")
+                #else:
+                #    self.dispatch(pkt, tweet, "RUBBSIH")
+        except:
+            pass
         pass
 
     def is_haiku(self, text):

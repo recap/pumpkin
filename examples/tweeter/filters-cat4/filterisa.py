@@ -53,7 +53,7 @@ class filterisa(PmkSeed.Seed):
             if not self.is_a(tw):
                 pass
             else:
-                self.dispatch(pkt, self.has_a(tw), "ISA")
+                self.dispatch(pkt, self.is_a(tw), "ISA")
 
         pass
 
