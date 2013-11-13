@@ -29,19 +29,6 @@ from os.path import isfile, join
 
 from pumpkin import *
 
-
-
-
-###
-#import nltk
-#from nltk.corpus import cmudict
-#import curses
-#from curses.ascii import isdigit
-#import nltk
-#from nltk.corpus import cmudict
-#import re
-###
-
 import zmq
 
 class tweetinject(PmkSeed.Seed):

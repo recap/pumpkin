@@ -15,15 +15,9 @@ from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, Pro
 from PmkShared import *
 from PmkContexts import *
 from PmkBroadcast import *
-from PmkSeed import *
 from PmkShell import *
 from PmkHTTPServer import *
-#from PmkPeers import *
-#from PmkPackets import *
-#from PmkExternalDispatch import *
-#from PmkInternalDispatch import *
-#from PmkHTTPServer import *
-#from PmkShell import *
+
 
 class Pumpkin(object):
     def __init__(self):

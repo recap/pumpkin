@@ -7,6 +7,7 @@ import thread
 import threading
 
 from networkx.readwrite import json_graph
+
 from PmkShared import *
 
 
@@ -29,7 +30,7 @@ class ProcessGraph(object):
         a = []
         self.rlock.acquire()
         if e["name"] in self.registry.keys():
-            log.info("Updating peer: "+e["name"])
+            log.debug("Updating peer: "+e["name"])
             d = self.registry[e["name"]]
             epb = False
             for ep in d["endpoints"]:
@@ -109,6 +110,8 @@ class ProcessGraph(object):
         json.dump(d, open(filename,'w'))
 
         pass
+
+
 
 
 

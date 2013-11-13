@@ -1,12 +1,13 @@
 __author__ = 'reggie'
-import re
-import threading
-from threading import *
-from socket import *
-import PmkSeed
 
+
+import re
+from socket import *
+
+
+import PmkSeed
 from PmkShared import *
-import sys
+
 
 
 

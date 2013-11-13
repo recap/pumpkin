@@ -10,7 +10,8 @@ from pumpkin import *
 
 
 log = logging.getLogger("root")
-log.setLevel(logging.DEBUG)
+#log.setLevel(logging.DEBUG)
+#log.setLevel(logging.INFO)
 
 
 parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
@@ -30,10 +31,16 @@ parser.add_argument('--shell',action="store_true",
                    help='start a shell prompt.')
 parser.add_argument('--rest',action="store_true",
                    help='start rest interface for seeds.')
+parser.add_argument('--debug',action="store_true",
+                   help='print debugging info.')
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
 
+if args.debug:
+    log.setLevel(logging.DEBUG)
+else:
+    log.setLevel(logging.INFO)
 
 P = Pumpkin()
 context = P.getContext()

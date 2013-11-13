@@ -1,27 +1,9 @@
 __author__ = 'reggie'
 
-#import os
-#import re
-#import json
-#import tftpy
-#import PmkSeed
-#import time
-#
-#
-#from threading import *
-#from Queue import *
-#
-#
-#
-#from PmkShared import *
-#from PmkContexts import *
-#from PmkPackets import *
-#from PmkSeed import *
 
 
 import json
 import time
-import PmkSeed
 import Queue
 import zmq
 import copy
@@ -35,46 +17,10 @@ class tx(Queue):
         Queue.__init__(self)
         pass
 
-class ExternalDispatch2(Thread):
-    def __init__(self, context):
-        Thread.__init__(self)
-        self.context = context
-        pass
-
-    def run(self):
-        tx = self.context.getTx()
-        log.debug("HERE 3")
-        d = tx.get(True)
-        log.debug("HERE 4")
-        foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
-        foutnames = d["container-id"]+d["box-id"]+".pkt"
-        for fc in d["invoke"]:
-            state = fc["state"]
-            if not ((int(state) & DRPackets.READY_STATE) == 1):
-                func = fc["func"]
-                log.debug("Function "+func)
-                peer = self.context.getMePeer().getPeerForFunc(func)
-                if not peer == None:
-                    comm = peer.getTftpComm()
-                    log.debug("Got comm")
-                    if not comm == None:
-                        log.debug("Comm to "+comm.host+" "+str(comm.port))
-                        client = tftpy.TftpClient(str(comm.host), int(comm.port))
-                        log.debug("Files: "+foutnames+" "+foutname)
-                        tmpf = open(foutname, "r")
-                        fstr = tmpf.read()
-                        log.debug("File: "+fstr)
-                        tmpf.close()
-                        client.upload(foutnames.encode('utf-8'),foutname.encode('utf-8'))
-                        #client.upload("test.pkt","./tx/test.pkt")
-                        break
-                else:
-                    log.warn("No peer found for function "+func)
 
 
 
 class ExternalDispatch(SThread):
-
 
     def __init__(self, context):
         SThread.__init__(self)
@@ -195,3 +141,40 @@ class ZMQPacketDispatch(Dispatch):
 
     def close(self):
         self.soc.close()
+
+
+#class ExternalDispatch2(Thread):
+#    def __init__(self, context):
+#        Thread.__init__(self)
+#        self.context = context
+#        pass
+#
+#    def run(self):
+#        tx = self.context.getTx()
+#        log.debug("HERE 3")
+#        d = tx.get(True)
+#        log.debug("HERE 4")
+#        foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
+#        foutnames = d["container-id"]+d["box-id"]+".pkt"
+#        for fc in d["invoke"]:
+#            state = fc["state"]
+#            if not ((int(state) & DRPackets.READY_STATE) == 1):
+#                func = fc["func"]
+#                log.debug("Function "+func)
+#                peer = self.context.getMePeer().getPeerForFunc(func)
+#                if not peer == None:
+#                    comm = peer.getTftpComm()
+#                    log.debug("Got comm")
+#                    if not comm == None:
+#                        log.debug("Comm to "+comm.host+" "+str(comm.port))
+#                        client = tftpy.TftpClient(str(comm.host), int(comm.port))
+#                        log.debug("Files: "+foutnames+" "+foutname)
+#                        tmpf = open(foutname, "r")
+#                        fstr = tmpf.read()
+#                        log.debug("File: "+fstr)
+#                        tmpf.close()
+#                        client.upload(foutnames.encode('utf-8'),foutname.encode('utf-8'))
+#                        #client.upload("test.pkt","./tx/test.pkt")
+#                        break
+#                else:
+#                    log.warn("No peer found for function "+func)

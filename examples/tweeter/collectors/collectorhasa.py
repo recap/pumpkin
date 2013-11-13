@@ -26,13 +26,16 @@ __author__ = 'reggie'
 from pumpkin import PmkSeed
 
 
-
+import json
+import re
+import networkx as nx
+from networkx.readwrite import json_graph
 
 class collectorhasa(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.d = None
+        self.G = nx.DiGraph()
         pass
 
     def on_load(self):
@@ -42,8 +45,13 @@ class collectorhasa(PmkSeed.Seed):
 
 
     def run(self, pkt, tweet):
-
-        print "HASA: "+str(tweet)
+        st = tweet.replace("has an", "has a")
+        sta = st.split("has a")
+        self.G.add_edge(sta[0].strip(),sta[1].strip())
 
         pass
 
+
+    def serve(self):
+        d = json_graph.node_link_data(self.G)
+        return json.dumps(d)

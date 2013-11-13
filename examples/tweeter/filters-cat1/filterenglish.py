@@ -29,18 +29,13 @@ __author__ = 'reggie'
 ##END-CONF
 
 
-import time
-import os
-import json
+
 import re
-from os import listdir
-from os.path import isfile, join
 import nltk
-from nltk.corpus import cmudict
 
 from pumpkin import PmkSeed
 
-from random import randint
+
 
 class filterenglish(PmkSeed.Seed):
 

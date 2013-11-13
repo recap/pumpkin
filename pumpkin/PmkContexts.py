@@ -1,7 +1,5 @@
 __author__ = 'reggie'
 
-import json
-import sys
 
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
@@ -58,6 +56,11 @@ class MainContext(object):
 
     def setAttributes(self, attributes):
         self.__attrs = attributes
+        if attributes.debug:
+            log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.INFO)
+
         epm = attributes.epmode
         ept = attributes.eptype
         prot = ept.split('.')[1].lower()

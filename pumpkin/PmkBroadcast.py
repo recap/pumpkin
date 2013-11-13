@@ -189,7 +189,7 @@ class Broadcaster(SThread):
         pass
 
     def run(self):
-        log.info("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
+        log.debug("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
         #sok = socket(AF_INET, SOCK_DGRAM)
         #sok.bind(('', 0))
         #sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)

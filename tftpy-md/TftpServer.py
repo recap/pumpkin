@@ -73,6 +73,7 @@ class TftpServer(TftpSession):
         return port
 
 
+
     def open(self,
              rvserverip="",
              rvserverport=DEF_RVSERVER_PORT,
@@ -87,6 +88,7 @@ class TftpServer(TftpSession):
 	  self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	  self.sock.sendto(rvserverpool, rvmaster)
 	  data, addr = self.sock.recvfrom(len(rvserverpool)+3 )
+      #["ok 23", ["12324", 1234]]
 	  if data != "ok "+rvserverpool:
           	log.error("Unable to request!")
           	sys.exit(1)

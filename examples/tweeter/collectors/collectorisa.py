@@ -36,7 +36,7 @@ class collectorisa(PmkSeed.Seed):
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
         self.d = None
-        self.G = nx.Graph()
+        self.G = nx.DiGraph()
         pass
 
     def on_load(self):

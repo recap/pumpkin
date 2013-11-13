@@ -50,7 +50,7 @@ class filterisa(PmkSeed.Seed):
         m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
         if m:
             tw = m.group(2)
-            if not self.has_a(tw):
+            if not self.is_a(tw):
                 pass
             else:
                 self.dispatch(pkt, self.has_a(tw), "ISA")
@@ -58,7 +58,7 @@ class filterisa(PmkSeed.Seed):
         pass
 
 
-    def has_a(self,text):
+    def is_a(self,text):
         m = re.search('([A-Z]+[A-Za-z]+\s*[A-Za-z]*\s(is an|is a)\s[A-Z]+[A-Za-z]+\s[A-Z]*[A-Za-z]*)', text, re.S)
         if m:
             tw = m.group(0)

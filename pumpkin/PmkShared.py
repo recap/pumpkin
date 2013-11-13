@@ -28,7 +28,8 @@ SUPERNODES = [ "127.0.0.1", "elab.lab.uvalight.net", "flightcees.lab.uvalight.ne
 #logging.basicConfig()
 #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 log = logging.getLogger('pumpkin')
-log.setLevel(logging.DEBUG)
+#log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class SThread(Thread):
