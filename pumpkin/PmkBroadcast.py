@@ -26,7 +26,7 @@ def get_lan_ip():
     ip = gethostbyname(gethostname())
     if ip.startswith("127.") and os.name != "nt":
         interfaces = [
-            "lo"
+            "lo0"
             "eth0",
             "eth1",
             "eth2",
