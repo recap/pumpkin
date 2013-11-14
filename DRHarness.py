@@ -5,12 +5,13 @@ import sys
 import argparse
 import logging
 
+
 from pumpkin import *
 
 
 
 log = logging.getLogger("root")
-#log.setLevel(logging.DEBUG)
+log.setLevel(logging.DEBUG)
 #log.setLevel(logging.INFO)
 
 
@@ -33,41 +34,43 @@ parser.add_argument('--rest',action="store_true",
                    help='start rest interface for seeds.')
 parser.add_argument('--debug',action="store_true",
                    help='print debugging info.')
+parser.add_argument('-d', action='store', dest="daemon", default=None,
+                   help='daemonize start|stop|restart')
 
 parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
 args = parser.parse_args()
 
-if args.debug:
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.INFO)
 
 P = Pumpkin()
-context = P.getContext()
-context.setAttributes(args)
-#
-log.info("Node assigned UID: "+context.getUuid())
-log.info("Exec context: "+context.getExecContext())
-log.info("Node bound to IP: "+context.getLocalIP())
 
-P.startContext()
-
-
-#Handle SIGINT
-def signal_handler(signal, frame):
-        P.stopContext()
-
-
-        log.info("Exiting Bye Bye")
-        ##Ugly kill because threads zmq are not behaving
-        os.system("kill -9 "+str(os.getpid()))
-
-        sys.exit(0)
+if args.daemon == "start":
+    log.info("Starting Pumpkin Daemon")
+    context = P.getContext()
+    context.setAttributes(args)
+    P.start()
+if args.daemon == "stop":
+    P.stop()
+if args.daemon == "restart":
+    P.restart()
+if args.daemon == None:
+    context = P.getContext()
+    context.setAttributes(args)
+    P.startContext()
+    #Handle SIGINT
+    def signal_handler(signal, frame):
+            P.stopContext()
 
 
-#Catch Ctrl+C
-signal.signal(signal.SIGINT, signal_handler)
-signal.pause()
+            log.info("Exiting Bye Bye")
+            ##Ugly kill because threads zmq are not behaving
+            os.system("kill -9 "+str(os.getpid()))
+
+            sys.exit(0)
+
+
+    #Catch Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
 
 
 

@@ -9,6 +9,8 @@ import hashlib
 import struct
 import fcntl
 import zmq
+import subprocess as sp
+#import netifaces
 
 from select import select
 from socket import *
@@ -17,15 +19,25 @@ from threading import *
 
 from PmkShared import *
 
-def get_interface_ip(ifname):
-        s = socket(AF_INET, SOCK_DGRAM)
-        return inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
-                                ifname[:15]))[20:24])
+def get_cloud_ip():
+     x = sp.Popen("ip addr show | grep  172.16 | awk '{print $2}'", stdout= sp.PIPE, shell=True).stdout.read().split("/")[0]
+     return x
 
-def get_lan_ip():
-    ip = gethostbyname(gethostname())
-    if ip.startswith("127.") and os.name != "nt":
-        interfaces = [
+
+
+def get_interface_ip(ifname):
+    s = socket(AF_INET, SOCK_DGRAM)
+    return inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
+                                ifname[:15]))[20:24])
+    pass
+
+def get_interface_ip6(ifname):
+    #addrs = netifaces.ifaddresses(ifname)
+    #return addrs[netifaces.AF_INET6][0]['addr']
+    pass
+
+def get_lan_ip6():
+    interfaces = [
             "lo0"
             "eth0",
             "eth1",
@@ -37,13 +49,40 @@ def get_lan_ip():
             "ath1",
             "ppp0",
             ]
-        for ifname in interfaces:
+    for ifname in interfaces:
             try:
-                ip = get_interface_ip(ifname)
+                ip = get_interface_ip6(ifname)
+                s = json.dumps(ip)
+                print str(s)
                 break
-            except IOError:
+            except:
                 pass
     return ip
+
+def get_lan_ip():
+    ip = get_cloud_ip()
+    if not ip:
+        ip = gethostbyname(gethostname())
+        if ip.startswith("127.") and os.name != "nt":
+            interfaces = [
+                "lo0"
+                "eth0",
+                "eth1",
+                "eth2",
+                "wlan0",
+                "wlan1",
+                "wifi0",
+                "ath0",
+                "ath1",
+                "ppp0",
+                ]
+            for ifname in interfaces:
+                try:
+                    ip = get_interface_ip(ifname)
+                    break
+                except:
+                    pass
+        return ip
 
 def get_zmq_supernodes(node_list):
     ret = []

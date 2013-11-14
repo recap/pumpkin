@@ -4,6 +4,7 @@ import uuid
 import re
 import imp
 import signal
+import sys
 
 from os import listdir
 from os.path import isfile, join
@@ -17,10 +18,11 @@ from PmkContexts import *
 from PmkBroadcast import *
 from PmkShell import *
 from PmkHTTPServer import *
+from PmkDaemon import *
 
-
-class Pumpkin(object):
-    def __init__(self):
+class Pumpkin(Daemon):
+    def __init__(self, pidfile="/tmp/pumpkin.pid"):
+        Daemon.__init__(self,pidfile, "/dev/null", "/tmp/pumpkin.stdout", "/tmp/pumpkin.stderr")
         uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
         ex_cntx = str(uuid.uuid4())[:8]
 
@@ -45,11 +47,17 @@ class Pumpkin(object):
         log.info("Exiting Pumpkin")
         pass
 
-
-
-
+    def run(self):
+        self.startContext()
+        pass
 
     def startContext(self):
+        context = self.context
+        log.info("Node assigned UID: "+context.getUuid())
+        log.info("Exec context: "+context.getExecContext())
+        log.info("Node bound to IP: "+context.getLocalIP())
+        log.debug("Working directory: "+str(os.getcwd()))
+
         context = self.context
         zmq_context = self.zmq_context
 

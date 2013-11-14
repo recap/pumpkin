@@ -96,7 +96,7 @@ class HttpServer(SThread):
              #   rep = str(prot) + str(data)
              #   log.debug(rep)
                 rep = self.context.getProcGraph().dumpGraph()
-                self.context.getProcGraph().dumpGraphToFile("state.json")
+                #self.context.getProcGraph().dumpGraphToFile("state.json")
             else:
 
                 if h.module in PmkSeed.iplugins.keys():
