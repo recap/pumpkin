@@ -82,7 +82,7 @@ def get_lan_ip():
                     break
                 except:
                     pass
-        return ip
+    return ip
 
 def get_zmq_supernodes(node_list):
     ret = []
