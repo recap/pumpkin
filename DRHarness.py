@@ -20,8 +20,12 @@ parser.add_argument('--noplugins',action="store_true",
                    help='disable plugin hosting for this node.')
 parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
                    help='disable broadcasting.')
-parser.add_argument('--taskdir', action='store', dest="taskdir", default="./plugins",
+parser.add_argument('--taskdir', action='store', dest="taskdir", default="./examples/helloworld",
                    help='directory for loading tasks.')
+parser.add_argument('--rx', action='store', dest="rxdir", default=None,
+                   help='directory for injecting data.')
+parser.add_argument('--seed', action='store', dest="singleseed", default=None,
+                   help='load a single seed.')
 parser.add_argument('--supernode',action="store_true",
                    help='run in supernode i.e. main role is information proxy.')
 parser.add_argument('--endpoint.mode', action='store', dest="epmode", default="zmq.PULL",

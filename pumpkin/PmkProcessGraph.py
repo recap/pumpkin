@@ -59,7 +59,7 @@ class ProcessGraph(object):
         self.__display_graph = False
 
     def getRoutes(self, tag):
-        log.debug("Finding route for "+ tag)
+        #log.debug("Finding route for "+ tag)
         if tag in self.tagroute:
             return self.tagroute[tag]
 
@@ -74,8 +74,10 @@ class ProcessGraph(object):
                 for osp in eo["ostate"].split('|'):
                     istype = eo["itype"]+":"+isp
                     if istype == "NONE:NONE":
-                           istype = "RAW"
+                           istype = "INJECTION"
                     ostype = eo["otype"]+":"+osp
+                    if ostype == "NONE:NONE":
+                        ostype = "EXTRACTION"
                     G.add_edge(istype, ostype, function=eo["name"])
                 if istype in self.tagroute.keys():
                     self.tagroute[istype].append(eo)

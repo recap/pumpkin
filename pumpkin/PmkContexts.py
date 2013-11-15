@@ -23,6 +23,7 @@ class MainContext(object):
         self.proc_graph = ProcessGraph()
         self.__exec_context = None
 
+
         pass
 
 
@@ -41,6 +42,12 @@ class MainContext(object):
         #self.endpoints.append(("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT), "zmq.tcp", "zmq.PULL"))
 
         pass
+
+    def hasRx(self):
+        return self.__attrs.rxdir
+
+    def singleSeed(self):
+        return self.__attrs.singleseed
 
     def getLocalIP(self):
         return self.__ip

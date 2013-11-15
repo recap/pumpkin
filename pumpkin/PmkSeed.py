@@ -99,6 +99,10 @@ class Seed(object):
             return sret
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
+    def fork_dispatch(self, pkt, msg, state):
+        self.dispatch(pkt, msg, state, PKT_NEWBOX)
+        pass
+
     def dispatch(self, pkt, msg, state, boxing = PKT_OLDBOX):
 
         if boxing == PKT_NEWBOX:

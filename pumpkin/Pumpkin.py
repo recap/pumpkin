@@ -19,6 +19,7 @@ from PmkBroadcast import *
 from PmkShell import *
 from PmkHTTPServer import *
 from PmkDaemon import *
+from PmkDataCatch import *
 
 class Pumpkin(Daemon):
     def __init__(self, pidfile="/tmp/pumpkin.pid"):
@@ -61,6 +62,11 @@ class Pumpkin(Daemon):
         context = self.context
         zmq_context = self.zmq_context
 
+        if context.hasRx():
+            rxdir = context.hasRx()
+            pfm = PacketFileMonitor(context, rxdir)
+            pfm.start()
+            context.addThread(pfm)
 
 
         if context.isSupernode():
@@ -86,51 +92,68 @@ class Pumpkin(Daemon):
                 zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
                 zmqsub.start()
                 context.addThread(zmqsub)
+            try:
+                if not context.singleSeed():
+                    onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
+                    for fl in onlyfiles:
+                        fullpath = context.getTaskDir()+"/"+fl
+                        modname = fl[:-3]
+                        #ext = fl[-2:]
 
-            onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
-            for fl in onlyfiles:
-                fullpath = context.getTaskDir()+"/"+fl
-                modname = fl[:-3]
-                #ext = fl[-2:]
+                        if( fl[-2:] == "py"):
+                            log.debug("Found seed: "+fullpath)
+                            file_header = ""
+                            fh = open(fullpath, "r")
+                            fhd = fh.read()
+                            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
 
-                if( fl[-2:] == "py"):
-                    log.debug("Found module: "+fullpath)
-                    file_header = ""
-                    #try:
-                    imp.load_source(modname,fullpath)
+                            if m:
+                                conf = m.group(1).replace("##","")
+                                if conf:
+                                    d = json.loads(conf)
+                                    if not "auto-load" in d.keys() or d["auto-load"] == True:
+                                        imp.load_source(modname,fullpath)
 
-                    fh = open(fullpath, "r")
-                    fhd = fh.read()
-                    m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+                                        klass = PmkSeed.hplugins[modname](context)
+                                        PmkSeed.iplugins[modname] = klass
+                                        klass.on_load()
+                                        klass.setconf(d)
 
-                    if m:
-                        conf = m.group(1).replace("##","")
-                        if conf:
-                            d = json.loads(conf)
-                            klass = PmkSeed.hplugins[modname](context)
-                            PmkSeed.iplugins[modname] = klass
-                            klass.on_load()
-                            klass.setconf(d)
-                            #print klass.getparameters()
-                            #print klass.getreturn()
+                else:
+                    seedfp = context.singleSeed()
+                    seedfpa = seedfp.split("/")
+                    seedsp = seedfpa[len(seedfpa) -1 ]
+                    modname = seedsp[:-3]
+                    if( seedsp[-2:] == "py"):
+                        log.debug("Found seed: "+seedfp)
+                        file_header = ""
+                        #try:
+                        imp.load_source(modname,seedfp)
 
+                        fh = open(seedfp, "r")
+                        fhd = fh.read()
+                        m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
 
-                    #except Exception:
-                    #    log.error("Import error "+ str(Exception))
+                        if m:
+                            conf = m.group(1).replace("##","")
+                            if conf:
+                                d = json.loads(conf)
+                                klass = PmkSeed.hplugins[modname](context)
+                                PmkSeed.iplugins[modname] = klass
+                                klass.on_load()
+                                klass.setconf(d)
+
+            except Exception as e:
+                log.error("Import error "+ str(e))
+                pass
 
 
 
             for x in PmkSeed.iplugins.keys():
                klass = PmkSeed.iplugins[x]
                js = klass.getConfEntry()
-               log.debug(js)
+               #log.debug(js)
                context.getProcGraph().updateRegistry(json.loads(js))
-
-
-
-
-
-
 
             udpbc = Broadcaster(context)
             udpbc.start()

@@ -1,0 +1,14 @@
+[
+    {
+        "box": "0",
+        "e": "E",
+        "ship": "c466f181",
+        "container": "98ea09ac"
+    },
+    {
+        "stag": "String:UNGREETED",
+        "data": "Mars",
+        "exstate": "0001",
+        "func": ""
+    }
+]

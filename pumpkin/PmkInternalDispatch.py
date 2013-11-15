@@ -5,8 +5,9 @@ import Queue
 import zmq
 
 import PmkSeed
-from Queue import *
+
 from PmkShared import *
+from Queue import *
 
 class rx(Queue):
     def __init__(self):
@@ -22,15 +23,17 @@ class InternalDispatch(SThread):
     def run(self):
         rx = self.context.getRx()
         while 1:
-            pkt = json.loads(rx.get(True))
+            pkts = rx.get(True)
+            log.debug("Packet received: \n"+pkts)
+            pkt = json.loads(pkts)
             l = len(pkt)
             func = pkt[l-1]["func"]
             data = pkt[l-2]["data"]
-            log.debug(data)
+
             if func in PmkSeed.iplugins.keys():
                 klass = PmkSeed.iplugins[func]
                 rt = klass.run(pkt, data)
-                #log.debug("RESULT: "+str(rt))
+
 
 
 
@@ -89,6 +92,7 @@ class ZMQPacketMonitor(SThread):
                     continue
 
         pass
+
 
 
 #class InternalDispatch2(Thread):

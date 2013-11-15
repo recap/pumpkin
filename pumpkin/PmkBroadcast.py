@@ -23,8 +23,6 @@ def get_cloud_ip():
      x = sp.Popen("ip addr show | grep  172.16 | awk '{print $2}'", stdout= sp.PIPE, shell=True).stdout.read().split("/")[0]
      return x
 
-
-
 def get_interface_ip(ifname):
     s = socket(AF_INET, SOCK_DGRAM)
     return inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
@@ -60,6 +58,7 @@ def get_lan_ip6():
     return ip
 
 def get_lan_ip():
+    #FIXME get_cloud_ip() is a hack for SC should be removed
     ip = get_cloud_ip()
     if not ip:
         ip = gethostbyname(gethostname())

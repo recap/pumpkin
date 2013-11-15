@@ -1,5 +1,4 @@
 __author__ = 'reggie'
-__author__ = 'reggie'
 
 ###START-CONF
 ##{
