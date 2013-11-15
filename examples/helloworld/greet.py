@@ -4,7 +4,7 @@ __author__ = 'reggie'
 ##{
 ##"object_name": "greet",
 ##"object_poi": "my-greet-1234",
-##"auto-load" : false,
+##"auto-load" : true,
 ##"parameters": [ {
 ##                  "name": "name",
 ##                  "description": "name to greet",
