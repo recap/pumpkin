@@ -248,6 +248,7 @@ class Broadcaster(SThread):
                 time.sleep(2)
             else:
                 time.sleep(self.__rate)
+                self.announce(data)
 
 
             if self.stopped():
