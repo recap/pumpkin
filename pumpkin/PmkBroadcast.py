@@ -3,7 +3,7 @@ __author__ = 'reggie'
 import threading
 import socket, os
 import time
-import tftpy
+
 import json
 import hashlib
 import struct

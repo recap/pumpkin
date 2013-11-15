@@ -43,6 +43,12 @@ class MainContext(object):
 
         pass
 
+    def getEndpoint(self):
+        if self.__attrs.eptype == "zmq.TCP":
+            return "tcp://"+str(self.__ip)+":"+str(ZMQ_ENDPOINT_PORT)
+        if self.__attrs.eptype == "zmq.IPC":
+            return "ipc:///tmp/"+self.getUuid()
+
     def hasRx(self):
         return self.__attrs.rxdir
 

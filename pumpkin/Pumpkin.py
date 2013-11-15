@@ -179,7 +179,8 @@ class Pumpkin(Daemon):
 
             zmq_context = zmq.Context()
 
-            tcpm = ZMQPacketMonitor(context, zmq_context, "ipc:///tmp/"+context.getUuid())
+
+            tcpm = ZMQPacketMonitor(context, zmq_context, context.getEndpoint())
             tcpm.start()
             context.addThread(tcpm)
 
