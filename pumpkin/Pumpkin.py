@@ -62,6 +62,10 @@ class Pumpkin(Daemon):
         context = self.context
         zmq_context = self.zmq_context
 
+        udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
+        udplisten.start()
+        context.addThread(udplisten)
+
         if context.hasRx():
             rxdir = context.hasRx()
             pfm = PacketFileMonitor(context, rxdir)
@@ -71,9 +75,9 @@ class Pumpkin(Daemon):
 
         if context.isSupernode():
             log.debug("In supernode mode")
-            udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
-            udplisten.start()
-            context.addThread(udplisten)
+            #udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
+            #udplisten.start()
+            #context.addThread(udplisten)
 
             zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
             zmqbc.start()
