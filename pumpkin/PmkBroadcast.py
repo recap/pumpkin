@@ -29,33 +29,33 @@ def get_interface_ip(ifname):
                                 ifname[:15]))[20:24])
     pass
 
-def get_interface_ip6(ifname):
-    #addrs = netifaces.ifaddresses(ifname)
-    #return addrs[netifaces.AF_INET6][0]['addr']
-    pass
-
-def get_lan_ip6():
-    interfaces = [
-            "lo0"
-            "eth0",
-            "eth1",
-            "eth2",
-            "wlan0",
-            "wlan1",
-            "wifi0",
-            "ath0",
-            "ath1",
-            "ppp0",
-            ]
-    for ifname in interfaces:
-            try:
-                ip = get_interface_ip6(ifname)
-                s = json.dumps(ip)
-                print str(s)
-                break
-            except:
-                pass
-    return ip
+#def get_interface_ip6(ifname):
+#    #addrs = netifaces.ifaddresses(ifname)
+#    #return addrs[netifaces.AF_INET6][0]['addr']
+#    pass
+#
+#def get_lan_ip6():
+#    interfaces = [
+#            "lo0"
+#            "eth0",
+#            "eth1",
+#            "eth2",
+#            "wlan0",
+#            "wlan1",
+#            "wifi0",
+#            "ath0",
+#            "ath1",
+#            "ppp0",
+#            ]
+#    for ifname in interfaces:
+#            try:
+#                ip = get_interface_ip6(ifname)
+#                s = json.dumps(ip)
+#                print str(s)
+#                break
+#            except:
+#                pass
+#    return ip
 
 def get_lan_ip():
     #FIXME get_cloud_ip() is a hack for SC should be removed
@@ -64,7 +64,6 @@ def get_lan_ip():
         ip = gethostbyname(gethostname())
         if ip.startswith("127.") and os.name != "nt":
             interfaces = [
-                "lo0"
                 "eth0",
                 "eth1",
                 "eth2",
@@ -260,7 +259,7 @@ class Broadcaster(SThread):
         sok = socket(AF_INET, SOCK_DGRAM)
         sok.bind(('', 0))
         sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-
+        sok.sendto(msg, ('<broadcast>', UDP_BROADCAST_PORT))
 
         for sn in self.context.getSupernodeList():
             sok.sendto(msg, (sn, port) )
