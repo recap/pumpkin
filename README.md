@@ -110,3 +110,5 @@ The *greet* seed is missing. We will host *greet* on **B**. After installing Pum
     
 This instructs Pumpkin to only load the *greet* seed. After a few seconds you should see "Hello World" 
 as output on **A**. This is because Pumpkins on **A** and **B** discover each other **given they are on a LAN** and data can flow.
+
+![Alt text](https://github.com/recap/pumpkin/blob/kakai/examples/helloworld/helloworld_dtn.jpg "Optional title")
