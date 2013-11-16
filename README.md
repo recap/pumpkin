@@ -84,3 +84,29 @@ If all goes well a new output should be:
     Greeting: Hello Mars
 
 
+Distributing Seeds
+==================
+
+Pumpkin allows seeds to be disperesed on different computers. To try this out lets force *greet* to run on a different host. First install Pumpkin on a differetn host we will call host **B**. Our current host is host **A**.  On **A** locate the file *greet.py* under *examples/helloworld/*. Edit the file and change the line
+
+    ##"auto-load" : true,
+
+to
+
+    ##"auto-load" : false,
+    
+This instruct Pumpkin not to load the seed *greet* automatically. Now on host **A** run Pumpkin with:
+
+    ./bin/pmk
+    
+If you notice the output only lists 2 seeds
+
+    INFO:Discovered new peer: extract at tcp://192.168.1.50:7900
+    INFO:Discovered new peer: inject at tcp://192.168.1.50:7900
+    
+The *greet* seed is missing. We will host *greet* on **B**. After installing Pumpkin on **B** run the following:
+
+    ./bin/pmk --seed ./examples/helloworld/greet.py
+    
+This instructs Pumpkin to only load the *greet* seed. After a few seconds you should see "Hello World" 
+as output on **A**. This is because Pumpkins on **A** and **B** discover each other **given they are on a LAN** and data can flow.
