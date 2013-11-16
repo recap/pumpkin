@@ -111,4 +111,10 @@ The *greet* seed is missing. We will host *greet* on **B**. After installing Pum
 This instructs Pumpkin to only load the *greet* seed. After a few seconds you should see "Hello World" 
 as output on **A**. This is because Pumpkins on **A** and **B** discover each other **given they are on a LAN** and data can flow.
 
-![Alt text](https://github.com/recap/pumpkin/blob/kakai/examples/helloworld/helloworld_dtn.jpg "Optional title")
+Data Transformation Network
+============================
+
+Using the meta data given for each seed about its inputs and outputs, Pumpkin builds data automaton which represents the possible states data can be in the network. The DTN for the *hello world* example is given below. 
+
+
+![dtn](https://raw.github.com/recap/pumpkin/kakai/examples/helloworld/helloworld_dtn.jpg "DTN for helloworld")
