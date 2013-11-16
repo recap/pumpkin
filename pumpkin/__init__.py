@@ -8,8 +8,9 @@ required_version = (2, 3)
 if sys.version_info < required_version:
     raise ImportError, "Requires at least Python 2.3"
 
-VERSION = "0.2.1"
+VERSION = "0.3.1"
 
+from pumpkin.PmkDataCatch import *
 from pumpkin.PmkBroadcast import *  
 from pumpkin.PmkExternalDispatch import *  
 from pumpkin.PmkInternalDispatch import *  

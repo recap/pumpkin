@@ -1,83 +1,15 @@
-__author__ = 'reggie'
+#! /usr/bin/env python
+import os
 
-#commit 123
-import sys
-import argparse
-import logging
-
-
+try:
+	import pumpkin
+	from pumpkin import *
+except Exception as e:
+	os.chdir('../')
+	
 from pumpkin import *
 
 main()
-
-#
-#log = logging.getLogger("root")
-#log.setLevel(logging.DEBUG)
-##log.setLevel(logging.INFO)
-#
-#
-#parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
-#parser.add_argument('--noplugins',action="store_true",
-#                   help='disable plugin hosting for this node.')
-#parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
-#                   help='disable broadcasting.')
-#parser.add_argument('--taskdir', action='store', dest="taskdir", default="./examples/helloworld",
-#                   help='directory for loading tasks.')
-#parser.add_argument('--rx', action='store', dest="rxdir", default=None,
-#                   help='directory for injecting data.')
-#parser.add_argument('--seed', action='store', dest="singleseed", default=None,
-#                   help='load a single seed.')
-#parser.add_argument('--supernode',action="store_true",
-#                   help='run in supernode i.e. main role is information proxy.')
-#parser.add_argument('--endpoint.mode', action='store', dest="epmode", default="zmq.PULL",
-#                   help='endpoint mode e.x. zmq.PULL|zmq.PUB')
-#parser.add_argument('--endpoint.type', action='store', dest="eptype", default="zmq.TCP",
-#                   help='endpoint type e.x. zmq.TCP|zmq.IPC|zmq.INPROC')
-#parser.add_argument('--shell',action="store_true",
-#                   help='start a shell prompt.')
-#parser.add_argument('--rest',action="store_true",
-#                   help='start rest interface for seeds.')
-#parser.add_argument('--debug',action="store_true",
-#                   help='print debugging info.')
-#parser.add_argument('-d', action='store', dest="daemon", default=None,
-#                   help='daemonize start|stop|restart')
-#
-#parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
-#args = parser.parse_args()
-#
-#
-#P = Pumpkin()
-#
-#if args.daemon == "start":
-#    log.info("Starting Pumpkin Daemon")
-#    context = P.getContext()
-#    context.setAttributes(args)
-#    P.start()
-#if args.daemon == "stop":
-#    P.stop()
-#if args.daemon == "restart":
-#    P.restart()
-#if args.daemon == None:
-#    context = P.getContext()
-#    context.setAttributes(args)
-#    P.startContext()
-#    #Handle SIGINT
-#    def signal_handler(signal, frame):
-#            P.stopContext()
-#
-#
-#            log.info("Exiting Bye Bye")
-#            ##Ugly kill because threads zmq are not behaving
-#            os.system("kill -9 "+str(os.getpid()))
-#
-#            sys.exit(0)
-#
-#
-#    #Catch Ctrl+C
-#    signal.signal(signal.SIGINT, signal_handler)
-#    signal.pause()
-
-
 
 
 
