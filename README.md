@@ -17,13 +17,9 @@ by archive
 
 Install
 ==========
-If you want to run pumpkin locally you can:
+If you want to install local
 
-    cd bin
-    ln -s ../pumpkin ./pumpkin
-    chmod +x pmk
-    cd ../
-
+    python setup.py install --prefix=~/.local
 
 If you want to install pumpkin to the system:
 
