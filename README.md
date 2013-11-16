@@ -1,15 +1,18 @@
 Pumpkin
 =========
-Distributed data processing network in python
-work in progress....
+Pumpkin is a framework for distributed Data Transformation Network (DTN). It is similar to an actor model but data
+is dynamically routed from one actor to the next. In our model actors are seeds and these can be added to the network
+dynamically, transformation paths are learnt and data can automatically start flowing to the new seeds.
 
 Download
 ==========
 
 by cloning
+
 git clone https://github.com/recap/pumpkin.git
 
 by archive
+
 https://github.com/recap/pumpkin/archive/master.zip
 
 Install
@@ -17,9 +20,13 @@ Install
 If you want to run pumpkin locally you can:
 
 cd bin
+
 ln -s ../pumpkin ./pumpkin
+
 chmod +x pmk
+
 cd ../
+
 
 If you want to install pumpkin to the system:
 
@@ -35,13 +42,21 @@ run:
 If all goes well you should get something like:
 
 INFO:Node assigned UID: slimme-783d9470
+
 INFO:Exec context: e4a460ff
+
 INFO:Node bound to IP: 192.168.1.50
+
 INFO:Starting broadcast listener on port 7700
+
 INFO:Discovered new peer: extract at ipc:///tmp/slimme-783d9470
+
 INFO:Discovered new peer: inject at ipc:///tmp/slimme-783d9470
+
 INFO:Discovered new peer: greet at ipc:///tmp/slimme-783d9470
+
 Greeting: Hello World
+
 
 
 you can exit with ctrl-c
@@ -57,10 +72,15 @@ that they can run on different machines (more on this later).
 
 
 +----------+         +----------+       +-----------+
+
 |          |         |          |       |           |
+
 |  inject  |-------> |  greet   |------>|  extract  |
+
 |          |         |          |       |           |
+
 +----------+         +----------+       +-----------+
+
 
 Injecting Data
 ================
