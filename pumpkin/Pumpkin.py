@@ -214,7 +214,7 @@ def main():
     #FIXME remove this after SC13
     parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
                        help='disable broadcasting.')
-    parser.add_argument('--bcport', action='store', dest="bcport", default=7701,
+    parser.add_argument('--bcport', action='store', dest="bcport", default=7700,
                        help='broadcast UDP port.')
     parser.add_argument('--broadcast',action="store_true",
                        help='broadcast on lan.')
