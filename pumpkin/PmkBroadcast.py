@@ -152,7 +152,7 @@ class BroadcastListener(Thread):
     def __init__(self, context, port):
         Thread.__init__(self)
         self.__stop = Event()
-        self.__port = port
+        self.__port = int(port)
         self.context = context
         self.bclist = {}
         pass
@@ -223,7 +223,7 @@ class BroadcastListener(Thread):
 class Broadcaster(SThread):
     def __init__(self, context, port=UDP_BROADCAST_PORT, rate=30):
         SThread.__init__(self)
-        self.__port = port
+        self.__port = int(port)
         self.__rate = rate
         self.context = context
         pass

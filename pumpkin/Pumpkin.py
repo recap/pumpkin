@@ -71,7 +71,7 @@ class Pumpkin(Daemon):
 
 
 
-        udplisten = BroadcastListener(context, context.getAttributeValue().bcport)
+        udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
         udplisten.start()
         context.addThread(udplisten)
 
@@ -168,7 +168,7 @@ class Pumpkin(Daemon):
                #log.debug(js)
                context.getProcGraph().updateRegistry(json.loads(js))
 
-            udpbc = Broadcaster(context, context.getAttributeValue().bcport)
+            udpbc = Broadcaster(context, int(context.getAttributeValue().bcport))
             udpbc.start()
 
             context.addThread(udpbc)
