@@ -65,10 +65,13 @@ class Pumpkin(Daemon):
         log.info("Node bound to IP: "+context.getLocalIP())
         log.debug("Working directory: "+str(os.getcwd()))
 
+
         context = self.context
         zmq_context = self.zmq_context
 
-        udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
+
+
+        udplisten = BroadcastListener(context, context.getAttributeValue().bcport)
         udplisten.start()
         context.addThread(udplisten)
 
@@ -165,7 +168,7 @@ class Pumpkin(Daemon):
                #log.debug(js)
                context.getProcGraph().updateRegistry(json.loads(js))
 
-            udpbc = Broadcaster(context)
+            udpbc = Broadcaster(context, context.getAttributeValue().bcport)
             udpbc.start()
 
             context.addThread(udpbc)
@@ -211,7 +214,8 @@ def main():
     #FIXME remove this after SC13
     parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
                        help='disable broadcasting.')
-
+    parser.add_argument('--bcport', action='store', dest="bcport", default=7701,
+                       help='broadcast UDP port.')
     parser.add_argument('--broadcast',action="store_true",
                        help='broadcast on lan.')
     parser.add_argument('--taskdir', action='store', dest="taskdir", default="./examples/helloworld",
@@ -253,6 +257,7 @@ def main():
     if args.daemon == None:
         context = P.getContext()
         context.setAttributes(args)
+        UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
         P.startContext()
         #Handle SIGINT
         def signal_handler(signal, frame):

@@ -248,7 +248,7 @@ class Broadcaster(SThread):
                 time.sleep(2)
             else:
                 time.sleep(self.__rate)
-                self.announce(data)
+                self.announce(data, port)
 
 
             if self.stopped():
@@ -261,7 +261,7 @@ class Broadcaster(SThread):
         sok.bind(('', 0))
         if self.context.getAttributeValue().broadcast:
             sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-            sok.sendto(msg, ('<broadcast>', UDP_BROADCAST_PORT))
+            sok.sendto(msg, ('<broadcast>', port))
 
         for sn in self.context.getSupernodeList():
             sok.sendto(msg, (sn, port) )
