@@ -259,8 +259,9 @@ class Broadcaster(SThread):
     def announce(self, msg, port=UDP_BROADCAST_PORT):
         sok = socket(AF_INET, SOCK_DGRAM)
         sok.bind(('', 0))
-        sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-        sok.sendto(msg, ('<broadcast>', UDP_BROADCAST_PORT))
+        if self.context.getAttributeValue().broadcast:
+            sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+            sok.sendto(msg, ('<broadcast>', UDP_BROADCAST_PORT))
 
         for sn in self.context.getSupernodeList():
             sok.sendto(msg, (sn, port) )

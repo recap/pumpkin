@@ -208,8 +208,12 @@ def main():
     parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
     parser.add_argument('--noplugins',action="store_true",
                        help='disable plugin hosting for this node.')
+    #FIXME remove this after SC13
     parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
                        help='disable broadcasting.')
+
+    parser.add_argument('--broadcast',action="store_true",
+                       help='broadcast on lan.')
     parser.add_argument('--taskdir', action='store', dest="taskdir", default="./examples/helloworld",
                        help='directory for loading tasks.')
     parser.add_argument('--rx', action='store', dest="rxdir", default=None,

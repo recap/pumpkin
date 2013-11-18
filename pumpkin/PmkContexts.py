@@ -67,6 +67,9 @@ class MainContext(object):
 
         return False
 
+    def getAttributeValue(self):
+        return self.__attrs
+
     def setAttributes(self, attributes):
         self.__attrs = attributes
         if attributes.debug:
