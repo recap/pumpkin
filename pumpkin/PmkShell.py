@@ -1,7 +1,7 @@
 __author__ = 'reggie'
 import cmd
 
-import PmkShared
+
 
 class Shell(cmd.Cmd):
     prompt = ">>"

@@ -32,7 +32,7 @@ class InternalDispatch(SThread):
 
             if func in PmkSeed.iplugins.keys():
                 klass = PmkSeed.iplugins[func]
-                rt = klass.run(pkt, data)
+                rt = klass._stage_run(pkt, data)
 
 
 
@@ -63,7 +63,8 @@ class ZMQPacketMonitor(SThread):
         self.context = context
         self.bind_to = bind_to
         if (zmqcontext == None):
-            self.zmq_cntx = zmq.Context()
+            #self.zmq_cntx = zmq.Context()
+            pass
         else:
             self.zmq_cntx = zmqcontext
         self.rx = self.context.getRx()
@@ -79,6 +80,15 @@ class ZMQPacketMonitor(SThread):
         while True:
             try:
                 msg = soc.recv()
+                if "REVERSE" in msg:
+                    log.debug(msg)
+                    ep = msg.split("::")[1]
+                    log.debug("Reverse connecting to: "+ep)
+                    rec = self.zmq_cntx.socket(zmq.PULL)
+                    rec.connect(ep)
+                    msg = rec.recv()
+                    log.debug("Received msg: "+msg)
+                    #continue
                 self.rx.put(msg)
                 log.debug("Message: "+str(msg))
             except zmq.ZMQError as e:

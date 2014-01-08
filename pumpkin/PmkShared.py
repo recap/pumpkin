@@ -2,6 +2,7 @@ __author__ = 'reggie'
 
 import logging
 import threading
+import os
 
 from threading import *
 
@@ -20,7 +21,9 @@ ZMQ_ENDPOINT_PORT = 7900
 ZMQ_PUB_PORT = 7901
 
 #SUPERNODES = ["127.0.0.1", "flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]
-SUPERNODES = [ "127.0.0.1", "elab.lab.uvalight.net", "flightcees.lab.uvalight.net"]
+#SUPERNODES = [ "127.0.0.1", "elab.lab.uvalight.net", "flightcees.lab.uvalight.net"]
+SUPERNODES = [ "127.0.0.1"]
+
 
 
 
@@ -30,6 +33,15 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 log = logging.getLogger('pumpkin')
 #log.setLevel(logging.DEBUG)
 log.setLevel(logging.INFO)
+
+def _ensure_dir(f):
+        if not f[len(f)-1] == "/":
+                f = f +"/"
+        d = os.path.dirname(f)
+        if not os.path.exists(d):
+            log.debug(d + " does not exist, creating...")
+            os.makedirs(d)
+        pass
 
 
 class SThread(Thread):

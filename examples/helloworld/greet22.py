@@ -2,8 +2,8 @@ __author__ = 'reggie'
 
 ###START-CONF
 ##{
-##"object_name": "greet",
-##"object_poi": "my-greet-1234",
+##"object_name": "greet22",
+##"object_poi": "my-greet22-1234",
 ##"auto-load" : true,
 ##"parameters": [ {
 ##                  "name": "name",
@@ -29,7 +29,7 @@ __author__ = 'reggie'
 
 from pumpkin import *
 
-class greet(PmkSeed.Seed):
+class greet22(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
@@ -42,7 +42,7 @@ class greet(PmkSeed.Seed):
         "hello" to a name to form a greeting. This will be
         dispatched and received by a collector.
         """
-        greeting = "Hello " + str(name)
-        time.sleep(5)
+        greeting = "Uuuh who are you? " + str(name)
+
         self.dispatch(pkt, greeting, "GREETING")
         pass

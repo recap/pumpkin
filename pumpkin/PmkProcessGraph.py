@@ -5,6 +5,7 @@ import networkx as nx
 import time
 import thread
 import threading
+import copy
 
 from networkx.readwrite import json_graph
 
@@ -16,6 +17,7 @@ class ProcessGraph(object):
     def __init__(self):
 
         self.registry = {}
+        self.external_registry = {}
         self.__reg_update = False
         self.__display_graph = False
         self.rlock = threading.RLock()
@@ -25,25 +27,32 @@ class ProcessGraph(object):
 
     pass
 
-    def updateRegistry(self, entry):
+    def updateRegistry(self, entry, loc="remote"):
+
+        registry = self.registry
+
         e = entry
         a = []
+        tep = []
         self.rlock.acquire()
-        if e["name"] in self.registry.keys():
+        if e["name"] in registry.keys():
             log.debug("Updating peer: "+e["name"])
-            d = self.registry[e["name"]]
+            #d is local registry
+            #e is entry to update
+            d = registry[e["name"]]
             epb = False
-            for ep in d["endpoints"]:
-                if ep["ep"] == e["endpoints"][0]["ep"]:
-                    epb = True
-                    break
-            if epb == False:
-                d["endpoints"].append(e["endpoints"][0])
-                self.__reg_update = True
-                self.__display_graph = True
+            for eep in e["endpoints"]:
+                found = False
+                for dep in d["endpoints"]:
+                    if dep["ep"] == eep["ep"]:
+                        found = True
+                if not found:
+                    d["endpoints"].append(eep)
+                    self.__reg_update = True
+                    self.__display_graph = True
         else:
             log.info("Discovered new peer: "+e["name"]+" at "+e["endpoints"][0]["ep"])
-            self.registry[e["name"]] = e
+            registry[e["name"]] = e
             self.__reg_update = True
             self.__display_graph = True
 
@@ -63,13 +72,24 @@ class ProcessGraph(object):
         if tag in self.tagroute:
             return self.tagroute[tag]
 
+    def getPriorityEndpoint(self, route):
+        bep = None
+        prt = 1000
+        for ep in route['endpoints']:
+            p = int(ep["priority"])
+            if p < prt:
+                bep = ep
+                prt = p
+
+        return bep
+
+
+
     def buildGraph(self):
         self.tagroute = {}
         G = self.graph
         for xo in self.registry.keys():
             eo = self.registry[xo]
-
-
             for isp in eo["istate"].split('|'):
                 for osp in eo["ostate"].split('|'):
                     istype = eo["itype"]+":"+isp
@@ -84,6 +104,8 @@ class ProcessGraph(object):
                 else:
                     self.tagroute[istype] = []
                     self.tagroute[istype].append(eo)
+
+
         return G
 
     def showGraph(self):
@@ -114,14 +136,31 @@ class ProcessGraph(object):
         pass
 
 
-
-
-
     def dumpRegistry(self):
         self.rlock.acquire()
         d = json.dumps(self.registry)
         self.rlock.release()
         return d
+
+    def dumpExternalRegistry(self):
+
+        self.rlock.acquire()
+        ne = copy.deepcopy(self.registry)
+        self.rlock.release()
+
+        for f in ne.values():
+            #Filter out endpoints with less than priority 5. Any priority less than 5
+            #is reserved for local communication such as IPC, INPROC, FILES
+            f["endpoints"][:] = [x for x in f["endpoints"] if self.__determine(x)]
+
+        d = json.dumps(ne)
+        return d
+
+    def __determine(self, ep):
+        if int(ep["priority"]) < 5:
+            return False
+        else:
+            return True
 
     def printRegistry(self):
         for x in self.registry.keys():

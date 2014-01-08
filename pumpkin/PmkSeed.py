@@ -3,6 +3,10 @@ __author__ = 'reggie'
 import inspect
 import uuid
 import copy
+import tarfile
+import shutil
+import tftpy
+
 from PmkShared import *
 
 plugins = []
@@ -48,6 +52,47 @@ class Seed(object):
         self.run(self.__rawpacket())
         pass
 
+    def _tar_to_gz(self, source, destination):
+        t = tarfile.open(name=destination, mode='w:gz')
+        t.add(source, os.path.basename(source))
+        t.close()
+        pass
+
+    def moveto_fileserver(self, filename):
+        fullpath = self.context.getWorkingDir()+"/"+filename
+        if os.path.exists(fullpath):
+            dst = self.context.getFileDir()+"/"+filename
+        pass
+
+
+    def __endpoint_parts(self, ep):
+        p1 = ep.split("://")
+        p2 = p1[1].split("/")
+        rpath = ""
+        for p in range(1, len(p2)):
+            rpath += "/"+p2[p]
+        file = p2[len(p2)-1]
+        p3 = p2[0].split(":")
+        ip = p3[0]
+        port = p3[1]
+        return [ip, port, rpath, file]
+
+    def _stage_run(self,pkt, *args):
+        nargs = []
+        if(args[0]):
+            msg = str(args[0])
+            if(msg.startswith("tftp://")):
+                ip, port, rpath, file = self.__endpoint_parts(msg)
+                client = tftpy.TftpClient(ip, int(port))
+                wdf = self.context.getWorkingDir()+"/"+file
+                client.download(file, wdf)
+                nargs.append("file://"+wdf)
+        for x in range (1,len(args)-1):
+            nargs.append(args[x])
+
+        self.run(pkt,*nargs)
+        pass
+
     def run(self, pkt, *args):
         pass
 
@@ -76,10 +121,19 @@ class Seed(object):
        #''+self.getreturn()+'}'
         return js
 
+    def _ensure_dir(self, f):
+        if not f[len(f)-1] == "/":
+                f = f +"/"
+        d = os.path.dirname(f)
+        if not os.path.exists(d):
+            log.debug(d + " does not exist, creating...")
+            os.makedirs(d)
+        pass
+
     def __getEps(self):
         aep = ""
         for ep in self.context.endpoints:
-            s =  '{"ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'"}'
+            s =  '{"ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'", "priority" : "'+str(ep[3])+'"}'
             aep = aep + s + ","
         aep = aep[:len(aep)-1]
         return aep
@@ -103,7 +157,31 @@ class Seed(object):
         self.dispatch(pkt, msg, state, PKT_NEWBOX)
         pass
 
+    def fileparts(self,filepath):
+        prts1 = filepath.split("://")
+        prot = prts1[0]
+        prts2 = prts1[1].split("/")
+        path= ""
+        file = ""
+        for p in range(0,len(prts2)-1):
+            path += prts2[p]+"/"
+
+
+        file = prts2[len(prts2)-1]
+        path = path.replace("//","/")
+        apath = path+file
+
+        return [prot,path,file,apath]
+
     def dispatch(self, pkt, msg, state, boxing = PKT_OLDBOX):
+
+        if str(msg).startswith("file://"):
+            dst = self.context.getFileDir()
+            _,path,file,src = self.fileparts(msg)
+
+            shutil.move(src,dst)
+            #msg = "tftp://"+self.context.getLocalIP()+"/"+file
+            msg = self.context.getFileServerEndPoint()+"/"+file
 
         if boxing == PKT_NEWBOX:
             lpkt = copy.deepcopy(pkt)

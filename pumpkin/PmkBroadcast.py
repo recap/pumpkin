@@ -104,7 +104,7 @@ class ZMQBroadcaster(SThread):
         while True:
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(30)
-                data = self.context.getProcGraph().dumpRegistry()
+                data = self.context.getProcGraph().dumpExternalRegistry()
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)
@@ -113,7 +113,7 @@ class ZMQBroadcaster(SThread):
                     continue
 
             if self.context.getProcGraph().isRegistryModified():
-                data = self.context.getProcGraph().dumpRegistry()
+                data = self.context.getProcGraph().dumpExternalRegistry()
                 self.context.getProcGraph().ackRegistryUpdate()
                 log.debug("Publishing new registry data")
                 sock.send(data)
@@ -241,7 +241,7 @@ class Broadcaster(SThread):
             #sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
             #time.sleep(self.__rate)
 
-            data = self.context.getProcGraph().dumpRegistry()
+            data = self.context.getProcGraph().dumpExternalRegistry()
             if self.context.getProcGraph().isRegistryModified():
                 self.context.getProcGraph().ackRegistryUpdate()
                 self.announce(data)

@@ -9,13 +9,19 @@ import argparse
 import logging
 
 
+
 from os import listdir
 from os.path import isfile, join
 from socket import *
 from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
 
+from os.path import expanduser
+
+
 
 import pumpkin as pmk
+
+import PmkShared
 
 from PmkShared import *
 from PmkContexts import *
@@ -24,6 +30,7 @@ from PmkShell import *
 from PmkHTTPServer import *
 from PmkDaemon import *
 from PmkDataCatch import *
+from PmkTftpServer import *
 
 
 
@@ -63,17 +70,32 @@ class Pumpkin(Daemon):
         log.info("Node assigned UID: "+context.getUuid())
         log.info("Exec context: "+context.getExecContext())
         log.info("Node bound to IP: "+context.getLocalIP())
-        log.debug("Working directory: "+str(os.getcwd()))
+        home = expanduser("~")
+        wd = home+"/.pumpkin/"+context.getUuid()+"/"
+        context.working_dir = wd
+
+        PmkShared._ensure_dir(wd)
+
+
+        log.debug("Working directory: "+context.getWorkingDir())
+
 
 
         context = self.context
         zmq_context = self.zmq_context
+        context.zmq_context = zmq_context
 
 
 
         udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
         udplisten.start()
         context.addThread(udplisten)
+
+        ftpdir = wd + 'fdata/'
+        tftpserver = TftpServer(context, ftpdir, TFTP_FILE_SERVER_PORT)
+        tftpserver.start()
+        context.setFileDir(ftpdir)
+        context.addThread(tftpserver)
 
         if context.hasRx():
             rxdir = context.hasRx()
@@ -99,6 +121,12 @@ class Pumpkin(Daemon):
 
 
         if not context.isWithNoPlugins():# and not context.isSupernode():
+            for ep in context.getEndpoints():
+                if context.isZMQEndpoint(ep):
+                    tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
+                    tcpm.start()
+                    context.addThread(tcpm)
+
 
             for sn in get_zmq_supernodes(SUPERNODES):
                 log.debug("Subscribing to: "+sn)
@@ -166,7 +194,11 @@ class Pumpkin(Daemon):
                klass = PmkSeed.iplugins[x]
                js = klass.getConfEntry()
                #log.debug(js)
-               context.getProcGraph().updateRegistry(json.loads(js))
+               context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+               context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+               context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+
+            log.debug("Registry dump: "+context.getProcGraph().dumpExternalRegistry())
 
             udpbc = Broadcaster(context, int(context.getAttributeValue().bcport))
             udpbc.start()
@@ -190,12 +222,9 @@ class Pumpkin(Daemon):
             context.addThread(inj)
             #####################################################################
 
-            zmq_context = zmq.Context()
 
 
-            tcpm = ZMQPacketMonitor(context, zmq_context, context.getEndpoint())
-            tcpm.start()
-            context.addThread(tcpm)
+
 
             if context.hasShell():
                 cmdp = Shell(context)
@@ -212,8 +241,8 @@ def main():
     parser.add_argument('--noplugins',action="store_true",
                        help='disable plugin hosting for this node.')
     #FIXME remove this after SC13
-    parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
-                       help='disable broadcasting.')
+    #parser.add_argument('--nobroadcast', action='store', dest="nobroadcast", default=False,
+    #                   help='disable broadcasting.')
     parser.add_argument('--bcport', action='store', dest="bcport", default=7700,
                        help='broadcast UDP port.')
     parser.add_argument('--broadcast',action="store_true",
@@ -226,6 +255,8 @@ def main():
                        help='load a single seed.')
     parser.add_argument('--supernode',action="store_true",
                        help='run in supernode i.e. main role is information proxy.')
+    parser.add_argument('--endpoints', action='store', dest="eps", default="ALL",
+                       help='endpoints separated with ";" e.x. zmq.TCP;zmq.INPROC;zmq.IPC;tftp')
     parser.add_argument('--endpoint.mode', action='store', dest="epmode", default="zmq.PULL",
                        help='endpoint mode e.x. zmq.PULL|zmq.PUB')
     parser.add_argument('--endpoint.type', action='store', dest="eptype", default="zmq.TCP",

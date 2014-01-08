@@ -26,6 +26,8 @@ class ExternalDispatch(SThread):
         SThread.__init__(self)
         self.context = context
         self.dispatchers = {}
+        self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+        #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
         pass
 
 
@@ -39,6 +41,7 @@ class ExternalDispatch(SThread):
 
             while 1:
                 routes = graph.getRoutes(otag)
+                log.debug("Found routes: "+json.dumps(routes))
                 if routes:
                     break
                 else:
@@ -49,28 +52,59 @@ class ExternalDispatch(SThread):
                 #log.debug("Route: "+str(r))
                 dcpkt = copy.copy(pkt)
                 #TODO make it more flexible not bound to zmq
-                if r["endpoints"][0]:
-                    entry = r["endpoints"][0]
-                    ep = r["endpoints"][0]["ep"]
-                    #log.debug(r["zmq_endpoint"][0]["ep"])
-                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
+                pep = self.context.getProcGraph().getPriorityEndpoint(r)
+                if pep:
+                    entry = pep
+                    ep = pep["ep"]
+                    log.debug("Route found for function "+r["name"]+": "+pep["ep"])
+                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                     dcpkt.append(next_hop)
                     #pkt.remove( pkt[len(pkt)-1] )
                     #log.debug(json.dumps(pkt))
                     if ep in self.dispatchers.keys():
                         disp = self.dispatchers[ep]
                         disp.dispatch(json.dumps(dcpkt))
+                        #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
                     else:
                         disp = None
                         if entry["mode"] == "zmq.PULL":
-                            disp = ZMQPacketDispatch(self.context)
+                            #disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                            #disp = ZMQPacketDispatch(self.context)
+                            disp = self.gdisp
 
                         if not disp == None:
                             self.dispatchers[ep] = disp
                             disp.connect(ep)
                             disp.dispatch(json.dumps(dcpkt))
+                            #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
                         else:
                             log.error("No dispatchers found for: "+ep)
+
+                #if r["endpoints"][0]:
+                #    entry = r["endpoints"][0]
+                #    ep = r["endpoints"][0]["ep"]
+                #    log.debug(r["endpoints"][0]["ep"])
+                #    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
+                #    dcpkt.append(next_hop)
+                #    #pkt.remove( pkt[len(pkt)-1] )
+                #    #log.debug(json.dumps(pkt))
+                #    if ep in self.dispatchers.keys():
+                #        disp = self.dispatchers[ep]
+                #        disp.dispatch(json.dumps(dcpkt))
+                #    else:
+                #        disp = None
+                #        if entry["mode"] == "zmq.PULL":
+                #            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                #            #disp = ZMQPacketDispatch(self.context)
+                #
+                #        if not disp == None:
+                #            self.dispatchers[ep] = disp
+                #            disp.connect(ep)
+                #            disp.dispatch(json.dumps(dcpkt))
+                #        else:
+                #            log.error("No dispatchers found for: "+ep)
 
 
 
@@ -123,13 +157,16 @@ class ZMQPacketDispatch(Dispatch):
         Dispatch.__init__(self)
         self.context = context
         self.soc = None
+        log.debug("Created ZMQPacketDispatch")
         if (zmqcontext == None):
+            log.debug("Creating zmq context")
             self.zmq_cntx = zmq.Context()
         else:
             self.zmq_cntx = zmqcontext
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        log.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
 
     def dispatch(self, pkt):
@@ -142,6 +179,40 @@ class ZMQPacketDispatch(Dispatch):
     def close(self):
         self.soc.close()
 
+class ZMQPacketVentilate(Dispatch):
+
+    def __init__(self, context, zmqcontext=None):
+        Dispatch.__init__(self)
+        self.context = context
+        self.soc = None
+        log.debug("Created ZMQPacketVentilate")
+        if (zmqcontext == None):
+            log.debug("Creating zmq context")
+            self.zmq_cntx = zmq.Context()
+        else:
+            self.zmq_cntx = zmqcontext
+
+        self.sender = self.zmq_cntx.socket(zmq.PUSH)
+        self.sender.bind("ipc://127.0.0.1:7777")
+
+
+    def connect(self, connect_to):
+        self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        log.debug("ZMQ connecting to :"+str(connect_to))
+        self.soc.connect(connect_to)
+        self.soc.send("REVERSE::ipc://127.0.0.1:7777")
+
+    def dispatch(self, pkt):
+
+        try:
+            time.sleep(3)
+            log.debug("Sending")
+            self.sender.send(pkt)
+        except zmq.ZMQError as e:
+            log.error(str(e))
+
+    def close(self):
+        self.soc.close()
 
 #class ExternalDispatch2(Thread):
 #    def __init__(self, context):
