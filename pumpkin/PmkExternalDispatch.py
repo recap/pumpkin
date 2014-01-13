@@ -30,6 +30,27 @@ class ExternalDispatch(SThread):
         #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
         pass
 
+    def getProtoFromEP(self, ep):
+        ep.split("://")
+        return ep[0]
+
+    def sendPACK(self, pkt):
+        ep = pkt[0]["last_contact"]
+        if ep in self.dispatchers.keys():
+            disp = self.dispatchers[ep]
+            disp.dispatch(json.dumps(pkt))
+        else:
+            disp = self.gdisp
+            if not disp == None:
+                self.dispatchers[ep] = disp
+                disp.connect(ep)
+                disp.dispatch(json.dumps(pkt))
+                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+            else:
+                log.error("No dispatchers found for: "+ep)
+
+            pass
 
     def run(self):
         graph = self.context.getProcGraph()
@@ -53,6 +74,10 @@ class ExternalDispatch(SThread):
                 dcpkt = copy.copy(pkt)
                 #TODO make it more flexible not bound to zmq
                 pep = self.context.getProcGraph().getPriorityEndpoint(r)
+                eep = self.context.getProcGraph().getExternalEndpoints(r)
+                oep = self.context.getOurEndpoint(self.getProtoFromEP(pep["ep"]))
+                dcpkt[0]["last_contact"] = oep[0]
+
                 if pep:
                     entry = pep
                     ep = pep["ep"]

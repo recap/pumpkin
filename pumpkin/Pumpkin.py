@@ -10,6 +10,8 @@ import logging
 
 
 
+
+
 from os import listdir
 from os.path import isfile, join
 from socket import *
@@ -54,6 +56,7 @@ class Pumpkin(Daemon):
         return self.context
 
     def stopContext(self):
+        self.context.close()
         for th in self.context.getThreads():
             th.stop()
             #th.join()
@@ -75,6 +78,7 @@ class Pumpkin(Daemon):
         context.working_dir = wd
 
         PmkShared._ensure_dir(wd)
+        context.startPktShelve("PktStore")
 
 
         log.debug("Working directory: "+context.getWorkingDir())
@@ -195,8 +199,8 @@ class Pumpkin(Daemon):
                js = klass.getConfEntry()
                #log.debug(js)
                context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
-               context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
-               context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+               #context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+               #context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
 
             log.debug("Registry dump: "+context.getProcGraph().dumpExternalRegistry())
 
@@ -206,6 +210,7 @@ class Pumpkin(Daemon):
             context.addThread(udpbc)
 
             edispatch = ExternalDispatch(context)
+            context.setExternalDispatch(edispatch)
             edispatch.start()
             context.addThread(edispatch)
 
@@ -232,8 +237,11 @@ class Pumpkin(Daemon):
 
 
 def main():
-    log = logging.getLogger("root")
+    log = logging.getLogger("pumpkin")
     log.setLevel(logging.DEBUG)
+
+    requests_log = logging.getLogger("tftpy")
+    requests_log.setLevel(logging.WARNING)
     #log.setLevel(logging.INFO)
 
 

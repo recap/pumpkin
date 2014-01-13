@@ -6,8 +6,14 @@ import copy
 import tarfile
 import shutil
 import tftpy
+import time
+import thread
+import collections
+
 
 from PmkShared import *
+from PmkExternalDispatch import ExternalDispatch
+
 
 plugins = []
 hplugins = {}
@@ -15,6 +21,7 @@ iplugins = {}
 
 PKT_NEWBOX = 01
 PKT_OLDBOX = 02
+PKT_PROCESS_WINDOW = 2
 
 class SeedType(type):
     def __init__(cls, name, bases, attrs):
@@ -36,6 +43,18 @@ class Seed(object):
         self.context = context
         self.poi = poi
         self.conf = None
+        self.tftp_sessions = {}
+        self.flight_pkts = {}
+        self._lock_fpkts = threading.Lock()
+        self._lock_in_fpkts = threading.Lock()
+        self.in_flight_pkts = {}
+        self.pkt_checker_t()
+        self.ttf = None
+        #threading.Timer(10, self.pkt_checker_t).start()
+        #try:
+        #thread.start_new_thread(self.pkt_checker_t)
+        #except:
+         #   log.error("Unable to start pkt checker thread.")
 
 
         pass
@@ -44,9 +63,12 @@ class Seed(object):
         pkt = []
         ship_id = self.context.getExecContext()
         cont_id =  str(uuid.uuid4())[:8]
-        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "e" : "E"})
+        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : "E", "state" : "NEW", "ttl" : '0',"t_state":"None", "t_otype" : "None" , "last_contact" : "None", "last_func" : "None"})
         pkt.append( {"stag" : "RAW", "exstate" : "0001"} )
         return pkt
+
+    def getNewContainer(self):
+        return str(uuid.uuid4())[:8]
 
     def rawrun(self):
         self.run(self.__rawpacket())
@@ -77,21 +99,77 @@ class Seed(object):
         port = p3[1]
         return [ip, port, rpath, file]
 
-    def _stage_run(self,pkt, *args):
-        nargs = []
-        if(args[0]):
-            msg = str(args[0])
-            if(msg.startswith("tftp://")):
-                ip, port, rpath, file = self.__endpoint_parts(msg)
-                client = tftpy.TftpClient(ip, int(port))
-                wdf = self.context.getWorkingDir()+"/"+file
-                client.download(file, wdf)
-                nargs.append("file://"+wdf)
-        for x in range (1,len(args)-1):
-            nargs.append(args[x])
+    def ack_pkt(self, pkt):
+        pkt[0]["state"] = "PACK_OK"
+        pkt_id = self.getPktId(pkt)
+        self._lock_in_fpkts.acquire()
+        self.context.pktReady(pkt)
+        if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
+        self._lock_in_fpkts.release()
+        exdisp = self.context.getExternalDispatch()
+        exdisp.sendPACK(pkt)
 
-        self.run(pkt,*nargs)
         pass
+
+
+    def pack_ok(self, pkt):
+        pkt_id = self.getPktId(pkt)
+        if pkt[0]["last_func"] == self.__class__.__name__:
+            self._lock_fpkts.acquire()
+            if pkt_id in self.flight_pkts.keys():
+                del self.flight_pkts[pkt_id]
+            self._lock_fpkts.release()
+        else:
+            log.warning("Trying to ACK packet from another function!")
+        pass
+
+    def isDuplicate(self, pkt):
+        pkt_id = self.getPktId(pkt)
+        self._lock_in_fpkts.acquire()
+
+        if pkt_id in self.in_flight_pkts.keys():
+            self._lock_in_fpkts.release()
+            return True
+        if self.context.isPktShelved(pkt):
+            self._lock_in_fpkts.release()
+            return True
+        self._lock_in_fpkts.release()
+        return False
+
+    def _stage_run(self,pkt, *args):
+        pkt_id = self.getPktId(pkt)
+        if not self.isDuplicate(pkt):
+
+
+            pkt[0]["state"] = "PROCESSING"
+            self._lock_in_fpkts.acquire()
+            self.in_flight_pkts[pkt_id] = pkt
+            self._lock_in_fpkts.release()
+
+            nargs = []
+            if(args[0]):
+                msg = str(args[0])
+                if(msg.startswith("tftp://")):
+                    ip, port, rpath, file = self.__endpoint_parts(msg)
+                    if ip in self.tftp_sessions.keys():
+                        client = self.tftp_sessions[ip]
+                    else:
+                        client = tftpy.TftpClient(ip, int(port))
+                        self.tftp_sessions[ip] = client
+
+                    wdf = self.context.getWorkingDir()+"/"+file
+                    client.download(file, wdf)
+                    nargs.append("file://"+wdf)
+                    for x in range (1,len(args)-1):
+                        nargs.append(args[x])
+
+                    self.run(pkt,*nargs)
+                    return
+
+            self.run(pkt,*args)
+        else:
+            log.debug("Duplicate packet received: "+pkt_id)
+            pass
 
     def run(self, pkt, *args):
         pass
@@ -108,6 +186,36 @@ class Seed(object):
             return True
 
         return False
+
+    def pkt_checker_t(self):
+        log.debug("Starting pkt checker thread")
+        #time.sleep(10)
+
+        #while 1:
+        interval = 30
+        reset = 60
+        self._lock_fpkts.acquire()
+
+        for k in self.flight_pkts.keys():
+            pkt = self.flight_pkts[k]
+            ttl = int(pkt[0]["ttl"])
+            ttl = ttl - interval
+            if ttl <= 0:
+                ttl = reset
+                log.debug("Resending packet: "+str(pkt))
+                state = pkt[0]["t_state"]
+                otype = pkt[0]["t_otype"]
+                self.context.getTx().put((state, otype, pkt))
+                pass
+            pkt[0]["ttl"] = str(ttl)
+
+        self._lock_fpkts.release()
+
+        threading.Timer(interval, self.pkt_checker_t).start()
+
+         #   time.sleep(10)
+
+        pass
 
     def getConfEntry(self):
         js = '{ "name" : "'+self.getname()+'", \
@@ -157,6 +265,11 @@ class Seed(object):
         self.dispatch(pkt, msg, state, PKT_NEWBOX)
         pass
 
+    def ifFile(self, msg):
+        if msg.startswith("file://"):
+            return True
+        return False
+
     def fileparts(self,filepath):
         prts1 = filepath.split("://")
         prot = prts1[0]
@@ -173,6 +286,19 @@ class Seed(object):
 
         return [prot,path,file,apath]
 
+    def getPktId(self, pkt):
+        id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+        return id
+
+    def duplicate_pkt_new_box(self,pkt):
+        lpkt = copy.deepcopy(pkt)
+        cont = self.getNewContainer()
+        header = lpkt[0]
+        #box = int(header["box"])
+        #box = box + 1
+        header["container"] = cont
+        return lpkt
+
     def dispatch(self, pkt, msg, state, boxing = PKT_OLDBOX):
 
         if str(msg).startswith("file://"):
@@ -186,13 +312,13 @@ class Seed(object):
         if boxing == PKT_NEWBOX:
             lpkt = copy.deepcopy(pkt)
             header = lpkt[0]
-            box = int(header["box"])
-            box = box + 1
-            header["box"] = str(box)
-            pkt[0]["box"] = str(box)
+            fragment = int(header["fragment"])
+            fragment = fragment + 1
+            header["fragment"] = str(fragment)
+            pkt[0]["fragment"] = str(fragment)
         else:
             lpkt = copy.copy(pkt)
-
+        lpkt_id = self.getPktId(lpkt)
         otype = self.conf["return"][0]["type"]
         stag = otype + ":"  + state
         pkt_e = {}
@@ -201,7 +327,28 @@ class Seed(object):
         pkt_e["exstate"] = "0001"
         pkt_e["data"] = msg
         lpkt.append(pkt_e)
+        lpkt[0]["state"] = "WAITING_PACK"
+        lpkt[0]["ttl"] = '60'
+        lpkt[0]["t_state"] = state
+        lpkt[0]["t_otype"] = otype
+        lpkt[0]["last_func"] = self.__class__.__name__
+
+        self.addFlightPacket(lpkt)
+
+
         self.context.getTx().put((state,otype,lpkt))
+        pass
+    def addFlightPacket(self,pkt):
+        pkt_id = self.getPktId(pkt)
+        while 1:
+            if len(self.flight_pkts) < PKT_PROCESS_WINDOW:
+                self._lock_fpkts.acquire()
+                self.flight_pkts[pkt_id] = pkt
+                self._lock_fpkts.release()
+                break
+            else:
+                log.debug("Process window full for "+self.__class__.__name__)
+                time.sleep(5)
         pass
 
     def getname(self):

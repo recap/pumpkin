@@ -41,14 +41,22 @@ class consumer(PmkSeed.Seed):
 
     def run(self, pkt, data):
 
+        if self.ifFile(data):
+            prot,path,file,apath = self.fileparts(data)
 
-        prot,path,file,apath = self.fileparts(data)
+            f = open(apath, 'r')
+            s = f.read()
+            f.close()
 
-        f = open(apath, 'r')
-        s = f.read()
-        f.close()
+            print "FILE DATA FROM: "+apath+": "+s
 
-        print "FILE DATA FROM: "+apath+": "+s
+        else:
+
+            print "DATA FROM: "+data
+
+        #time.sleep(10)
+
+        self.ack_pkt(pkt)
 
 
         pass

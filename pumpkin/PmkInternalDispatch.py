@@ -26,13 +26,22 @@ class InternalDispatch(SThread):
             pkts = rx.get(True)
             log.debug("Packet received: \n"+pkts)
             pkt = json.loads(pkts)
-            l = len(pkt)
-            func = pkt[l-1]["func"]
-            data = pkt[l-2]["data"]
+            #Check for PACK
+            if pkt[0]["state"] == "PACK_OK":
+                log.debug("PACK packet: "+pkts)
+                seed = pkt[0]["last_func"]
 
-            if func in PmkSeed.iplugins.keys():
-                klass = PmkSeed.iplugins[func]
-                rt = klass._stage_run(pkt, data)
+                if seed in PmkSeed.iplugins.keys():
+                    klass = PmkSeed.iplugins[seed]
+                    klass.pack_ok(pkt)
+            else:
+                l = len(pkt)
+                func = pkt[l-1]["func"]
+                data = pkt[l-2]["data"]
+
+                if func in PmkSeed.iplugins.keys():
+                    klass = PmkSeed.iplugins[func]
+                    rt = klass._stage_run(pkt, data)
 
 
 

@@ -47,11 +47,16 @@ class ProcessGraph(object):
                     if dep["ep"] == eep["ep"]:
                         found = True
                 if not found:
+                    if loc == "remote":
+                        eep["priority"] = 10
                     d["endpoints"].append(eep)
                     self.__reg_update = True
                     self.__display_graph = True
         else:
             log.info("Discovered new peer: "+e["name"]+" at "+e["endpoints"][0]["ep"])
+            if loc == "remote":
+                for ep in e["endpoints"]:
+                    ep["priority"] = 10
             registry[e["name"]] = e
             self.__reg_update = True
             self.__display_graph = True
@@ -83,7 +88,18 @@ class ProcessGraph(object):
 
         return bep
 
+    def getExternalEndpoints(self, route):
+        eps = []
+        bep = None
+        prt = 10
+        pep = self.getPriorityEndpoint(route)
+        for ep in route['endpoints']:
+            p = int(ep["priority"])
+            if p >= prt:
+                if not ep["ep"] == pep["ep"]:
+                    eps.append(ep)
 
+        return eps
 
     def buildGraph(self):
         self.tagroute = {}

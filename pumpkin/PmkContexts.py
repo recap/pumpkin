@@ -1,6 +1,8 @@
 __author__ = 'reggie'
 
 import sys
+import shelve
+
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
 
@@ -25,9 +27,37 @@ class MainContext(object):
         self.zmq_context = None
         self.working_dir = "./.pumpkin/"+self.__uuid
         self.file_dir = None
+        self.external_dispatch = None
+
 
 
         pass
+
+    def startPktShelve(self, filename):
+        self.pkt_shelve = shelve.open(self.working_dir+"/"+filename)
+        pass
+
+    def getPktId(self, pkt):
+        id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+        return id
+
+    def pktReady(self, pkt):
+        pkt_id = str(self.getPktId(pkt))
+        self.pkt_shelve[pkt_id] = pkt
+        pass
+
+    def isPktShelved(self, pkt):
+        pkt_id = str(self.getPktId(pkt))
+        if pkt_id in self.pkt_shelve:
+            return True
+        return False
+
+    def setExternalDispatch(self, dispatch):
+        self.external_dispatch = dispatch
+        pass
+
+    def getExternalDispatch(self):
+        return self.external_dispatch
 
     def setFileDir(self, file_dir):
         self.file_dir = file_dir
@@ -96,6 +126,17 @@ class MainContext(object):
 
     def getAttributeValue(self):
         return self.__attrs
+
+    def getOurEndpoint(self, proto):
+        tcp_ep = None
+        for ep in self.endpoints:
+            if str(ep[0]).startswith(proto):
+                return ep
+            if str(ep[0]).startswith("tcp://"):
+                tcp_ep = ep
+
+        log.warning("Found no endpoint matching defaulting to tcp")
+        return tcp_ep
 
     def setEndpoints(self):
         if self.__attrs.eps == "ALL":
@@ -216,6 +257,8 @@ class MainContext(object):
         return self.tx
 
 
+    def close(self):
+        self.pkt_shelve.close()
 
 
 
