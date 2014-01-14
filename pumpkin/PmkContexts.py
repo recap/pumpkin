@@ -47,9 +47,15 @@ class MainContext(object):
         pass
 
     def isPktShelved(self, pkt):
+
         pkt_id = str(self.getPktId(pkt))
+        func = pkt[0]["last_func"]
         if pkt_id in self.pkt_shelve:
-            return True
+            spkt = self.pkt_shelve[pkt_id]
+            #Check if the duplicate ID is for the same function
+            #it could be a returning packet for a different function
+            if func == spkt[0]["last_func"]:
+                return True
         return False
 
     def setExternalDispatch(self, dispatch):

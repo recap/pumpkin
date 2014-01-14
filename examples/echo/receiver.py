@@ -3,16 +3,16 @@ __author__ = 'reggie'
 
 ###START-CONF
 ##{
-##"object_name": "consumer",
-##"object_poi": "my-consumer-1234",
+##"object_name": "receiver",
+##"object_poi": "my-receiver-1234",
 ##"auto-load": true,
 ##"parameters": [
 ##                  {
 ##                      "name": "data",
 ##                      "description": "file data",
 ##                      "required": true,
-##                      "type": "DataFile",
-##                      "state" : "RAW"
+##                      "type": "DataString",
+##                      "state" : "PROCESSED"
 ##                  }
 ## ],
 ##"return": [
@@ -20,8 +20,8 @@ __author__ = 'reggie'
 ##                      "name": "data",
 ##                      "description": "file data",
 ##                      "required": true,
-##                      "type": "DataFile",
-##                      "state" : "RAW2"
+##                      "type": "DataString",
+##                      "state" : "RECEIVED"
 ##                  }
 ##
 ##          ] }
@@ -32,7 +32,7 @@ __author__ = 'reggie'
 
 from pumpkin import *
 
-class consumer(PmkSeed.Seed):
+class receiver(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)

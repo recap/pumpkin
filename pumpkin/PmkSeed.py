@@ -100,14 +100,15 @@ class Seed(object):
         return [ip, port, rpath, file]
 
     def ack_pkt(self, pkt):
-        pkt[0]["state"] = "PACK_OK"
-        pkt_id = self.getPktId(pkt)
+        dpkt = copy.copy(pkt)
+        dpkt[0]["state"] = "PACK_OK"
+        pkt_id = self.getPktId(dpkt)
         self._lock_in_fpkts.acquire()
-        self.context.pktReady(pkt)
+        self.context.pktReady(dpkt)
         if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
         self._lock_in_fpkts.release()
         exdisp = self.context.getExternalDispatch()
-        exdisp.sendPACK(pkt)
+        exdisp.sendPACK(dpkt)
 
         pass
 
@@ -299,7 +300,8 @@ class Seed(object):
         header["container"] = cont
         return lpkt
 
-    def dispatch(self, pkt, msg, state, boxing = PKT_OLDBOX):
+    def dispatch(self, dpkt, msg, state, boxing = PKT_OLDBOX):
+        pkt = copy.deepcopy(dpkt)
 
         if str(msg).startswith("file://"):
             dst = self.context.getFileDir()
@@ -318,6 +320,7 @@ class Seed(object):
             pkt[0]["fragment"] = str(fragment)
         else:
             lpkt = copy.copy(pkt)
+            
         lpkt_id = self.getPktId(lpkt)
         otype = self.conf["return"][0]["type"]
         stag = otype + ":"  + state

@@ -83,12 +83,9 @@ class Pumpkin(Daemon):
 
         log.debug("Working directory: "+context.getWorkingDir())
 
-
-
         context = self.context
         zmq_context = self.zmq_context
         context.zmq_context = zmq_context
-
 
 
         udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
