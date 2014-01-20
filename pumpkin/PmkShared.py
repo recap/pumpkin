@@ -3,6 +3,9 @@ __author__ = 'reggie'
 import logging
 import threading
 import os
+import socket
+
+from socket import *
 
 from threading import *
 
@@ -14,7 +17,8 @@ UDP_BROADCAST_RATE = 15
 RZV_SERVER_PORT = 7101
 
 HTTP_TCP_IP = ''
-HTTP_TCP_PORT = 7811
+#HTTP_TCP_PORT = _get_nextport(7811)
+# 7811
 HTTP_BUFFER_SIZE = 1024
 
 ZMQ_ENDPOINT_PORT = 7900
@@ -43,6 +47,30 @@ def _ensure_dir(f):
             os.makedirs(d)
         pass
 
+def _get_nextport(port, prot="TCP"):
+         err = True
+         lport = int(port)
+         while err == True:
+             err = False
+             if prot == "UDP":
+                 sock = socket(AF_INET, SOCK_DGRAM)
+             else:
+                 sock = socket(AF_INET, SOCK_STREAM)
+             try:
+                sock.bind(('0.0.0.0', lport))
+
+             except Exception as e:
+                 sock.close()
+                 err = True
+                 log.warn("Port already in use: "+str(lport))
+                 lport += 1
+
+                 continue
+
+
+         sock.close()
+         return lport
+
 
 class SThread(Thread):
 
@@ -55,3 +83,7 @@ class SThread(Thread):
 
     def stopped(self):
         return self.__stop.isSet()
+
+
+
+HTTP_TCP_PORT = _get_nextport(7811)

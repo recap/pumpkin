@@ -1,16 +1,19 @@
 __author__ = 'reggie'
 
 
-import re
+import re, json
 from socket import *
 
 
 import PmkSeed
+import PmkContexts
+
 from PmkShared import *
 
+import BaseHTTPServer
 
 
-
+CONTEXT = None
 
 class Head(object):
 
@@ -39,9 +42,71 @@ class Head(object):
             self.method = None
 
 
-
-
 class HttpServer(SThread):
+     def __init__(self, context):
+         SThread.__init__(self)
+         self.context = context
+
+         pass
+
+     def run(self):
+        HOST_NAME = 'localhost' # !!!REMEMBER TO CHANGE THIS!!!
+        PORT_NUMBER = HTTP_TCP_PORT # Maybe set this to 9000.
+        server_class = BaseHTTPServer.HTTPServer
+        httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
+        log.info("Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER))
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        httpd.server_close()
+        log.info("Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER))
+
+class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    def do_HEAD(s):
+        s.send_response(200)
+        s.send_header("Content-type", "text/html")
+        s.end_headers()
+    def do_GET(s):
+        """Respond to a GET request."""
+        log.debug("Request "+s.path)
+        context = PmkContexts.MainContext(None)
+
+        if s.path =="/graph.json":
+            rep = context.getProcGraph().dumpGraph()
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            s.wfile.write(str(rep))
+        if s.path =="/packets.json":
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            rep = json.dumps(dict(context.getPktShelve()))
+
+            s.wfile.write(str(rep))
+
+        if s.path == "/":
+            s.send_response(200)
+            s.send_header("Content-type", "text/html")
+            s.end_headers()
+            s.wfile.write("<html><head><title>Pumpkin Web</title></head>")
+            s.wfile.write("<body><p>Loaded Seeds</p>")
+            for x in PmkSeed.iplugins.keys():
+               klass = PmkSeed.iplugins[x]
+               s.wfile.write("<p>"+klass.getName()+"</p>")
+            s.wfile.write("</body></html>")
+
+        #s.wfile.write("<html><head><title>Title goes here.</title></head>")
+        #s.wfile.write("<body><p>This is a test.</p>")
+        # If someone went to "http://something.somewhere.net/foo/bar/",
+        # then s.path equals "/foo/bar/".
+        #s.wfile.write("<p>You accessed path: %s</p>" % s.path)
+        #s.wfile.write("</body></html>")
+
+
+
+class HttpServer_OLD(SThread):
 
 
     def __init__(self, context):

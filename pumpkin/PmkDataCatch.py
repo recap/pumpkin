@@ -2,7 +2,7 @@ __author__ = 'reggie'
 
 import json
 import pyinotify, os
-
+import PmkShared
 
 from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
 
@@ -14,6 +14,7 @@ class PacketFileMonitor(SThread):
         SThread.__init__(self)
         self.context = context
         self.dir = dir
+        PmkShared._ensure_dir(dir)
         pass
 
     def run(self):

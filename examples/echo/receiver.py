@@ -36,10 +36,14 @@ class receiver(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
+        self.counter = 0
         pass
 
 
     def run(self, pkt, data):
+        # if self.counter < 2:
+        #     self.counter += 1
+        #     raise Exception('spam', 'eggs')
 
         if self.ifFile(data):
             prot,path,file,apath = self.fileparts(data)

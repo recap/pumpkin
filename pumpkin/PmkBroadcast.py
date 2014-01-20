@@ -89,22 +89,31 @@ def get_zmq_supernodes(node_list):
         ret.append(s)
     return ret
 
+
 class ZMQBroadcaster(SThread):
-    def __init__(self, context, zmq_context,  port):
+    def __init__(self, context, zmq_context,  sn):
         SThread.__init__(self)
         self.context = context
-        self.port = port
+        self.sn = sn
         self.zmq_cntx = zmq_context
 
     def run(self):
         log.info("Starting thread: "+self.__class__.__name__)
         sock = self.zmq_cntx.socket(zmq.PUB)
-        sock.bind("tcp://*:"+str(self.port))
+        try:
+            #sock.bind("tcp://*:"+str(self.port))
+            sock.bind(self.sn)
+
+        except Exception as er:
+            log.warn("ZMQ Broadcaster disabled (another is already running)")
+            sock.close()
+            return
 
         while True:
             if not self.context.getProcGraph().isRegistryModified():
-                time.sleep(30)
+                time.sleep(10)
                 data = self.context.getProcGraph().dumpExternalRegistry()
+                log.debug("Publishing new registry data on ["+self.sn+"]")
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)
@@ -137,9 +146,11 @@ class ZMQBroadcastSubscriber(SThread):
         sock = self.zmq_cntx.socket(zmq.SUB)
         sock.setsockopt(zmq.SUBSCRIBE, '')
         sock.connect(self.zmq_endpoint)
+
         while True:
+
             data = sock.recv()
-            #log.debug("Incomming data: "+data)
+            log.debug("Incomming data from ["+self.zmq_endpoint+"]: "+data)
             d = json.loads(data)
             for k in d.keys():
                 self.context.getProcGraph().updateRegistry(d[k])
@@ -160,7 +171,13 @@ class BroadcastListener(Thread):
     def run(self):
         log.info("Starting broadcast listener on port "+str(self.__port))
         sok = socket(AF_INET, SOCK_DGRAM)
-        sok.bind(('', self.__port))
+        try:
+            sok.bind(('', self.__port))
+        except Exception as er:
+            log.warn("Broadcast listener disabled (another is already running)")
+            sok.close()
+            return
+
         sok.settimeout(5)
         while 1:
             try:

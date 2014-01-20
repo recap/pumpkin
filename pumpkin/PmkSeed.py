@@ -59,6 +59,9 @@ class Seed(object):
 
         pass
 
+    def getName(self):
+        return self.__class__.__name__
+
     def __rawpacket(self):
         pkt = []
         ship_id = self.context.getExecContext()
@@ -74,11 +77,39 @@ class Seed(object):
         self.run(self.__rawpacket())
         pass
 
-    def _tar_to_gz(self, source, destination):
+    def getContId(self,pkt):
+        return pkt[0]["container"]
+
+    def getShipId(self, pkt):
+        return pkt[0]["ship"]
+
+    def _tar_to_gz(self, source, destination=None, suffix="test"):
+        src = self.context.getWorkingDir()+source
+        if destination == None:
+            destination = self.context.getWorkingDir()+source+"-"+suffix+".tar.gz"
+
         t = tarfile.open(name=destination, mode='w:gz')
-        t.add(source, os.path.basename(source))
+        t.add(src, os.path.basename(src))
         t.close()
-        pass
+
+        return destination
+
+
+    def _untar_to_wd(self, source, destination=None):
+        fp = source
+
+        if not os.path.isfile(fp):
+            fp = self.context.getWorkingDir() +"/"+ source
+            if os.path.isfile(fp):
+                if not destination:
+                    destination = self.context.getWorkingDir()
+                t = tarfile.open(fp)
+                t.extractall(destination)
+                t.close()
+                return fp
+            else:
+                log.error("Input file not found ["+source+"]")
+
 
     def moveto_fileserver(self, filename):
         fullpath = self.context.getWorkingDir()+"/"+filename
@@ -107,8 +138,9 @@ class Seed(object):
         self.context.pktReady(dpkt)
         if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
         self._lock_in_fpkts.release()
-        exdisp = self.context.getExternalDispatch()
-        exdisp.sendPACK(dpkt)
+        if not pkt[0]["last_func"] == None:
+            exdisp = self.context.getExternalDispatch()
+            exdisp.sendPACK(dpkt)
 
         pass
 
@@ -146,28 +178,37 @@ class Seed(object):
             self._lock_in_fpkts.acquire()
             self.in_flight_pkts[pkt_id] = pkt
             self._lock_in_fpkts.release()
+            try:
+                nargs = []
+                if(args[0]):
+                    msg = str(args[0])
+                    if(msg.startswith("tftp://")):
+                        ip, port, rpath, file = self.__endpoint_parts(msg)
+                        if ip in self.tftp_sessions.keys():
+                            client = self.tftp_sessions[ip]
+                        else:
+                            client = tftpy.TftpClient(ip, int(port))
+                            self.tftp_sessions[ip] = client
 
-            nargs = []
-            if(args[0]):
-                msg = str(args[0])
-                if(msg.startswith("tftp://")):
-                    ip, port, rpath, file = self.__endpoint_parts(msg)
-                    if ip in self.tftp_sessions.keys():
-                        client = self.tftp_sessions[ip]
-                    else:
-                        client = tftpy.TftpClient(ip, int(port))
-                        self.tftp_sessions[ip] = client
+                        wdf = self.context.getWorkingDir()+"/"+file
+                        client.download(file, wdf)
+                        nargs.append("file://"+wdf)
+                        for x in range (1,len(args)-1):
+                            nargs.append(args[x])
 
-                    wdf = self.context.getWorkingDir()+"/"+file
-                    client.download(file, wdf)
-                    nargs.append("file://"+wdf)
-                    for x in range (1,len(args)-1):
-                        nargs.append(args[x])
+                        self.run(pkt,*nargs)
+                        return
 
-                    self.run(pkt,*nargs)
-                    return
+                self.run(pkt,*args)
+            except Exception as e:
+                log.error(str(e))
+                self._lock_in_fpkts.acquire()
 
-            self.run(pkt,*args)
+                if pkt_id in self.in_flight_pkts.keys():
+                    del self.in_flight_pkts[pkt_id]
+
+                self._lock_in_fpkts.release()
+                pass
         else:
             log.debug("Duplicate packet received: "+pkt_id)
             pass
@@ -301,6 +342,8 @@ class Seed(object):
         return lpkt
 
     def dispatch(self, dpkt, msg, state, boxing = PKT_OLDBOX):
+
+
         pkt = copy.deepcopy(dpkt)
 
         if str(msg).startswith("file://"):
@@ -320,7 +363,7 @@ class Seed(object):
             pkt[0]["fragment"] = str(fragment)
         else:
             lpkt = copy.copy(pkt)
-            
+
         lpkt_id = self.getPktId(lpkt)
         otype = self.conf["return"][0]["type"]
         stag = otype + ":"  + state
@@ -335,6 +378,12 @@ class Seed(object):
         lpkt[0]["t_state"] = state
         lpkt[0]["t_otype"] = otype
         lpkt[0]["last_func"] = self.__class__.__name__
+
+        if lpkt[0]["stop_func"] == self.__class__.__name__:
+            lpkt[0]["state"] == "PACK_OK"
+            log.debug("Stop function reached ["+lpkt[0]["stop_func"]+"]")
+            self.ack_pkt(lpkt)
+            return
 
         self.addFlightPacket(lpkt)
 

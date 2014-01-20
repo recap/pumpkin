@@ -7,8 +7,14 @@ import signal
 import sys
 import argparse
 import logging
+import shutil
+import errno
 
 
+
+import shelve, os, fcntl, new
+import __builtin__
+from fcntl import LOCK_SH, LOCK_EX, LOCK_UN, LOCK_NB
 
 
 
@@ -17,7 +23,9 @@ from os.path import isfile, join
 from socket import *
 from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
 
+
 from os.path import expanduser
+
 
 
 
@@ -25,7 +33,7 @@ import pumpkin as pmk
 
 import PmkShared
 
-from PmkShared import *
+#from PmkShared import *
 from PmkContexts import *
 from PmkBroadcast import *
 from PmkShell import *
@@ -33,6 +41,9 @@ from PmkHTTPServer import *
 from PmkDaemon import *
 from PmkDataCatch import *
 from PmkTftpServer import *
+from PmkFtpServer import *
+
+
 
 
 
@@ -56,6 +67,11 @@ class Pumpkin(Daemon):
         return self.context
 
     def stopContext(self):
+
+        local_peers = self._shelve_safe_open("/tmp/pumpkin")
+        if self.context.getUuid() in local_peers: del local_peers[self.context.getUuid()]
+        local_peers.close()
+
         self.context.close()
         for th in self.context.getThreads():
             th.stop()
@@ -66,6 +82,59 @@ class Pumpkin(Daemon):
 
     def run(self):
         self.startContext()
+        pass
+
+    def _shelve_safe_close(self, selv):
+        shelve.Shelf.close(selv)
+        fcntl.flock(selv.lckfile.fileno(), LOCK_UN)
+        selv.lckfile.close()
+
+    def _shelve_safe_open(self, filename, flag='c', protocol=None, writeback=False, block=True, lckfilename=None):
+        """Open the sheve file, createing a lockfile at filename.lck.  If
+        block is False then a IOError will be raised if the lock cannot
+        be acquired"""
+        if lckfilename == None:
+            lckfilename = filename + ".lck"
+        lckfile = __builtin__.open(lckfilename, 'w')
+
+        # Accquire the lock
+        if flag == 'r':
+            lockflags = LOCK_SH
+        else:
+            lockflags = LOCK_EX
+        if not block:
+            lockflags = LOCK_NB
+        fcntl.flock(lckfile.fileno(), lockflags)
+
+        # Open the shelf
+        shelf = shelve.open(filename, flag, protocol, writeback)
+
+        # Override close
+        shelf.close = new.instancemethod(self._shelve_safe_close, shelf, shelve.Shelf)
+        shelf.lckfile = lckfile
+
+        # And return it
+        return shelf
+
+    def _checkLocalPeers(self, zmq_context):
+        try:
+            local_peers = self._shelve_safe_open("/tmp/pumpkin")
+
+            for p in local_peers:
+                if p not in self.context.peers:
+                    self.context.peers[p] = local_peers[p]
+                    log.debug("Subscribing to new Peer ["+local_peers[p]+"]")
+                    zmqsub = ZMQBroadcastSubscriber(self.context, zmq_context, local_peers[p])
+                    zmqsub.start()
+                    self.context.addThread(zmqsub)
+
+            local_peers.close()
+        except Exception as er:
+            log.error(str(er))
+            local_peers.close()
+
+        threading.Timer(10, self._checkLocalPeers, [zmq_context]).start()
+
         pass
 
     def startContext(self):
@@ -79,27 +148,65 @@ class Pumpkin(Daemon):
 
         PmkShared._ensure_dir(wd)
         context.startPktShelve("PktStore")
+        context.peers[context.getUuid()] = "/tmp/"+context.getUuid()+"-bcast"
+        local_peers = self._shelve_safe_open("/tmp/pumpkin")
+        local_peers[context.getUuid()] = "ipc:///tmp/"+context.getUuid()+"-bcast"
+        local_peers.close()
+
 
 
         log.debug("Working directory: "+context.getWorkingDir())
 
+        #context.openfiles.append(context.getWorkingDir())
+
         context = self.context
         zmq_context = self.zmq_context
         context.zmq_context = zmq_context
+        #PmkShared.ZMQ_PUB_PORT  = PmkShared._get_nextport(ZMQ_PUB_PORT, "TCP")
+        PmkShared.ZMQ_ENDPOINT_PORT = PmkShared._get_nextport(ZMQ_ENDPOINT_PORT, "TCP")
+        PmkShared.TFTP_FILE_SERVER_PORT  = PmkShared._get_nextport(TFTP_FILE_SERVER_PORT, "UDP")
+
+        context.setEndpoints()
 
 
-        udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
-        udplisten.start()
-        context.addThread(udplisten)
+        # udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
+        # udplisten.start()
+        # context.addThread(udplisten)
+
+        #Local bus
+        zmqbc = ZMQBroadcaster(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bcast")
+        context.openfiles.append("/tmp/"+context.getUuid()+"-bcast")
+        #context.openfiles.append("/tmp/pumpkin-bus")
+        zmqbc.start()
+        context.addThread(zmqbc)
+
+        # zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bus")
+        #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "ipc:///tmp/pumpkin-bus")
+        #zmqsub.start()
+        #context.addThread(zmqsub)
+
 
         ftpdir = wd + 'fdata/'
-        tftpserver = TftpServer(context, ftpdir, TFTP_FILE_SERVER_PORT)
+
+        tftpserver = TftpServer(context, ftpdir, PmkShared.TFTP_FILE_SERVER_PORT)
         tftpserver.start()
         context.setFileDir(ftpdir)
         context.addThread(tftpserver)
 
+        ftpserver = FtpServer(context, context.getWorkingDir())
+        ftpserver.start()
+        context.addThread(ftpserver)
+
+
+
+
         if context.hasRx():
             rxdir = context.hasRx()
+            pfm = PacketFileMonitor(context, rxdir)
+            pfm.start()
+            context.addThread(pfm)
+        else:
+            rxdir = context.getWorkingDir()+"/rx"
             pfm = PacketFileMonitor(context, rxdir)
             pfm.start()
             context.addThread(pfm)
@@ -111,7 +218,7 @@ class Pumpkin(Daemon):
             #udplisten.start()
             #context.addThread(udplisten)
 
-            zmqbc = ZMQBroadcaster(context, zmq_context, ZMQ_PUB_PORT)
+            zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
             zmqbc.start()
             context.addThread(zmqbc)
 
@@ -120,20 +227,22 @@ class Pumpkin(Daemon):
             context.addThread(http)
 
 
-
         if not context.isWithNoPlugins():# and not context.isSupernode():
             for ep in context.getEndpoints():
                 if context.isZMQEndpoint(ep):
+                    #ep[0] = PmkShared._get_nextport(ep[0], "TCP")
                     tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
                     tcpm.start()
                     context.addThread(tcpm)
 
 
             for sn in get_zmq_supernodes(SUPERNODES):
-                log.debug("Subscribing to: "+sn)
-                zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
-                zmqsub.start()
-                context.addThread(zmqsub)
+                #log.debug("Subscribing to: "+sn)
+                #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
+                #zmqsub.start()
+                #context.addThread(zmqsub)
+                pass
+
             try:
                 if not context.singleSeed():
                     onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
@@ -189,6 +298,15 @@ class Pumpkin(Daemon):
                 log.error("Import error "+ str(e))
                 pass
 
+            for fd in listdir(context.getTaskDir()):
+                src = context.getTaskDir()+"/"+fd
+                dst = context.getWorkingDir()+"/"+fd
+                try:
+                    shutil.copytree(src, dst)
+                except OSError as exc: # python >2.5
+                    if exc.errno == errno.ENOTDIR:
+                        shutil.copy(src, dst)
+                    else: raise
 
 
             for x in PmkSeed.iplugins.keys():
@@ -217,6 +335,7 @@ class Pumpkin(Daemon):
 
             #context.startDisplay()
 
+            self._checkLocalPeers(zmq_context)
 
             ##############START TASKS WITH NO INPUTS#############################
             inj = Injector(context)
@@ -233,13 +352,30 @@ class Pumpkin(Daemon):
                 cmdp.cmdloop()
 
 
+
+from BaseHTTPServer import HTTPServer
+from SocketServer import ThreadingMixIn
+
+#class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+#    """Handle requests in a separate thread."""
+
+
+
 def main():
+
     log = logging.getLogger("pumpkin")
     log.setLevel(logging.DEBUG)
 
     requests_log = logging.getLogger("tftpy")
     requests_log.setLevel(logging.WARNING)
     #log.setLevel(logging.INFO)
+
+
+    ###################TEST###############################3
+
+
+
+    ######################################################3
 
 
     parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
