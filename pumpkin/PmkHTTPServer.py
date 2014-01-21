@@ -78,6 +78,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_header("Content-type", "application/json")
             s.end_headers()
             s.wfile.write(str(rep))
+
         if s.path =="/packets.json":
             s.send_response(200)
             s.send_header("Content-type", "application/json")
@@ -94,7 +95,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.wfile.write("<body><p>Loaded Seeds</p>")
             for x in PmkSeed.iplugins.keys():
                klass = PmkSeed.iplugins[x]
-               s.wfile.write("<p>"+klass.getName()+"</p>")
+               s.wfile.write("<p>"+klass.get_name()+"</p>")
             s.wfile.write("</body></html>")
 
         #s.wfile.write("<html><head><title>Title goes here.</title></head>")

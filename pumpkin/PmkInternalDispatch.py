@@ -15,6 +15,7 @@ class rx(Queue):
         pass
 
 class InternalDispatch(SThread):
+    _packed_pkts = 0
     def __init__(self, context):
         SThread.__init__(self)
         self.context = context
@@ -24,16 +25,18 @@ class InternalDispatch(SThread):
         rx = self.context.getRx()
         while 1:
             pkts = rx.get(True)
-            log.debug("Packet received: \n"+pkts)
+            #log.debug("Packet received: \n"+pkts)
             pkt = json.loads(pkts)
             #Check for PACK
             if pkt[0]["state"] == "PACK_OK":
-                log.debug("PACK packet: "+pkts)
+                #log.debug("PACK packet: "+pkts)
                 seed = pkt[0]["last_func"]
 
                 if seed in PmkSeed.iplugins.keys():
                     klass = PmkSeed.iplugins[seed]
                     klass.pack_ok(pkt)
+                    self._packed_pkts += 1
+                    #log.debug("PACKED pkts: "+str(self._packed_pkts))
             else:
                 l = len(pkt)
                 func = pkt[l-1]["func"]
@@ -89,6 +92,7 @@ class ZMQPacketMonitor(SThread):
         while True:
             try:
                 msg = soc.recv()
+
                 if "REVERSE" in msg:
                     log.debug(msg)
                     ep = msg.split("::")[1]
@@ -99,7 +103,7 @@ class ZMQPacketMonitor(SThread):
                     log.debug("Received msg: "+msg)
                     #continue
                 self.rx.put(msg)
-                log.debug("Message: "+str(msg))
+                #log.debug("Message: "+str(msg))
             except zmq.ZMQError as e:
                 if self.stopped():
                     log.debug("Exiting thread "+  self.__class__.__name__)
@@ -109,6 +113,9 @@ class ZMQPacketMonitor(SThread):
                     break
                 else:
                     continue
+            #except MemoryError as e:
+            #    log.error(str(e))
+            #    sys.exit(1)
 
         pass
 

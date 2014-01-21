@@ -21,7 +21,7 @@ iplugins = {}
 
 PKT_NEWBOX = 01
 PKT_OLDBOX = 02
-PKT_PROCESS_WINDOW = 2
+PKT_PROCESS_WINDOW = 100
 
 class SeedType(type):
     def __init__(cls, name, bases, attrs):
@@ -37,7 +37,7 @@ class SeedType(type):
 class Seed(object):
     __metaclass__ = SeedType
 
-
+    _pkt_counter_interval = 1.0
 
     def __init__(self, context, poi="Unset"):
         self.context = context
@@ -50,6 +50,16 @@ class Seed(object):
         self.in_flight_pkts = {}
         self.pkt_checker_t()
         self.ttf = None
+        #self.sclock = time.clock()
+        self._lock_telemetrics = threading.Lock()
+        self._pkt_counter = 0
+        self._avg_pkt_proc_time = 1
+        self._avg_ingress = 0
+        self._avg_outgress = 0
+
+
+        self._update_pkt_counter_t()
+
         #threading.Timer(10, self.pkt_checker_t).start()
         #try:
         #thread.start_new_thread(self.pkt_checker_t)
@@ -59,14 +69,33 @@ class Seed(object):
 
         pass
 
-    def getName(self):
-        return self.__class__.__name__
+
+    def _update_pkt_counter_t(self):
+        self._lock_telemetrics.acquire()
+        self._avg_ingress = 0
+
+        if self._pkt_counter > 0:
+            self._avg_ingress = float(self._pkt_counter / self._pkt_counter_interval)
+            self._pkt_counter_interval = 1
+        else:
+            self._pkt_counter_interval = 10
+
+        log.debug(self.get_name()+" avg pkt ingress: "+str(self._avg_ingress)+" pkt/s  ["+str(self._pkt_counter)+"]["+str(len(self.flight_pkts))+"]")
+        self._pkt_counter = 0
+
+        self._lock_telemetrics.release()
+
+        threading.Timer(self._pkt_counter_interval, self._update_pkt_counter_t).start()
+
+
 
     def __rawpacket(self):
         pkt = []
         ship_id = self.context.getExecContext()
         cont_id =  str(uuid.uuid4())[:8]
-        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : "E", "state" : "NEW", "ttl" : '0',"t_state":"None", "t_otype" : "None" , "last_contact" : "None", "last_func" : "None"})
+        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : "E",\
+                    "state" : "NEW", "ttl" : '0',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
+                    "last_contact" : "None", "last_func" : "None", "last_timestamp" : 0})
         pkt.append( {"stag" : "RAW", "exstate" : "0001"} )
         return pkt
 
@@ -131,7 +160,7 @@ class Seed(object):
         return [ip, port, rpath, file]
 
     def ack_pkt(self, pkt):
-        dpkt = copy.copy(pkt)
+        dpkt = copy.deepcopy(pkt)
         dpkt[0]["state"] = "PACK_OK"
         pkt_id = self.getPktId(dpkt)
         self._lock_in_fpkts.acquire()
@@ -139,9 +168,8 @@ class Seed(object):
         if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
         self._lock_in_fpkts.release()
         if not pkt[0]["last_func"] == None:
-            exdisp = self.context.getExternalDispatch()
-            exdisp.sendPACK(dpkt)
-
+             exdisp = self.context.getExternalDispatch()
+             exdisp.sendPACK(dpkt)
         pass
 
 
@@ -156,7 +184,7 @@ class Seed(object):
             log.warning("Trying to ACK packet from another function!")
         pass
 
-    def isDuplicate(self, pkt):
+    def is_duplicate(self, pkt):
         pkt_id = self.getPktId(pkt)
         self._lock_in_fpkts.acquire()
 
@@ -169,9 +197,20 @@ class Seed(object):
         self._lock_in_fpkts.release()
         return False
 
+    def __inc_pkt_counter(self):
+        self._lock_telemetrics.acquire()
+        self._pkt_counter += 1
+        self._lock_telemetrics.release()
+
+    def __dec_pkt_counter(self):
+        self._lock_telemetrics.acquire()
+        self._pkt_counter -= 1
+        self._lock_telemetrics.release()
+
+
     def _stage_run(self,pkt, *args):
         pkt_id = self.getPktId(pkt)
-        if not self.isDuplicate(pkt):
+        if not self.is_duplicate(pkt):
 
 
             pkt[0]["state"] = "PROCESSING"
@@ -179,6 +218,8 @@ class Seed(object):
             self.in_flight_pkts[pkt_id] = pkt
             self._lock_in_fpkts.release()
             try:
+                self.__inc_pkt_counter()
+
                 nargs = []
                 if(args[0]):
                     msg = str(args[0])
@@ -253,19 +294,19 @@ class Seed(object):
 
         self._lock_fpkts.release()
 
-        threading.Timer(interval, self.pkt_checker_t).start()
+        #threading.Timer(interval, self.pkt_checker_t).start()
 
          #   time.sleep(10)
 
         pass
 
     def getConfEntry(self):
-        js = '{ "name" : "'+self.getname()+'", \
+        js = '{ "name" : "'+self.get_name()+'", \
        "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.getparameters()+',' \
        ''+self.getreturn()+'}'
 
-       # js = '{ "name" : "'+self.getname()+'", \
+       # js = '{ "name" : "'+self.get_name()+'", \
        #"zmq_endpoint" : [ {"ep" : "'+self.context.endpoints[0]+'", "cuid" : "'+self.context.getUuid()+'"} ],' \
        #''+self.getparameters()+',' \
        #''+self.getreturn()+'}'
@@ -385,25 +426,37 @@ class Seed(object):
             self.ack_pkt(lpkt)
             return
 
-        self.addFlightPacket(lpkt)
+        self.add_flight_pkt(lpkt)
 
 
         self.context.getTx().put((state,otype,lpkt))
         pass
-    def addFlightPacket(self,pkt):
+
+    def add_flight_pkt(self,pkt):
         pkt_id = self.getPktId(pkt)
-        while 1:
-            if len(self.flight_pkts) < PKT_PROCESS_WINDOW:
-                self._lock_fpkts.acquire()
-                self.flight_pkts[pkt_id] = pkt
-                self._lock_fpkts.release()
-                break
-            else:
-                log.debug("Process window full for "+self.__class__.__name__)
-                time.sleep(5)
+
+        # while 1:
+        #     if len(self.flight_pkts) < PKT_PROCESS_WINDOW:
+        #         self._lock_fpkts.acquire()
+        #         self.flight_pkts[pkt_id] = pkt
+        #         self._lock_fpkts.release()
+        # #        return
+        #         break
+        #     else:
+        #         log.debug("Process window full for "+self.__class__.__name__)
+        #         time.sleep(3)
+        #         #log.debug(str(pkt))
+        #         #threading.Timer(20, self.add_flight_pkt, [pkt]).start()
+
+
+
+        self._lock_fpkts.acquire()
+        self.flight_pkts[pkt_id] = pkt
+        self._lock_fpkts.release()
+
         pass
 
-    def getname(self):
+    def get_name(self):
         return self.__class__.__name__
 
 

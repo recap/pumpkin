@@ -113,7 +113,7 @@ class ZMQBroadcaster(SThread):
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(10)
                 data = self.context.getProcGraph().dumpExternalRegistry()
-                log.debug("Publishing new registry data on ["+self.sn+"]")
+                #log.debug("Publishing new registry data on ["+self.sn+"]")
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)
@@ -124,7 +124,7 @@ class ZMQBroadcaster(SThread):
             if self.context.getProcGraph().isRegistryModified():
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 self.context.getProcGraph().ackRegistryUpdate()
-                log.debug("Publishing new registry data")
+                #log.debug("Publishing new registry data")
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)

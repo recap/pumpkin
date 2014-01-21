@@ -62,11 +62,11 @@ class ExternalDispatch(SThread):
 
             while 1:
                 routes = graph.getRoutes(otag)
-                log.debug("Found routes: "+json.dumps(routes))
+                #log.debug("Found routes: "+json.dumps(routes))
                 if routes:
                     break
                 else:
-                    log.debug("No route found for: "+otag)
+                    #log.debug("No route found for: "+otag)
                     time.sleep(5)
 
             for r in routes:
@@ -81,7 +81,7 @@ class ExternalDispatch(SThread):
                 if pep:
                     entry = pep
                     ep = pep["ep"]
-                    log.debug("Route found for function "+r["name"]+": "+pep["ep"])
+                    #log.debug("Route found for function "+r["name"]+": "+pep["ep"])
                     next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                     dcpkt.append(next_hop)
                     #pkt.remove( pkt[len(pkt)-1] )
@@ -191,6 +191,8 @@ class ZMQPacketDispatch(Dispatch):
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        self.soc.setsockopt(zmq.HWM, 1000)
+        #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         log.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
 

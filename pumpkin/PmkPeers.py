@@ -36,7 +36,7 @@
 #                    '}'
 #        return json_text
 #
-#    def getName(self):
+#    def get_name(self):
 #        return self.name
 #
 #class Communication(object):
@@ -142,7 +142,7 @@
 #    def getPeerForFunc(self, function):
 #        for p in self.peers:
 #            for f in p.functions:
-#                if f.getName() == function:
+#                if f.get_name() == function:
 #                    return p
 #        return None
 #

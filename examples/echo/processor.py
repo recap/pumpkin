@@ -41,9 +41,11 @@ class processor(PmkSeed.Seed):
 
     def run(self, pkt, data):
         print "PROCESSOR: "+data
+        self.ack_pkt(pkt)
+
         self.dispatch(pkt, data, "PROCESSED")
 
-        self.ack_pkt(pkt)
+
 
 
         pass
