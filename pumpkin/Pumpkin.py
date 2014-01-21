@@ -169,9 +169,9 @@ class Pumpkin(Daemon):
         context.setEndpoints()
 
 
-        # udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
-        # udplisten.start()
-        # context.addThread(udplisten)
+        udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
+        udplisten.start()
+        context.addThread(udplisten)
 
         #Local bus
         zmqbc = ZMQBroadcaster(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bcast")
