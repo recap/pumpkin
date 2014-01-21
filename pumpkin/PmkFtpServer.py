@@ -6,9 +6,15 @@ import PmkShared
 
 from PmkShared import *
 
-from pyftpdlib.contrib.authorizers import DummyAuthorizer
-from pyftpdlib.contrib.handlers import FTPHandler
-from pyftpdlib.ftpserver import FTPServer
+try:
+    from pyftpdlib.contrib.authorizers import DummyAuthorizer
+    from pyftpdlib.contrib.handlers import FTPHandler
+    from pyftpdlib.ftpserver import FTPServer
+except ImportError:
+    from pyftpdlib.authorizers import DummyAuthorizer
+    from pyftpdlib.handlers import FTPHandler
+    from pyftpdlib.servers import FTPServer
+
 
 class FtpServer(SThread):
 
