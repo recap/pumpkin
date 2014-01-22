@@ -9,10 +9,12 @@ import tftpy
 import time
 import thread
 import collections
-
+import networkx as nx
+import json
 
 from PmkShared import *
 from PmkExternalDispatch import ExternalDispatch
+from networkx.readwrite import json_graph
 
 
 plugins = []
@@ -93,13 +95,29 @@ class Seed(object):
         pkt = []
         ship_id = self.context.getExecContext()
         cont_id =  str(uuid.uuid4())[:8]
-        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : "E",\
-                    "state" : "NEW", "ttl" : '0',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
+        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : "E", "state": "NEW", \
+                    "c_tag" : "NONE:NONE", "ttl" : '0',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
                     "last_contact" : "None", "last_func" : "None", "last_timestamp" : 0})
+        #Place holder for data automaton
+        g = nx.DiGraph()
+        in_tags = self.get_in_tag_list()
+        out_tags = self.get_out_tag_list()
+
+        for it in in_tags:
+            for ot in out_tags:
+                g.add_edge(it,ot,function=self.get_name())
+
+        g.add_edge("DataString:RAW", "DataStrng:PROCESSED", function="foobar")
+
+        d =  json_graph.node_link_data(g)
+        ds = json.dumps(d)
+
+        pkt.append( ds )
         pkt.append( {"stag" : "RAW", "exstate" : "0001"} )
+
         return pkt
 
-    def getNewContainer(self):
+    def get_new_container(self):
         return str(uuid.uuid4())[:8]
 
     def rawrun(self):
@@ -260,7 +278,7 @@ class Seed(object):
     def getpoi(self):
         return self.poi
 
-    def setconf(self, jconf):
+    def set_conf(self, jconf):
         self.conf = jconf
         pass
 
@@ -303,12 +321,12 @@ class Seed(object):
     def getConfEntry(self):
         js = '{ "name" : "'+self.get_name()+'", \
        "endpoints" : [ '+self.__getEps()+' ],' \
-       ''+self.getparameters()+',' \
+       ''+self.get_parameters()+',' \
        ''+self.getreturn()+'}'
 
        # js = '{ "name" : "'+self.get_name()+'", \
        #"zmq_endpoint" : [ {"ep" : "'+self.context.endpoints[0]+'", "cuid" : "'+self.context.getUuid()+'"} ],' \
-       #''+self.getparameters()+',' \
+       #''+self.get_parameters()+',' \
        #''+self.getreturn()+'}'
         return js
 
@@ -329,8 +347,33 @@ class Seed(object):
         aep = aep[:len(aep)-1]
         return aep
 
+    def get_in_tag_list(self):
+        ret = []
+        if len(self.conf["parameters"]) > 0:
+            for p in self.conf["parameters"]:
+                type = p["type"]
+                tag_list = p["state"].split("|")
+                for t in tag_list:
+                    transition = type+":"+t
+                    ret.append(transition)
+        else:
+            ret.append("NONE:NONE")
+        return ret
 
-    def getparameters(self):
+    def get_out_tag_list(self):
+        ret = []
+        if len(self.conf["return"]) > 0:
+            for p in self.conf["return"]:
+                type = p["type"]
+                tag_list = p["state"].split("|")
+                for t in tag_list:
+                    transition = type+":"+t
+                    ret.append(transition)
+        else:
+            ret.append("NONE:NONE")
+        return ret
+
+    def get_parameters(self):
         if len(self.conf["parameters"]) > 0:
             for p in self.conf["parameters"]:
                 sret =  '"itype" : "'+p["type"]+'", "istate" : "'+p["state"]+'"'
@@ -375,14 +418,14 @@ class Seed(object):
 
     def duplicate_pkt_new_box(self,pkt):
         lpkt = copy.deepcopy(pkt)
-        cont = self.getNewContainer()
+        cont = self.get_new_container()
         header = lpkt[0]
         #box = int(header["box"])
         #box = box + 1
         header["container"] = cont
         return lpkt
 
-    def dispatch(self, dpkt, msg, state, boxing = PKT_OLDBOX):
+    def dispatch(self, dpkt, msg, tag, boxing = PKT_OLDBOX):
 
 
         pkt = copy.deepcopy(dpkt)
@@ -407,16 +450,20 @@ class Seed(object):
 
         lpkt_id = self.getPktId(lpkt)
         otype = self.conf["return"][0]["type"]
-        stag = otype + ":"  + state
+        stag = otype + ":"  + tag
+
+        #Add output of current function
         pkt_e = {}
         pkt_e["stag"] = stag
         pkt_e["func"] = self.__class__.__name__
         pkt_e["exstate"] = "0001"
         pkt_e["data"] = msg
         lpkt.append(pkt_e)
+
         lpkt[0]["state"] = "WAITING_PACK"
+        lpkt[0]["c_tag"] = stag
         lpkt[0]["ttl"] = '60'
-        lpkt[0]["t_state"] = state
+        lpkt[0]["t_state"] = tag
         lpkt[0]["t_otype"] = otype
         lpkt[0]["last_func"] = self.__class__.__name__
 
@@ -429,7 +476,7 @@ class Seed(object):
         self.add_flight_pkt(lpkt)
 
 
-        self.context.getTx().put((state,otype,lpkt))
+        self.context.getTx().put((tag,otype,lpkt))
         pass
 
     def add_flight_pkt(self,pkt):

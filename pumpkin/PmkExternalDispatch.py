@@ -7,6 +7,12 @@ import time
 import Queue
 import zmq
 import copy
+import networkx as nx
+
+
+
+from networkx.readwrite import json_graph
+
 
 from Queue import *
 from PmkShared import *
@@ -60,9 +66,22 @@ class ExternalDispatch(SThread):
             #log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
             otag = otype+":"+state
 
+
+            g = json_graph.loads(pkt[1])
+            ntag = None
+            if otag in g:
+                d = g[otag]
+
+                if d:
+                    ntag = d.keys()[0]
+
+
+
+
+
             while 1:
                 routes = graph.getRoutes(otag)
-                #log.debug("Found routes: "+json.dumps(routes))
+                log.debug("Found routes: "+json.dumps(routes))
                 if routes:
                     break
                 else:
@@ -72,40 +91,42 @@ class ExternalDispatch(SThread):
             for r in routes:
                 #log.debug("Route: "+str(r))
                 dcpkt = copy.copy(pkt)
-                #TODO make it more flexible not bound to zmq
-                pep = self.context.getProcGraph().getPriorityEndpoint(r)
-                eep = self.context.getProcGraph().getExternalEndpoints(r)
-                oep = self.context.getOurEndpoint(self.getProtoFromEP(pep["ep"]))
-                dcpkt[0]["last_contact"] = oep[0]
+                rtag = r["otype"]+":"+r["ostate"]
+                if (ntag and ntag == rtag) or not ntag:
+                    #TODO make it more flexible not bound to zmq
+                    pep = self.context.getProcGraph().getPriorityEndpoint(r)
+                    eep = self.context.getProcGraph().getExternalEndpoints(r)
+                    oep = self.context.getOurEndpoint(self.getProtoFromEP(pep["ep"]))
+                    dcpkt[0]["last_contact"] = oep[0]
 
-                if pep:
-                    entry = pep
-                    ep = pep["ep"]
-                    #log.debug("Route found for function "+r["name"]+": "+pep["ep"])
-                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
-                    dcpkt.append(next_hop)
-                    #pkt.remove( pkt[len(pkt)-1] )
-                    #log.debug(json.dumps(pkt))
-                    if ep in self.dispatchers.keys():
-                        disp = self.dispatchers[ep]
-                        disp.dispatch(json.dumps(dcpkt))
-                        #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                    else:
-                        disp = None
-                        if entry["mode"] == "zmq.PULL":
-                            #disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                            #disp = ZMQPacketDispatch(self.context)
-                            disp = self.gdisp
-
-                        if not disp == None:
-                            self.dispatchers[ep] = disp
-                            disp.connect(ep)
+                    if pep:
+                        entry = pep
+                        ep = pep["ep"]
+                        #log.debug("Route found for function "+r["name"]+": "+pep["ep"])
+                        next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
+                        dcpkt.append(next_hop)
+                        #pkt.remove( pkt[len(pkt)-1] )
+                        #log.debug(json.dumps(pkt))
+                        if ep in self.dispatchers.keys():
+                            disp = self.dispatchers[ep]
                             disp.dispatch(json.dumps(dcpkt))
                             #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                         else:
-                            log.error("No dispatchers found for: "+ep)
+                            disp = None
+                            if entry["mode"] == "zmq.PULL":
+                                #disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                #disp = ZMQPacketDispatch(self.context)
+                                disp = self.gdisp
+
+                            if not disp == None:
+                                self.dispatchers[ep] = disp
+                                disp.connect(ep)
+                                disp.dispatch(json.dumps(dcpkt))
+                                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                            else:
+                                log.error("No dispatchers found for: "+ep)
 
                 #if r["endpoints"][0]:
                 #    entry = r["endpoints"][0]
@@ -191,7 +212,7 @@ class ZMQPacketDispatch(Dispatch):
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
-        self.soc.setsockopt(zmq.HWM, 1000)
+        self.soc.setsockopt(zmq.HWM, 100)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         log.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)

@@ -268,7 +268,7 @@ class Pumpkin(Daemon):
                                         klass = PmkSeed.hplugins[modname](context)
                                         PmkSeed.iplugins[modname] = klass
                                         klass.on_load()
-                                        klass.setconf(d)
+                                        klass.set_conf(d)
 
                 else:
                     seedfp = context.singleSeed()
@@ -292,7 +292,7 @@ class Pumpkin(Daemon):
                                 klass = PmkSeed.hplugins[modname](context)
                                 PmkSeed.iplugins[modname] = klass
                                 klass.on_load()
-                                klass.setconf(d)
+                                klass.set_conf(d)
 
             except Exception as e:
                 log.error("Import error "+ str(e))

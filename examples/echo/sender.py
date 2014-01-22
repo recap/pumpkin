@@ -47,7 +47,7 @@ class sender(PmkSeed.Seed):
         # f.close()
 
         #npkt = self.duplicate_pkt_new_box(pkt)
-        for x in range(1,501):
+        for x in range(1,2):
             npkt1 = self.duplicate_pkt_new_box(pkt)
             print "SENDER: " +str(x)
             self.dispatch(npkt1, "TESTTEST: "+str(x), "RAW")

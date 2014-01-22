@@ -191,7 +191,7 @@ class BroadcastListener(Thread):
                 else:
                     continue
             log.debug("Broadcast received from: "+repr(wherefrom))
-            #log.debug("Broadcast data: "+data)
+            log.debug("Broadcast data: "+data)
             #datam = hashlib.md5(data).hexdigest()
             #log.debug("MD5 data: "+datam)
             self.handle(data,wherefrom)

@@ -246,8 +246,8 @@ main()
 #                    klass = Seed.hplugins[modname](context)
 #                    Seed.iplugins[modname] = klass
 #                    klass.on_load()
-#                    klass.setconf(d)
-#                    #print klass.getparameters()
+#                    klass.set_conf(d)
+#                    #print klass.get_parameters()
 #                    #print klass.getreturn()
 #
 #
