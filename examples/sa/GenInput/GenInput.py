@@ -29,8 +29,6 @@ __author__ = 'reggie'
 
 
 
-
-
 import subprocess
 import os
 from pumpkin import PmkSeed
@@ -40,9 +38,10 @@ class GenInput(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
+        self.wd = self.context.getWorkingDir()
         self.env = os.environ.copy()
         self.env['LD_LIBRARY_PATH'] += ":/usr/local/matlabR2008a/bin/glnxa64/"
-        self.script_path = "/home/reggie/PUMPKIN/examples/sa/GenInput/GenInput_generic"
+        self.script_path = self.wd+"/GenInput_generic"
         pass
 
     def on_load(self):
@@ -51,12 +50,20 @@ class GenInput(PmkSeed.Seed):
 
 
     def run(self, pkt, GenInputParam):
-        InputName = GenInputParam.split(",")[0]
+        ParamFile = GenInputParam.split(",")[0]
         NrOfSamplesParam = GenInputParam.split(",")[1]
+        InputFile = self.move_file_to_wd(ParamFile)
 
-        ret = subprocess.call([self.script_path, InputName, NrOfSamplesParam],env=self.env, cwd=self.context.getWorkingDir())
+        print "RUNNING GenInput" + str(NrOfSamplesParam)
+        ret = subprocess.call([self.script_path, InputFile, NrOfSamplesParam],env=self.env, cwd=self.context.getWorkingDir())
+        #ret = subprocess.call([self.script_path, "testje3.txt", NrOfSamplesParam],env=self.env, cwd=self.context.getWorkingDir())
         if ret == 0:
-            #Success
+            #Sucess
+            dst_dir = "/out_data/"+self.get_ship_id(pkt)
+            self.move_data_file("input-variation.txt", dst_dir, self.get_cont_id(pkt))
+            self.move_data_file("X1-input.dat", dst_dir, self.get_cont_id(pkt))
+            self.move_data_file("X2-input.dat", dst_dir, self.get_cont_id(pkt))
+            self.move_data_file("Xsim-input.csv", dst_dir, self.get_cont_id(pkt))
 
             pass
         else:

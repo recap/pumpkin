@@ -64,7 +64,7 @@ class Sobol(PmkSeed.Seed):
         #ret = subprocess.call([self.script_path],env=self.env, cwd="/tmp/")
         if ret == 0:
             print "SOBOL OK"
-            dst = self._tar_to_gz("/SimRes", suffix=self.getContId(pkt))
+            dst = self._tar_to_gz("/SimRes", suffix=self.get_cont_id(pkt))
             self.ack_pkt(pkt)
             self.dispatch(pkt, "file://"+dst, "SobolIndeces")
 

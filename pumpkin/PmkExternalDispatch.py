@@ -65,15 +65,15 @@ class ExternalDispatch(SThread):
             state, otype, pkt = tx.get(True)
             #log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
             otag = otype+":"+state
-
-
-            g = json_graph.loads(pkt[1])
             ntag = None
-            if otag in g:
-                d = g[otag]
+            if pkt[1]:
+                g = json_graph.loads(pkt[1])
 
-                if d:
-                    ntag = d.keys()[0]
+                if otag in g:
+                    d = g[otag]
+
+                    if d:
+                        ntag = d.keys()[0]
 
 
 

@@ -9,6 +9,7 @@ import argparse
 import logging
 import shutil
 import errno
+import ConfigParser
 
 
 
@@ -236,7 +237,7 @@ class Pumpkin(Daemon):
                     context.addThread(tcpm)
 
 
-            for sn in get_zmq_supernodes(SUPERNODES):
+            for sn in get_zmq_supernodes(PmkShared.SUPERNODES):
                 log.debug("Subscribing to: "+sn)
                 zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
                 zmqsub.start()
@@ -410,6 +411,8 @@ def main():
                        help='print debugging info.')
     parser.add_argument('-d', action='store', dest="daemon", default=None,
                        help='daemonize start|stop|restart')
+    parser.add_argument('-c', action='store', dest="config", default="./pumpkin.cfg",
+                       help='config file')
 
     parser.add_argument('--version', action='version', version='%(prog)s '+pmk.VERSION)
     args = parser.parse_args()
@@ -430,6 +433,14 @@ def main():
         context = P.getContext()
         context.setAttributes(args)
         UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
+        config = ConfigParser.RawConfigParser(allow_no_value=True)
+        if os.path.exists(args.config):
+            config.read(args.config)
+            PmkShared.SUPERNODES = config.get("supernodes", "hosts").split(",")
+            x = 10
+            pass
+
+
         P.startContext()
         #Handle SIGINT
         def signal_handler(signal, frame):

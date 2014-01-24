@@ -12,6 +12,8 @@ import collections
 import networkx as nx
 import json
 
+import PmkShared
+
 from PmkShared import *
 from PmkExternalDispatch import ExternalDispatch
 from networkx.readwrite import json_graph
@@ -124,10 +126,10 @@ class Seed(object):
         self.run(self.__rawpacket())
         pass
 
-    def getContId(self,pkt):
+    def get_cont_id(self,pkt):
         return pkt[0]["container"]
 
-    def getShipId(self, pkt):
+    def get_ship_id(self, pkt):
         return pkt[0]["ship"]
 
     def _tar_to_gz(self, source, destination=None, suffix="test"):
@@ -141,6 +143,13 @@ class Seed(object):
 
         return destination
 
+    def move_file_to_wd(self, file):
+        filep = file.split("/")
+        file_name = filep[len(filep)-1]
+        dst = self.context.getWorkingDir()+"/"+file_name
+        src = self.context.getWorkingDir()+"/"+file
+        shutil.move(src,dst)
+        return file_name
 
     def _untar_to_wd(self, source, destination=None):
         fp = source
@@ -424,6 +433,16 @@ class Seed(object):
         #box = box + 1
         header["container"] = cont
         return lpkt
+
+    def move_data_file(self, src, dst, postfix):
+
+        PmkShared._ensure_dir(self.context.getWorkingDir()+dst)
+        dst_file = self.context.getWorkingDir()+"/"+dst+"/"+src+"-"+postfix
+        dst_file = dst_file.replace("//","/")
+        src_file = self.context.getWorkingDir()+src
+
+        shutil.move(src_file,dst_file)
+        return dst_file
 
     def dispatch(self, dpkt, msg, tag, boxing = PKT_OLDBOX):
 
