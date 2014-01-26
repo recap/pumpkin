@@ -1,0 +1,24 @@
+[
+    {
+        "box": "0",
+        "fragment" :"0",
+        "e": "E",
+        "ship": "c466f181",
+        "container": "98ea09ac",
+        "last_func" : "None",
+        "stop_func" : "StubModel",
+        "state" : "New",
+        "ttl" : "600",
+        "t_otype" : "None",
+        "t_state" : "None",
+        "last_contact" : "None"
+
+    },
+    {},
+    {
+        "stag": "StringFileTar:XSimX1X2",
+        "data": "/data/c466f181-98ea09ac.tar.gz",
+        "exstate": "0000",
+        "func": "StubModel"
+    }
+]
