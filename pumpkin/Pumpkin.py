@@ -148,6 +148,9 @@ class Pumpkin(Daemon):
         context.working_dir = wd
 
         PmkShared._ensure_dir(wd)
+        PmkShared._ensure_dir(wd+"logs/")
+        context.log_to_file()
+
         context.startPktShelve("PktStore")
         context.peers[context.getUuid()] = "/tmp/"+context.getUuid()+"-bcast"
         local_peers = self._shelve_safe_open("/tmp/pumpkin")
@@ -227,6 +230,16 @@ class Pumpkin(Daemon):
             http.start()
             context.addThread(http)
 
+        for fd in listdir(context.getTaskDir()):
+                src = context.getTaskDir()+"/"+fd
+                dst = context.getWorkingDir()+"/"+fd
+                try:
+                    shutil.copytree(src, dst)
+                except OSError as exc: # python >2.5
+                    if exc.errno == errno.ENOTDIR:
+                        shutil.copy(src, dst)
+                    else: raise
+
 
         if not context.isWithNoPlugins():# and not context.isSupernode():
             for ep in context.getEndpoints():
@@ -299,15 +312,7 @@ class Pumpkin(Daemon):
                 log.error("Import error "+ str(e))
                 pass
 
-            for fd in listdir(context.getTaskDir()):
-                src = context.getTaskDir()+"/"+fd
-                dst = context.getWorkingDir()+"/"+fd
-                try:
-                    shutil.copytree(src, dst)
-                except OSError as exc: # python >2.5
-                    if exc.errno == errno.ENOTDIR:
-                        shutil.copy(src, dst)
-                    else: raise
+
 
 
             for x in PmkSeed.iplugins.keys():
@@ -366,6 +371,7 @@ def main():
 
     log = logging.getLogger("pumpkin")
     log.setLevel(logging.DEBUG)
+
 
     requests_log = logging.getLogger("tftpy")
     requests_log.setLevel(logging.WARNING)

@@ -9,9 +9,9 @@ __author__ = 'reggie'
 ##                      "name": "Sobol",
 ##                      "description": "data directory tarred",
 ##                      "required": true,
-##                      "type": "StringTAR",
+##                      "type": "StringFileTar",
 ##                      "format": "FileString",
-##                      "state" : "SobolInput"
+##                      "state" : "XsimOut"
 ##                  }
 ##              ],
 ##"return": [
@@ -55,23 +55,31 @@ class Sobol(PmkSeed.Seed):
         #InputName = GenInputParam.split(",")[0]
         #NrOfSamplesParam = GenInputParam.split(",")[1]
 
-        self._untar_to_wd(TarFile)
+        self.logger.debug("Untaring: "+TarFile)
+        prot,rel_path,filep,apath = self.fileparts(TarFile)
 
-        print "STARTING SOBOL"
+        self._untar_to_wd(filep, rename="SimRes")
+
+        self.logger.info("Executing shell script: "+self.script_path)
         ret = subprocess.call([self.script_path],env=self.env, cwd=self.context.getWorkingDir())
+        self.logger.info("Shell script return: "+str(ret))
+        dst = self._tar_to_gz("/SimRes", destination="/out_data/"+self.get_ship_id(pkt)+"/", suffix=self.get_cont_id(pkt))
+        self.ack_pkt(pkt)
+        self.dispatch(pkt, "file://"+dst, "SobolIndeces")
 
-
-        #ret = subprocess.call([self.script_path],env=self.env, cwd="/tmp/")
-        if ret == 0:
-            print "SOBOL OK"
-            dst = self._tar_to_gz("/SimRes", suffix=self.get_cont_id(pkt))
-            self.ack_pkt(pkt)
-            self.dispatch(pkt, "file://"+dst, "SobolIndeces")
-
-            pass
-        else:
-            print "SOBOL ERROR"
-            pass
+        #
+        #
+        # #ret = subprocess.call([self.script_path],env=self.env, cwd="/tmp/")
+        # if ret == 0:
+        #     print "SOBOL OK"
+        #     dst = self._tar_to_gz("/SimRes", suffix=self.get_cont_id(pkt))
+        #     self.ack_pkt(pkt)
+        #     self.dispatch(pkt, "file://"+dst, "SobolIndeces")
+        #
+        #     pass
+        # else:
+        #     print "SOBOL ERROR"
+        #     pass
 
 
         #self.dispatch(pkt, self.is_a(tw), "ISA")

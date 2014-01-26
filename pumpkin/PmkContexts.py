@@ -231,6 +231,9 @@ class MainContext(object):
                     log.warning("Unknown endpoint: "+ep)
 
 
+        def log_to_file(self):
+            fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
+            log.addHandler(fh)
 
         def setAttributes(self, attributes):
             self.__attrs = attributes
@@ -238,6 +241,8 @@ class MainContext(object):
                 log.setLevel(logging.DEBUG)
             else:
                 log.setLevel(logging.INFO)
+
+
 
             #self.setEndpoints()
 

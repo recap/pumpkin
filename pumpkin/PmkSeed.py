@@ -11,6 +11,7 @@ import thread
 import collections
 import networkx as nx
 import json
+import logging
 
 import PmkShared
 
@@ -41,9 +42,18 @@ class SeedType(type):
 class Seed(object):
     __metaclass__ = SeedType
 
+
+
     _pkt_counter_interval = 1.0
 
+
     def __init__(self, context, poi="Unset"):
+        #logging.basicConfig(filename=context.getWorkingDir()+self.get_name()+".log", format='%(levelname)s:%(message)s', level=logging.DEBUG)
+        self.logger = logging.getLogger(self.get_name())
+        fh = logging.FileHandler(context.getWorkingDir()+"logs/"+self.get_name()+".log")
+        self.logger.addHandler(fh)
+        self.logger.info("Initialised seed: "+self.get_name())
+
         self.context = context
         self.poi = poi
         self.conf = None
@@ -132,16 +142,30 @@ class Seed(object):
     def get_ship_id(self, pkt):
         return pkt[0]["ship"]
 
-    def _tar_to_gz(self, source, destination=None, suffix="test"):
+    def _tar_to_gz(self, source, destination=None, suffix=None):
         src = self.context.getWorkingDir()+source
+        dst = destination
         if destination == None:
-            destination = self.context.getWorkingDir()+source+"-"+suffix+".tar.gz"
+            if suffix:
+                dst = self.context.getWorkingDir()+source+"-"+suffix+".tar.gz"
+            else:
+                dst = self.context.getWorkingDir()+source+".tar.gz"
+        else:
+            dst = self.context.getWorkingDir()+destination
+            dst = dst.replace("//","/")
+            self._ensure_dir(dst)
 
-        t = tarfile.open(name=destination, mode='w:gz')
+            if suffix:
+                dst = dst+source+"-"+suffix+".tar.gz"
+            else:
+                dst = dst+source+".tar.gz"
+
+
+        t = tarfile.open(name=dst, mode='w:gz')
         t.add(src, os.path.basename(src))
         t.close()
 
-        return destination
+        return dst
 
     def move_file_to_wd(self, file):
         filep = file.split("/")
@@ -151,18 +175,62 @@ class Seed(object):
         shutil.move(src,dst)
         return file_name
 
-    def _untar_to_wd(self, source, destination=None):
+    def _add_to_tar(self, file, tar, postfix=None, rename=None):
+        wd = self.context.getWorkingDir()
+        mems = self._untar_to_wd(tar)
+        pfile = os.path.basename(file)
+        if postfix:
+            pfile = pfile+"-"+postfix
+
+        dir = None
+        base_dir = None
+        for m in mems:
+            path = wd + str(m.name)
+            if os.path.isdir(path):
+                dir = path
+                base_dir = "/"+m.name
+                break
+        dst = dir+"/"+pfile
+        src = wd+file
+        shutil.copy(src,dst)
+
+        afile = wd+file
+        atar = wd+tar
+
+
+
+        outf = self._tar_to_gz(base_dir, suffix=postfix)
+        if not rename == None:
+            atar = wd+rename+".tar.gz"
+            shutil.move(outf,atar)
+            outf = atar
+
+        shutil.rmtree(dir)
+
+        return outf
+
+
+    def _untar_to_wd(self, source, destination=None, rename=None):
         fp = source
 
         if not os.path.isfile(fp):
             fp = self.context.getWorkingDir() +"/"+ source
+            fp = fp.replace("//","/")
             if os.path.isfile(fp):
                 if not destination:
                     destination = self.context.getWorkingDir()
                 t = tarfile.open(fp)
+                z = t.getmembers()
+
                 t.extractall(destination)
                 t.close()
-                return fp
+                if rename:
+                    for d in z:
+                        if os.path.isdir(destination+d.name):
+                            shutil.move(destination+d.name,destination+rename)
+
+                new_dst = self.context.getWorkingDir()+str(z[0])
+                return z
             else:
                 log.error("Input file not found ["+source+"]")
 
@@ -434,10 +502,18 @@ class Seed(object):
         header["container"] = cont
         return lpkt
 
-    def move_data_file(self, src, dst, postfix):
+    def is_final(self, pkt):
+        if pkt[0]["stop_func"] == self.__class__.__name__:
+            return True
+        return False
+
+    def move_data_file(self, src, dst, postfix=None):
 
         PmkShared._ensure_dir(self.context.getWorkingDir()+dst)
-        dst_file = self.context.getWorkingDir()+"/"+dst+"/"+src+"-"+postfix
+        if postfix:
+            dst_file = self.context.getWorkingDir()+"/"+dst+"/"+src+"-"+postfix
+        else:
+            dst_file = self.context.getWorkingDir()+"/"+dst+"/"+src
         dst_file = dst_file.replace("//","/")
         src_file = self.context.getWorkingDir()+src
 
@@ -449,7 +525,7 @@ class Seed(object):
 
         pkt = copy.deepcopy(dpkt)
 
-        if str(msg).startswith("file://"):
+        if str(msg).startswith("file://") and not self.is_final(pkt):
             dst = self.context.getFileDir()
             _,path,file,src = self.fileparts(msg)
 

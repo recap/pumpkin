@@ -35,6 +35,7 @@ SUPERNODES = [ "elab.lab.uvalight.net"]
 #logging.basicConfig()
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 log = logging.getLogger('pumpkin')
+
 #log.setLevel(logging.DEBUG)
 log.setLevel(logging.INFO)
 
