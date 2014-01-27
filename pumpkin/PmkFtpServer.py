@@ -23,8 +23,9 @@ class FtpServer(SThread):
         self.context = context
         self.port = port
         self.dir = dir
+        self.auth = DummyAuthorizer()
 
-        authorizer = DummyAuthorizer()
+        authorizer = self.auth
 
         # Define a new user having full r/w permissions and a read-only
         # anonymous user
@@ -52,6 +53,9 @@ class FtpServer(SThread):
         self.server.max_cons = 256
         self.server.max_cons_per_ip = 5
         pass
+
+
+
 
     def run(self):
         PmkShared._ensure_dir(self.dir)

@@ -46,7 +46,7 @@ class receiver(PmkSeed.Seed):
         #     raise Exception('spam', 'eggs')
 
         if self.ifFile(data):
-            prot,path,file,apath = self.fileparts(data)
+            prot,path,file,apath,_ = self.fileparts(data)
 
             f = open(apath, 'r')
             s = f.read()

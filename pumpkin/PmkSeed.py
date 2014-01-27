@@ -326,7 +326,7 @@ class Seed(object):
                             client = tftpy.TftpClient(ip, int(port))
                             self.tftp_sessions[ip] = client
 
-                        wdf = self.context.getWorkingDir()+"/"+file
+                        wdf = self.context.getWorkingDir()+"/rx/"+file
                         client.download(file, wdf)
                         nargs.append("file://"+wdf)
                         for x in range (1,len(args)-1):
@@ -482,12 +482,14 @@ class Seed(object):
         for p in range(0,len(prts2)-1):
             path += prts2[p]+"/"
 
-
-        file = prts2[len(prts2)-1]
         path = path.replace("//","/")
+        file = prts2[len(prts2)-1]
         apath = path+file
+        rpath = path.replace(self.context.getWorkingDir(),"/")
+        rpath = rpath+file
 
-        return [prot,path,file,apath]
+
+        return [prot,path,file,apath,rpath]
 
     def getPktId(self, pkt):
         id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
@@ -527,7 +529,7 @@ class Seed(object):
 
         if str(msg).startswith("file://") and not self.is_final(pkt):
             dst = self.context.getFileDir()
-            _,path,file,src = self.fileparts(msg)
+            _,path,file,src,_ = self.fileparts(msg)
 
             shutil.move(src,dst)
             #msg = "tftp://"+self.context.getLocalIP()+"/"+file

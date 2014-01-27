@@ -56,9 +56,9 @@ class Sobol(PmkSeed.Seed):
         #NrOfSamplesParam = GenInputParam.split(",")[1]
 
         self.logger.debug("Untaring: "+TarFile)
-        prot,rel_path,filep,apath = self.fileparts(TarFile)
+        prot,rel_path,filep,apath,rpath = self.fileparts(TarFile)
 
-        self._untar_to_wd(filep, rename="SimRes")
+        self._untar_to_wd(rpath, destination=self.wd, rename="SimRes")
 
         self.logger.info("Executing shell script: "+self.script_path)
         ret = subprocess.call([self.script_path],env=self.env, cwd=self.context.getWorkingDir())

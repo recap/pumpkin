@@ -57,12 +57,12 @@ class StubModel(PmkSeed.Seed):
 
     def run(self, pkt, TarFile):
 
-        prot,rel_path,filep,apath = self.fileparts(TarFile)
+        prot,rel_path,filep,apath,rpath = self.fileparts(TarFile)
 
         new_file_name = self.get_ship_id(pkt)+"-"+self.get_cont_id(pkt)+"-"+self.get_name()
         self.logger.debug("Adding stub Xsim-ouput.csv to tar file ["+filep+"]")
         #fout = self._add_to_tar("/data/Xsim-output.csv", filep, postfix=self.get_cont_id(pkt), rename=new_file_name)
-        fout = self._add_to_tar("/data/Xsim-output.csv", filep, rename=new_file_name)
+        fout = self._add_to_tar("/data/Xsim-output.csv", rpath, rename=new_file_name)
 
         if fout:
             self.logger.debug("Dispatching file: "+str(fout))

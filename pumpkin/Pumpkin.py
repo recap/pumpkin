@@ -149,6 +149,7 @@ class Pumpkin(Daemon):
 
         PmkShared._ensure_dir(wd)
         PmkShared._ensure_dir(wd+"logs/")
+        PmkShared._ensure_dir(wd+"seeds/")
         context.log_to_file()
 
         context.startPktShelve("PktStore")
@@ -189,8 +190,7 @@ class Pumpkin(Daemon):
         #zmqsub.start()
         #context.addThread(zmqsub)
 
-
-        ftpdir = wd + 'fdata/'
+        ftpdir = wd + 'tx/'
 
         tftpserver = TftpServer(context, ftpdir, PmkShared.TFTP_FILE_SERVER_PORT)
         tftpserver.start()
@@ -232,7 +232,13 @@ class Pumpkin(Daemon):
 
         for fd in listdir(context.getTaskDir()):
                 src = context.getTaskDir()+"/"+fd
-                dst = context.getWorkingDir()+"/"+fd
+                if( src[-3:] == "pyc"):
+                    continue
+
+                if( src[-2:] == "py"):
+                    dst = context.getWorkingDir()+"/seeds/"+fd
+                else:
+                    dst = context.getWorkingDir()+"/"+fd
                 try:
                     shutil.copytree(src, dst)
                 except OSError as exc: # python >2.5

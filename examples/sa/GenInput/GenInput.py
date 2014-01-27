@@ -51,7 +51,7 @@ class GenInput(PmkSeed.Seed):
     def on_load(self):
         self.logger.info("Loading: " + self.__class__.__name__)
 
-        shutil.copy(self.wd+"DataPacket-GenInput3.pkt", self.wd+"rx/DataPacket.pkt")
+        shutil.copy(self.wd+"example_packets/DataPacket-GenInput3.pkt", self.wd+"rx/DataPacket.pkt")
         pass
 
 
@@ -76,7 +76,9 @@ class GenInput(PmkSeed.Seed):
             self.move_data_file("X2-input.dat", dst_dir)
             self.move_data_file("Xsim-input.csv", dst_dir)
 
-            output_file = "file://"+str(self._tar_to_gz(dst_dir,suffix=self.get_cont_id(pkt)))
+            output_file = "file://"+str(self._tar_to_gz(dst_dir,suffix=self.get_cont_id(pkt)+"-"+self.get_name()))
+            #output_file = "file://"+self._tar_to_gz(dst_dir, destination="/out_data/", suffix=self.get_cont_id(pkt)+"-"+self.get_name())
+            #output_file = "file://"+self._tar_to_gz(dst_dir, suffix=self.get_cont_id(pkt)+"-"+self.get_name())
 
             self.dispatch(pkt,output_file,"XSimX1X2")
 

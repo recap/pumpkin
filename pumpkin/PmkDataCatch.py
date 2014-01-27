@@ -35,12 +35,13 @@ class PacketFileMonitor(SThread):
             def process_IN_CLOSE_WRITE(self, event):
                 try:
                     pktf = os.path.join(event.path, event.name)
-                    pktd =  open (pktf, "r").read()
-                    pktdj = json.loads(pktd)
-                    pkt_len = len(pktdj)
-                    type = pktdj[pkt_len - 1]["stag"].split(":")[0]
-                    tag = pktdj[pkt_len - 1]["stag"].split(":")[1]
-                    self.context.getTx().put((tag,type,pktdj))
+                    if( pktf[-3:] == "pkt"):
+                        pktd =  open (pktf, "r").read()
+                        pktdj = json.loads(pktd)
+                        pkt_len = len(pktdj)
+                        type = pktdj[pkt_len - 1]["stag"].split(":")[0]
+                        tag = pktdj[pkt_len - 1]["stag"].split(":")[1]
+                        self.context.getTx().put((tag,type,pktdj))
                 except Exception as e:
                     log.error("Loading paket: "+pktf)
                     pass
