@@ -50,7 +50,7 @@ class HttpServer(SThread):
          pass
 
      def run(self):
-        HOST_NAME = 'localhost' # !!!REMEMBER TO CHANGE THIS!!!
+        HOST_NAME = '0.0.0.0' # !!!REMEMBER TO CHANGE THIS!!!
         PORT_NUMBER = HTTP_TCP_PORT # Maybe set this to 9000.
         server_class = BaseHTTPServer.HTTPServer
         httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
