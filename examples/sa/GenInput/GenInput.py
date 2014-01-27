@@ -41,6 +41,8 @@ class GenInput(PmkSeed.Seed):
         self.wd = self.context.getWorkingDir()
         self.env = os.environ.copy()
         self.env['LD_LIBRARY_PATH'] += ":/usr/local/matlabR2008a/bin/glnxa64/"
+        #VPH
+        #self.env['LD_LIBRARY_PATH'] = "/mnt/MATLAB_Compiler_Runtime/v78/runtime/glnxa64"
         self.script_path = self.wd+"/GenInput_generic"
 
 
