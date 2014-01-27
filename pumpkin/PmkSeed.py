@@ -175,6 +175,9 @@ class Seed(object):
         shutil.move(src,dst)
         return file_name
 
+    def get_relative_path(self, file):
+        return "."+str(file)
+
     def _add_to_tar(self, file, tar, postfix=None, rename=None):
         wd = self.context.getWorkingDir()
         mems = self._untar_to_wd(tar)

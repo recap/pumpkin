@@ -42,7 +42,7 @@ class GenInput(PmkSeed.Seed):
         self.env = os.environ.copy()
         self.env['LD_LIBRARY_PATH'] += ":/usr/local/matlabR2008a/bin/glnxa64/"
         #VPH
-        #self.env['LD_LIBRARY_PATH'] = "/mnt/MATLAB_Compiler_Runtime/v78/runtime/glnxa64"
+        #self.env['LD_LIBRARY_PATH'] = "/opt/MATLAB_Compiler_Runtime/v78/runtime/glnxa64"
         self.script_path = self.wd+"/GenInput_generic"
 
 
@@ -51,14 +51,15 @@ class GenInput(PmkSeed.Seed):
     def on_load(self):
         self.logger.info("Loading: " + self.__class__.__name__)
 
-        shutil.copy(self.wd+"example_packets/DataPacket-GenInput3.pkt", self.wd+"rx/DataPacket.pkt")
+        shutil.copy(self.wd+"example_packets/DataPacket-GenInput.pkt", self.wd+"rx/DataPacket.pkt")
         pass
 
 
     def run(self, pkt, GenInputParam):
         ParamFile = GenInputParam.split(",")[0]
         NrOfSamplesParam = GenInputParam.split(",")[1]
-        InputFile = self.move_file_to_wd(ParamFile)
+        #InputFile = "./"+self.move_file_to_wd(ParamFile)
+        InputFile = self.get_relative_path(ParamFile)
 
         self.logger.info("Executing shell script: "+self.script_path)
         ret = subprocess.call([self.script_path, InputFile, NrOfSamplesParam],env=self.env, cwd=self.context.getWorkingDir())
