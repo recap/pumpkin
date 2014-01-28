@@ -50,7 +50,8 @@ class sender(PmkSeed.Seed):
         for x in range(1,2):
             npkt1 = self.duplicate_pkt_new_box(pkt)
             print "SENDER: " +str(x)
-            self.dispatch(npkt1, "TESTTEST: "+str(x), "RAW")
+            self.dispatch(npkt1, "The quick brown fox jumps over the lazy dog", "RAW")
+            #self.dispatch(npkt1, "AB", "RAW")
 
         #npkt2 = self.duplicate_pkt_new_box(pkt)
         # npkt3 = self.duplicate_pkt_new_box(pkt)

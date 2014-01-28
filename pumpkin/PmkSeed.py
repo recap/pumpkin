@@ -12,6 +12,7 @@ import collections
 import networkx as nx
 import json
 import logging
+import inspect
 
 import PmkShared
 
@@ -24,8 +25,11 @@ plugins = []
 hplugins = {}
 iplugins = {}
 
-PKT_NEWBOX = 01
-PKT_OLDBOX = 02
+#PKT_NEWBOX = 01
+#PKT_OLDBOX = 02
+MORE_PKT = 1
+LAST_PKT = 0
+
 PKT_PROCESS_WINDOW = 100
 
 class SeedType(type):
@@ -107,7 +111,7 @@ class Seed(object):
         pkt = []
         ship_id = self.context.getExecContext()
         cont_id =  str(uuid.uuid4())[:8]
-        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : "E", "state": "NEW", \
+        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : 0, "state": "NEW", \
                     "c_tag" : "NONE:NONE", "ttl" : '0',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
                     "last_contact" : "None", "last_func" : "None", "last_timestamp" : 0})
         #Place holder for data automaton
@@ -119,7 +123,7 @@ class Seed(object):
             for ot in out_tags:
                 g.add_edge(it,ot,function=self.get_name())
 
-        g.add_edge("DataString:RAW", "DataStrng:PROCESSED", function="foobar")
+        #g.add_edge("DataString:RAW", "DataString:PROCESSED", function="processor")
 
         d =  json_graph.node_link_data(g)
         ds = json.dumps(d)
@@ -260,7 +264,7 @@ class Seed(object):
     def ack_pkt(self, pkt):
         dpkt = copy.deepcopy(pkt)
         dpkt[0]["state"] = "PACK_OK"
-        pkt_id = self.getPktId(dpkt)
+        pkt_id = self.get_pkt_id(dpkt)
         self._lock_in_fpkts.acquire()
         self.context.pktReady(dpkt)
         if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
@@ -272,7 +276,7 @@ class Seed(object):
 
 
     def pack_ok(self, pkt):
-        pkt_id = self.getPktId(pkt)
+        pkt_id = self.get_pkt_id(pkt)
         if pkt[0]["last_func"] == self.__class__.__name__:
             self._lock_fpkts.acquire()
             if pkt_id in self.flight_pkts.keys():
@@ -283,7 +287,7 @@ class Seed(object):
         pass
 
     def is_duplicate(self, pkt):
-        pkt_id = self.getPktId(pkt)
+        pkt_id = self.get_pkt_id(pkt)
         self._lock_in_fpkts.acquire()
 
         if pkt_id in self.in_flight_pkts.keys():
@@ -307,7 +311,8 @@ class Seed(object):
 
 
     def _stage_run(self,pkt, *args):
-        pkt_id = self.getPktId(pkt)
+        pkt_id = self.get_pkt_id(pkt)
+        pstate =  pkt[0]["state"]
         if not self.is_duplicate(pkt):
 
 
@@ -335,10 +340,25 @@ class Seed(object):
                         for x in range (1,len(args)-1):
                             nargs.append(args[x])
 
-                        self.run(pkt,*nargs)
-                        return
+                        if pstate == "MERGE":
+                            self.merge(pkt,*nargs)
+                        else:
+                            if self.is_fragment(pkt):
+                                self.run(pkt,*nargs)
+                            else:
+                                if not self.split(pkt, *nargs):
+                                    self.run(pkt,*nargs)
+                            return
 
-                self.run(pkt,*args)
+                if pstate == "MERGE":
+                    self.merge(pkt, *args)
+                else:
+                    if self.is_fragment(pkt):
+                        self.run(pkt,*args)
+                    else:
+                        if not self.split(pkt, *args):
+                            self.run(pkt,*args)
+
             except Exception as e:
                 log.error(str(e))
                 self._lock_in_fpkts.acquire()
@@ -352,7 +372,14 @@ class Seed(object):
             log.debug("Duplicate packet received: "+pkt_id)
             pass
 
+    def split(self, pkt, *args):
+        return False
+
+
     def run(self, pkt, *args):
+        pass
+
+    def merge(self, pkt, *args):
         pass
 
     def getpoi(self):
@@ -468,7 +495,7 @@ class Seed(object):
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
     def fork_dispatch(self, pkt, msg, state):
-        self.dispatch(pkt, msg, state, PKT_NEWBOX)
+        self.dispatch(pkt, msg, state, fragment=True)
         pass
 
     def ifFile(self, msg):
@@ -494,8 +521,13 @@ class Seed(object):
 
         return [prot,path,file,apath,rpath]
 
-    def getPktId(self, pkt):
-        id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+    def get_pkt_id(self, pkt):
+        id = None
+        if pkt[0]["state"] == "MERGE":
+            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]+":M"
+        else:
+            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+
         return id
 
     def duplicate_pkt_new_box(self,pkt):
@@ -506,6 +538,33 @@ class Seed(object):
         #box = box + 1
         header["container"] = cont
         return lpkt
+
+    def fragment_pkt(self, pkt, frag_no):
+        lpkt = copy.deepcopy(pkt)
+        header = lpkt[0]
+        header["fragment"] = str(frag_no)
+        header["e"] = MORE_PKT
+        return lpkt
+
+    def last_fragment_pkt(self, pkt, frag_no):
+        lpkt = copy.deepcopy(pkt)
+        header = lpkt[0]
+        header["fragment"] = str(frag_no)
+        header["e"] = LAST_PKT
+        return lpkt
+
+    def clean_header(self, pkt):
+        header = pkt[0]
+        header["fragment"] = str(0)
+        header["e"] = LAST_PKT
+        return pkt
+
+    def is_last_fragment(self, pkt):
+        header = pkt[0]
+        if int(header["e"]) == LAST_PKT:
+            return True
+        else:
+            return False
 
     def is_final(self, pkt):
         if pkt[0]["stop_func"] == self.__class__.__name__:
@@ -525,10 +584,44 @@ class Seed(object):
         shutil.move(src_file,dst_file)
         return dst_file
 
-    def dispatch(self, dpkt, msg, tag, boxing = PKT_OLDBOX):
+    def is_fragment(self,pkt):
+        header = pkt[0]
+        if(int(header["fragment"]) > 0):
+            return True
+        return False
 
+    def get_fragment_id(self, pkt):
+        header = pkt[0]
+        return int(header["fragment"])
+
+    def get_pkt_data(self, pkt):
+        l = len(pkt)
+        data = pkt[l-2]["data"]
+        return data
+
+    def merge_pkt(self, pkt):
+        dpkt = copy.deepcopy(pkt)
+        dpkt[0]["state"] = "MERGE"
+        pkt_id = self.get_pkt_id(dpkt)
+        #self._lock_in_fpkts.acquire()
+        #self.context.pktReady(dpkt)
+        #if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
+        #self._lock_in_fpkts.release()
+        if not pkt[0]["last_func"] == None:
+             exdisp = self.context.getExternalDispatch()
+             exdisp.sendPACK(dpkt)
+        pass
+
+    def dispatch(self, dpkt, msg, tag, type=None, fragment = False):
 
         pkt = copy.deepcopy(dpkt)
+
+        #log.debug("Caller for dispatch function: "+inspect.stack()[1][3])
+        caller = inspect.stack()[1][3]
+        if self.is_fragment(pkt) and caller == "run":
+            self.merge_pkt(pkt)
+            return
+
 
         if str(msg).startswith("file://") and not self.is_final(pkt):
             dst = self.context.getFileDir()
@@ -538,7 +631,7 @@ class Seed(object):
             #msg = "tftp://"+self.context.getLocalIP()+"/"+file
             msg = self.context.getFileServerEndPoint()+"/"+file
 
-        if boxing == PKT_NEWBOX:
+        if fragment:
             lpkt = copy.deepcopy(pkt)
             header = lpkt[0]
             fragment = int(header["fragment"])
@@ -548,8 +641,11 @@ class Seed(object):
         else:
             lpkt = copy.copy(pkt)
 
-        lpkt_id = self.getPktId(lpkt)
-        otype = self.conf["return"][0]["type"]
+        lpkt_id = self.get_pkt_id(lpkt)
+        if not type:
+            otype = self.conf["return"][0]["type"]
+        else:
+            otype = type
         stag = otype + ":"  + tag
 
         #Add output of current function
@@ -580,7 +676,7 @@ class Seed(object):
         pass
 
     def add_flight_pkt(self,pkt):
-        pkt_id = self.getPktId(pkt)
+        pkt_id = self.get_pkt_id(pkt)
 
         # while 1:
         #     if len(self.flight_pkts) < PKT_PROCESS_WINDOW:

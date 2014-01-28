@@ -37,14 +37,25 @@ class InternalDispatch(SThread):
                     klass.pack_ok(pkt)
                     self._packed_pkts += 1
                     #log.debug("PACKED pkts: "+str(self._packed_pkts))
-            else:
-                l = len(pkt)
-                func = pkt[l-1]["func"]
-                data = pkt[l-2]["data"]
+                    continue
+            # if pkt[0]["state"] == "MERGE":
+            #     seed = pkt[0]["last_func"]
+            #
+            #     if seed in PmkSeed.iplugins.keys():
+            #         klass = PmkSeed.iplugins[seed]
+            #         klass.merge(pkt)
+            #         #klass.pack_ok(pkt)
+            #         #self._packed_pkts += 1
+            #         #log.debug("PACKED pkts: "+str(self._packed_pkts))
+            #         continue
 
-                if func in PmkSeed.iplugins.keys():
-                    klass = PmkSeed.iplugins[func]
-                    rt = klass._stage_run(pkt, data)
+            l = len(pkt)
+            func = pkt[l-1]["func"]
+            data = pkt[l-2]["data"]
+
+            if func in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[func]
+                rt = klass._stage_run(pkt, data)
 
 
 
