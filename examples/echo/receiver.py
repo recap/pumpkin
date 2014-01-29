@@ -56,13 +56,13 @@ class receiver(PmkSeed.Seed):
 
         else:
 
-            print "DATA FROM: "+data
+            print "R: "+data
 
         #time.sleep(10)
 
-        print str(json.dumps(pkt))
+        #print str(json.dumps(pkt))
 
-        self.ack_pkt(pkt)
+        #self.ack_pkt(pkt)
 
 
         pass

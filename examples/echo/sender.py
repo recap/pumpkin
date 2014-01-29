@@ -45,10 +45,10 @@ class sender(PmkSeed.Seed):
         # f = open(full_wfn, 'w')
         # f.write("some data")
         # f.close()
-        time.sleep(30)
+        #time.sleep(45)
 
         #npkt = self.duplicate_pkt_new_box(pkt)
-        for x in range(1,20):
+        for x in range(1,20000):
             npkt1 = self.duplicate_pkt_new_box(pkt)
 
             #print "SENDER: " +str(x)

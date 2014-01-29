@@ -86,16 +86,21 @@ class ZMQPacketMonitor(SThread):
         self.context = context
         self.bind_to = bind_to
         if (zmqcontext == None):
-            #self.zmq_cntx = zmq.Context()
+            self.zmq_cntx = zmq.Context()
             pass
         else:
             self.zmq_cntx = zmqcontext
+
+        #self.zmq_cntx = zmq.Context()
+
+
         self.rx = self.context.getRx()
 
     def run(self):
         #context = zmq.Context()
         soc = self.zmq_cntx.socket(zmq.PULL)
         soc.bind(self.bind_to)
+        #soc.setsockopt(zmq.HWM, 1000)
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
@@ -104,15 +109,15 @@ class ZMQPacketMonitor(SThread):
             try:
                 msg = soc.recv()
 
-                if "REVERSE" in msg:
-                    log.debug(msg)
-                    ep = msg.split("::")[1]
-                    log.debug("Reverse connecting to: "+ep)
-                    rec = self.zmq_cntx.socket(zmq.PULL)
-                    rec.connect(ep)
-                    msg = rec.recv()
-                    log.debug("Received msg: "+msg)
-                    #continue
+                # if "REVERSE" in msg:
+                #     log.debug(msg)
+                #     ep = msg.split("::")[1]
+                #     log.debug("Reverse connecting to: "+ep)
+                #     rec = self.zmq_cntx.socket(zmq.PULL)
+                #     rec.connect(ep)
+                #     msg = rec.recv()
+                #     log.debug("Received msg: "+msg)
+                #     #continue
                 self.rx.put(msg)
                 #log.debug("Message: "+str(msg))
             except zmq.ZMQError as e:
@@ -124,6 +129,9 @@ class ZMQPacketMonitor(SThread):
                     break
                 else:
                     continue
+            # except Exception as e:
+            #     log.error(str(e))
+
             #except MemoryError as e:
             #    log.error(str(e))
             #    sys.exit(1)

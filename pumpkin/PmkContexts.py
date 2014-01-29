@@ -183,7 +183,8 @@ class MainContext(object):
         def setEndpoints(self):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
-                self.__attrs.eps = "inproc://*;tcp://*:*"
+                #self.__attrs.eps = "inproc://*;tcp://*:*"
+                self.__attrs.eps = "tcp://*:*"
             epl = self.__attrs.eps.split(";")
             for ep in epl:
                 prts = ep.split("//")

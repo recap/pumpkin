@@ -32,6 +32,7 @@ class ExternalDispatch(SThread):
         SThread.__init__(self)
         self.context = context
         self.dispatchers = {}
+        self.redispatchers = {}
         self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
         #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
         pass
@@ -42,13 +43,16 @@ class ExternalDispatch(SThread):
 
     def send_to_last(self, pkt):
         ep = pkt[0]["last_contact"]
-        if ep in self.dispatchers.keys():
-            disp = self.dispatchers[ep]
+        #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
+
+        if ep in self.redispatchers.keys():
+            disp = self.redispatchers[ep]
             disp.dispatch(json.dumps(pkt))
         else:
-            disp = self.gdisp
+            #disp = self.gdisp
+            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
             if not disp == None:
-                self.dispatchers[ep] = disp
+                self.redispatchers[ep] = disp
                 disp.connect(ep)
                 disp.dispatch(json.dumps(pkt))
                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
@@ -56,7 +60,7 @@ class ExternalDispatch(SThread):
             else:
                 log.error("No dispatchers found for: "+ep)
 
-            pass
+        pass
 
     def run(self):
         graph = self.context.getProcGraph()
@@ -263,7 +267,7 @@ class ZMQPacketDispatch(Dispatch):
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
-        self.soc.setsockopt(zmq.HWM, 100)
+        #self.soc.setsockopt(zmq.HWM, 100)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         log.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
