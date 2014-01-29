@@ -46,7 +46,7 @@ class FtpServer(SThread):
 
 
         # Instantiate FTP server class and listen on 0.0.0.0:2121
-        address = ('', port)
+        address = ('0.0.0.0', port)
         self.server = FTPServer(address, handler)
 
         # set a limit for connections

@@ -35,7 +35,7 @@ class MainContext(object):
         def __init__(self,uuid, peer=None):
 
             self.__uuid = uuid
-            self.__peer = peer
+            #self.__peer = peer
             self.__attrs = None
             self.__supernodes = []
             self.__threads = []
@@ -104,7 +104,7 @@ class MainContext(object):
             return self.file_dir
 
         def getFileServerEndPoint(self):
-            ep = "tftp://"+self.getLocalIP()+":"+str(TFTP_FILE_SERVER_PORT)
+            ep = "tftp://"+self.get_local_ip()+":"+str(TFTP_FILE_SERVER_PORT)
             return ep
 
         def getWorkingDir(self):
@@ -116,7 +116,7 @@ class MainContext(object):
         def getExecContext(self):
             return self.__exec_contex
 
-        def setLocalIP(self,ip):
+        def set_local_ip(self,ip):
             self.__ip = ip
 
             #FIXME dynamic configuration
@@ -125,6 +125,7 @@ class MainContext(object):
             #self.endpoints.append(("tcp://"+str(ip)+":"+str(ZMQ_ENDPOINT_PORT), "zmq.tcp", "zmq.PULL"))
 
             pass
+
 
 
         #def getEndpoint(self):
@@ -149,7 +150,7 @@ class MainContext(object):
         def singleSeed(self):
             return self.__attrs.singleseed
 
-        def getLocalIP(self):
+        def get_local_ip(self):
             return self.__ip
 
         def getProcGraph(self):
@@ -164,7 +165,7 @@ class MainContext(object):
         def getAttributeValue(self):
             return self.__attrs
 
-        def getOurEndpoint(self, proto):
+        def get_our_endpoint(self, proto):
             tcp_ep = None
             for ep in self.endpoints:
                 if str(ep[0]).startswith(proto):
@@ -174,6 +175,10 @@ class MainContext(object):
 
             log.warning("Found no endpoint matching defaulting to tcp")
             return tcp_ep
+
+        def get_our_pub_ep(self, proto="tcp"):
+            ep = "tcp://"+str(self.get_local_ip())+":"+str(PmkShared.ZMQ_PUB_PORT)
+            return ep
 
         def setEndpoints(self):
             if self.__attrs.eps == "ALL":
@@ -288,11 +293,11 @@ class MainContext(object):
         def getThreads(self):
             return self.__threads
 
-        def setMePeer(self, peer):
-            self.__peer = peer
-
-        def getMePeer(self):
-            return self.__peer
+        # def setMePeer(self, peer):
+        #     self.__peer = peer
+        #
+        # def getMePeer(self):
+        #     return self.__peer
 
         def getRx(self):
             return self.rx

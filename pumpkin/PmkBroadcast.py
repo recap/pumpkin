@@ -15,6 +15,7 @@ import subprocess as sp
 from select import select
 from socket import *
 from threading import *
+import PmkShared
 
 
 from PmkShared import *
@@ -160,12 +161,13 @@ class ZMQBroadcastSubscriber(SThread):
 
 class BroadcastListener(Thread):
 
-    def __init__(self, context, port):
+    def __init__(self, context, port, zmq_context=None):
         Thread.__init__(self)
         self.__stop = Event()
         self.__port = int(port)
         self.context = context
         self.bclist = {}
+        self.zmq_context = zmq_context
         pass
 
     def run(self):
@@ -202,12 +204,22 @@ class BroadcastListener(Thread):
             #    self.handle(data,wherefrom)
 
     def handle(self, data, wherefrom):
+        context = self.context
+        zmq_context = self.zmq_context
         try:
             #pass
             #self.tested[wherefrom[0]] = True
             d = json.loads(data)
-            for k in d.keys():
-                self.context.getProcGraph().updateRegistry(d[k])
+
+            for ep in d:
+                if not ep["host"] == self.context.getUuid() and not ep["ep"] in self.context.peers.keys():
+                    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, ep)
+                    zmqsub.start()
+                    context.peers[ep["ep"]] = ep["host"]
+                    context.addThread(zmqsub)
+
+            #for k in d.keys():
+            #    self.context.getProcGraph().updateRegistry(d[k])
 
             #uid = d["uid"]
             #if not uid in self.bclist:
@@ -255,17 +267,27 @@ class Broadcaster(SThread):
 
 
         while 1:
+            #Only announce zmq point
+            #data = "tcp://"+str(self.context.get_local_ip())+":"+str(PmkShared.ZMQ_PUB_PORT)
+            data = '[{"host" : "'+self.context.getUuid()+'", "ep" : "'+self.context.get_our_pub_ep("tcp")+'"}]'
+            self.announce(data, self.__port)
+            time.sleep(self.__rate)
+
             #sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
             #time.sleep(self.__rate)
 
-            data = self.context.getProcGraph().dumpExternalRegistry()
-            if self.context.getProcGraph().isRegistryModified():
-                self.context.getProcGraph().ackRegistryUpdate()
-                self.announce(data)
-                time.sleep(2)
-            else:
-                time.sleep(self.__rate)
-                self.announce(data, self.__port)
+            #data = self.context.getProcGraph().dumpExternalRegistry()
+
+            # if self.context.getProcGraph().isRegistryModified():
+            #     self.context.getProcGraph().ackRegistryUpdate()
+            #     self.announce(data)
+            #     time.sleep(2)
+            # else:
+            #     #time.sleep(self.__rate)
+            #     time.sleep(2)
+            #     #self.announce(data, self.__port)
+            #     connection_string = "tcp://"+str(self.context.get_local_ip())+":PORT"
+            #     self.announce(connection_string, self.__port)
 
 
             if self.stopped():

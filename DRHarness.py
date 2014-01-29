@@ -191,7 +191,7 @@ main()
 #context.setExecContext(ex_cntx)
 #context.setArgs(args)
 #context.setSupernodeList(SUPERNODES)
-#context.setLocalIP(get_lan_ip())
+#context.set_local_ip(get_lan_ip())
 #
 #zmq_context = zmq.Context()
 

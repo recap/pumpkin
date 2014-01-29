@@ -96,7 +96,7 @@ class ExternalDispatch(SThread):
                     #TODO make it more flexible not bound to zmq
                     pep = self.context.getProcGraph().getPriorityEndpoint(r)
                     eep = self.context.getProcGraph().getExternalEndpoints(r)
-                    oep = self.context.getOurEndpoint(self.getProtoFromEP(pep["ep"]))
+                    oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                     dcpkt[0]["last_contact"] = oep[0]
 
                     if pep:

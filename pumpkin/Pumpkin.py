@@ -58,7 +58,7 @@ class Pumpkin(Daemon):
         self.context = MainContext(uid)
         self.context.setExecContext(ex_cntx)
         self.context.setSupernodeList(SUPERNODES)
-        self.context.setLocalIP(get_lan_ip())
+        self.context.set_local_ip(get_lan_ip())
 
         self.zmq_context = zmq.Context()
         pass
@@ -142,7 +142,7 @@ class Pumpkin(Daemon):
         context = self.context
         log.info("Node assigned UID: "+context.getUuid())
         log.info("Exec context: "+context.getExecContext())
-        log.info("Node bound to IP: "+context.getLocalIP())
+        log.info("Node bound to IP: "+context.get_local_ip())
         home = expanduser("~")
         wd = home+"/.pumpkin/"+context.getUuid()+"/"
         context.working_dir = wd
@@ -153,10 +153,8 @@ class Pumpkin(Daemon):
         context.log_to_file()
 
         context.startPktShelve("PktStore")
-        context.peers[context.getUuid()] = "/tmp/"+context.getUuid()+"-bcast"
-        local_peers = self._shelve_safe_open("/tmp/pumpkin")
-        local_peers[context.getUuid()] = "ipc:///tmp/"+context.getUuid()+"-bcast"
-        local_peers.close()
+
+
 
 
 
@@ -173,34 +171,50 @@ class Pumpkin(Daemon):
 
         context.setEndpoints()
 
-
-        udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport))
-        udplisten.start()
-        context.addThread(udplisten)
-
-        #Local bus
-        zmqbc = ZMQBroadcaster(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bcast")
-        context.openfiles.append("/tmp/"+context.getUuid()+"-bcast")
-        #context.openfiles.append("/tmp/pumpkin-bus")
+        #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
+        zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
         zmqbc.start()
         context.addThread(zmqbc)
 
-        # zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bus")
+        #Listen for UDP broadcasts on LAN
+        udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
+        udplisten.start()
+        context.addThread(udplisten)
+
+
+        udpbc = Broadcaster(context, int(context.getAttributeValue().bcport))
+        udpbc.start()
+        context.addThread(udpbc)
+
+        #Local stuff to exploit multi-cores still needs testing
+
+        #context.peers[context.getUuid()] = "/tmp/"+context.getUuid()+"-bcast"
+        #local_peers = self._shelve_safe_open("/tmp/pumpkin")
+        #local_peers[context.getUuid()] = "ipc:///tmp/"+context.getUuid()+"-bcast"
+        #local_peers.close()
+        # zmqbc = ZMQBroadcaster(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bcast")
+        # context.openfiles.append("/tmp/"+context.getUuid()+"-bcast")
+        # #context.openfiles.append("/tmp/pumpkin-bus")
+        # zmqbc.start()
+        # context.addThread(zmqbc)
+
+        #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "ipc:///tmp/"+context.getUuid()+"-bus")
         #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, "ipc:///tmp/pumpkin-bus")
         #zmqsub.start()
         #context.addThread(zmqsub)
 
         ftpdir = wd + 'tx/'
 
+        #TFTP for sending files between pumpkins
         tftpserver = TftpServer(context, ftpdir, PmkShared.TFTP_FILE_SERVER_PORT)
         tftpserver.start()
         context.setFileDir(ftpdir)
         context.addThread(tftpserver)
 
+        #FTP for user access of working directory
         ftpserver = FtpServer(context, context.getWorkingDir())
         ftpserver.start()
         context.addThread(ftpserver)
-
 
 
 
@@ -222,9 +236,9 @@ class Pumpkin(Daemon):
             #udplisten.start()
             #context.addThread(udplisten)
 
-            zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
-            zmqbc.start()
-            context.addThread(zmqbc)
+            #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
+            #zmqbc.start()
+            #context.addThread(zmqbc)
 
             http = HttpServer(context)
             http.start()
@@ -257,10 +271,11 @@ class Pumpkin(Daemon):
 
 
             for sn in get_zmq_supernodes(PmkShared.SUPERNODES):
-                log.debug("Subscribing to: "+sn)
-                zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
-                zmqsub.start()
-                context.addThread(zmqsub)
+                if not str(sn).__contains__("127.0.0.1"):
+                    log.debug("Subscribing to: "+sn)
+                    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
+                    zmqsub.start()
+                    context.addThread(zmqsub)
                 pass
 
             try:
@@ -331,10 +346,7 @@ class Pumpkin(Daemon):
 
             log.debug("Registry dump: "+context.getProcGraph().dumpExternalRegistry())
 
-            udpbc = Broadcaster(context, int(context.getAttributeValue().bcport))
-            udpbc.start()
 
-            context.addThread(udpbc)
 
             edispatch = ExternalDispatch(context)
             context.setExternalDispatch(edispatch)

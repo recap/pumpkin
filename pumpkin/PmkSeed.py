@@ -646,7 +646,7 @@ class Seed(object):
             _,path,file,src,_ = self.fileparts(msg)
 
             shutil.move(src,dst)
-            #msg = "tftp://"+self.context.getLocalIP()+"/"+file
+            #msg = "tftp://"+self.context.get_local_ip()+"/"+file
             msg = self.context.getFileServerEndPoint()+"/"+file
 
         if fragment:
