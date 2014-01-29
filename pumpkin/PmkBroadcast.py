@@ -213,7 +213,7 @@ class BroadcastListener(Thread):
 
             for ep in d:
                 if not ep["host"] == self.context.getUuid() and not ep["ep"] in self.context.peers.keys():
-                    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, ep)
+                    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, ep["ep"])
                     zmqsub.start()
                     context.peers[ep["ep"]] = ep["host"]
                     context.addThread(zmqsub)
