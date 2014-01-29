@@ -118,9 +118,9 @@ class ExternalDispatch(SThread):
                         else:
                             disp = None
                             if entry["mode"] == "zmq.PULL":
-                                #disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
                                 #disp = ZMQPacketDispatch(self.context)
-                                disp = self.gdisp
+                                #disp = self.gdisp
 
                             if not disp == None:
                                 self.dispatchers[ep] = disp
@@ -183,15 +183,16 @@ class EndpointPicker(object):
         if no_entries == 1:
             return route["endpoints"][0]
 
-        if not route_id in self.route_index:
-            self.route_index["route_id"] = -1
+        if not route_id in self.route_index.keys():
+            self.route_index[route_id] = -1
 
-        s_idx = self.route_index["route_id"]
+        s_idx = self.route_index[route_id]
         while 1:
             s_idx += 1
             s_idx = s_idx % no_entries
             ep = route["endpoints"][s_idx]
             if not self.is_local_ext_ep(ep):
+                self.route_index[route_id] = s_idx
                 return ep
 
 

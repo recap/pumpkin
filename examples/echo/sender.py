@@ -45,24 +45,17 @@ class sender(PmkSeed.Seed):
         # f = open(full_wfn, 'w')
         # f.write("some data")
         # f.close()
+        time.sleep(30)
 
         #npkt = self.duplicate_pkt_new_box(pkt)
-        for x in range(1,2):
+        for x in range(1,20):
             npkt1 = self.duplicate_pkt_new_box(pkt)
-            npkt2 = self.duplicate_pkt_new_box(pkt)
-            npkt3 = self.duplicate_pkt_new_box(pkt)
-            npkt4 = self.duplicate_pkt_new_box(pkt)
-            npkt5 = self.duplicate_pkt_new_box(pkt)
 
             #print "SENDER: " +str(x)
 
-            time.sleep(45)
             #self.dispatch(npkt1, "The quick brown fox jumps over the lazy dog", "RAW")
-            self.dispatch(npkt1, "test1", "RAW")
-            self.dispatch(npkt2, "test2", "RAW")
-            self.dispatch(npkt3, "test3", "RAW")
-            self.dispatch(npkt4, "test4", "RAW")
-            self.dispatch(npkt5, "test5", "RAW")
+            self.dispatch(npkt1, "##############################TEST####### "+str(x), "RAW")
+
 
         #npkt2 = self.duplicate_pkt_new_box(pkt)
         # npkt3 = self.duplicate_pkt_new_box(pkt)
