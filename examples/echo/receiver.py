@@ -60,6 +60,8 @@ class receiver(PmkSeed.Seed):
 
         #time.sleep(10)
 
+        print str(json.dumps(pkt))
+
         self.ack_pkt(pkt)
 
 

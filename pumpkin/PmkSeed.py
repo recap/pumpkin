@@ -129,7 +129,7 @@ class Seed(object):
         ds = json.dumps(d)
 
         pkt.append( ds )
-        pkt.append( {"stag" : "RAW", "exstate" : "0001"} )
+        pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
 
         return pkt
 
@@ -271,7 +271,7 @@ class Seed(object):
         self._lock_in_fpkts.release()
         if not pkt[0]["last_func"] == None:
              exdisp = self.context.getExternalDispatch()
-             exdisp.sendPACK(dpkt)
+             exdisp.send_to_last(dpkt)
         pass
 
 
@@ -600,7 +600,7 @@ class Seed(object):
         return data
 
     def merge_pkt(self, pkt):
-        dpkt = copy.deepcopy(pkt)
+        dpkt = pkt#copy.deepcopy(pkt)
         dpkt[0]["state"] = "MERGE"
         pkt_id = self.get_pkt_id(dpkt)
         #self._lock_in_fpkts.acquire()
@@ -609,8 +609,10 @@ class Seed(object):
         #self._lock_in_fpkts.release()
         if not pkt[0]["last_func"] == None:
              exdisp = self.context.getExternalDispatch()
-             exdisp.sendPACK(dpkt)
+             exdisp.send_to_last(dpkt)
         pass
+
+
 
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False):
 
@@ -619,6 +621,22 @@ class Seed(object):
         #log.debug("Caller for dispatch function: "+inspect.stack()[1][3])
         caller = inspect.stack()[1][3]
         if self.is_fragment(pkt) and caller == "run":
+            if not type:
+                 otype = self.conf["return"][0]["type"]
+            else:
+                 otype = type
+            stag = otype + ":"  + tag
+            #Add output of current function
+            lpkt = pkt
+            last_entry = lpkt[len(lpkt)-1]
+            pkt_e = {}
+            pkt_e["stag"] = stag
+            pkt_e["func"] = self.__class__.__name__+"."+caller
+            pkt_e["exstate"] = "0001"
+            pkt_e["data"] = msg
+            pkt_e["ep"] = last_entry["ep"]
+            lpkt.insert(len(lpkt)-1,pkt_e)
+
             self.merge_pkt(pkt)
             return
 
@@ -649,12 +667,17 @@ class Seed(object):
         stag = otype + ":"  + tag
 
         #Add output of current function
+        last_entry = lpkt[len(lpkt)-1]
         pkt_e = {}
         pkt_e["stag"] = stag
-        pkt_e["func"] = self.__class__.__name__
+        pkt_e["func"] = self.__class__.__name__+"."+caller
         pkt_e["exstate"] = "0001"
         pkt_e["data"] = msg
-        lpkt.append(pkt_e)
+        pkt_e["ep"] = last_entry["ep"]
+        lpkt[len(lpkt)-1] = pkt_e
+        #lpkt.append(pkt_e)
+
+
 
         lpkt[0]["state"] = "WAITING_PACK"
         lpkt[0]["c_tag"] = stag

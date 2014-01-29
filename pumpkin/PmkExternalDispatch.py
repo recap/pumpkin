@@ -40,7 +40,7 @@ class ExternalDispatch(SThread):
         ep.split("://")
         return ep[0]
 
-    def sendPACK(self, pkt):
+    def send_to_last(self, pkt):
         ep = pkt[0]["last_contact"]
         if ep in self.dispatchers.keys():
             disp = self.dispatchers[ep]
