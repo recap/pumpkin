@@ -614,7 +614,7 @@ class Seed(object):
 
 
 
-    def dispatch(self, dpkt, msg, tag, type=None, fragment = False):
+    def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
         pkt = copy.deepcopy(dpkt)
 
@@ -692,11 +692,13 @@ class Seed(object):
             self.ack_pkt(lpkt)
             return
 
-        self.add_flight_pkt(lpkt)
+        if dispatch:
+            self.add_flight_pkt(lpkt)
+            self.context.getTx().put((tag,otype,lpkt))
+
+        return lpkt
 
 
-        self.context.getTx().put((tag,otype,lpkt))
-        pass
 
     def add_flight_pkt(self,pkt):
         pkt_id = self.get_pkt_id(pkt)

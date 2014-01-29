@@ -61,6 +61,8 @@ class ExternalDispatch(SThread):
     def run(self):
         graph = self.context.getProcGraph()
         tx = self.context.getTx()
+        ep_sched = EndpointPicker(self.context)
+
         while True:
             state, otype, pkt = tx.get(True)
             #log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
@@ -94,8 +96,9 @@ class ExternalDispatch(SThread):
                 rtag = r["otype"]+":"+r["ostate"]
                 if (ntag and ntag == rtag) or not ntag:
                     #TODO make it more flexible not bound to zmq
-                    pep = self.context.getProcGraph().getPriorityEndpoint(r)
-                    eep = self.context.getProcGraph().getExternalEndpoints(r)
+                    #pep = self.context.getProcGraph().getPriorityEndpoint(r)
+                    ##eep = self.context.getProcGraph().getExternalEndpoints(r)
+                    pep = ep_sched.pick_route(r)
                     oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                     dcpkt[0]["last_contact"] = oep[0]
 
@@ -163,6 +166,53 @@ class ExternalDispatch(SThread):
                 break
             else:
                 continue
+
+class EndpointPicker(object):
+    def __init__(self, context):
+        self.context = context
+        self.route_index = {}
+
+    def is_local_ext_ep(self, ep):
+        if (int(ep["priority"]) >= 5) and (ep["cuid"] == self.context.getUuid()):
+            return True
+        return False
+
+    def pick_route(self, route):
+        route_id = route["name"]
+        no_entries = len(route["endpoints"])
+        if no_entries == 1:
+            return route["endpoints"][0]
+
+        if not route_id in self.route_index:
+            self.route_index["route_id"] = -1
+
+        s_idx = self.route_index["route_id"]
+        while 1:
+            s_idx += 1
+            s_idx = s_idx % no_entries
+            ep = route["endpoints"][s_idx]
+            if not self.is_local_ext_ep(ep):
+                return ep
+
+
+        #
+        # for ep in route['endpoints']:
+        #     if not self.is_local_ext_ep(ep):
+        #         pkt_counter = 0
+        #         if not ep["ep"] in self.route_index.keys():
+        #             self.route_index[ep["ep"]] = 1
+        #             return ep
+        #
+        #
+        #         cuid = ep["cuid"]
+        #         p = int(ep["priority"])
+        #
+        #
+        #         if p < prt:
+        #             bep = ep
+        #             prt = p
+        #
+
 
 
 
