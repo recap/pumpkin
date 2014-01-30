@@ -68,9 +68,9 @@ class ExternalDispatch(SThread):
         ep_sched = EndpointPicker(self.context)
 
         while True:
-            state, otype, pkt = tx.get(True)
+            group, state, otype, pkt = tx.get(True)
             #log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
-            otag = otype+":"+state
+            otag = group+":"+otype+":"+state
             ntag = None
             if pkt[1]:
                 g = json_graph.loads(pkt[1])

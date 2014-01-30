@@ -6,6 +6,7 @@ __author__ = 'reggie'
 ##"object_name": "sender",
 ##"object_poi": "my-sender-1234",
 ##"auto-load": true,
+##"group" : "public",
 ##"parameters": [ ],
 ##"return": [
 ##              {
@@ -48,7 +49,7 @@ class sender(PmkSeed.Seed):
         #time.sleep(45)
 
         #npkt = self.duplicate_pkt_new_box(pkt)
-        for x in range(1,20000):
+        for x in range(1,3):
             npkt1 = self.duplicate_pkt_new_box(pkt)
 
             #print "SENDER: " +str(x)

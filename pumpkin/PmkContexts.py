@@ -4,6 +4,9 @@ import sys
 import shelve
 import os
 import shutil
+import imp
+import PmkSeed
+import re
 
 import PmkShared
 
@@ -34,6 +37,7 @@ class MainContext(object):
 
         def __init__(self,uuid, peer=None):
 
+            self.__pumpkin = None
             self.__uuid = uuid
             #self.__peer = peer
             self.__attrs = None
@@ -58,6 +62,29 @@ class MainContext(object):
 
 
             pass
+
+        def load_seed(self, file):
+
+            _,tail = os.path.split(file)
+            modname = tail[:-3]
+            if( file[-2:] == "py"):
+                log.debug("Found seed: "+file)
+                file_header = ""
+                fh = open(file, "r")
+                fhd = fh.read()
+                m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+
+                if m:
+                    conf = m.group(1).replace("##","")
+                    if conf:
+                        d = json.loads(conf)
+                        if not "auto-load" in d.keys() or d["auto-load"] == True:
+                            imp.load_source(modname,file)
+                            klass = PmkSeed.hplugins[modname](self)
+                            PmkSeed.iplugins[modname] = klass
+                            klass.on_load()
+                            klass.set_conf(d)
+            return modname
 
         def startPktShelve(self, filename):
             self.pkt_shelve = shelve.open(self.working_dir+"/"+filename)

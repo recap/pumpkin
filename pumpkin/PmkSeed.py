@@ -385,6 +385,11 @@ class Seed(object):
     def getpoi(self):
         return self.poi
 
+    def get_group(self):
+        if "group" in self.conf.keys():
+            return self.conf["group"]
+
+
     def set_conf(self, jconf):
         self.conf = jconf
         pass
@@ -427,6 +432,7 @@ class Seed(object):
 
     def getConfEntry(self):
         js = '{ "name" : "'+self.get_name()+'", \
+        "group" : "'+self.get_group()+'",\
        "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.get_parameters()+',' \
        ''+self.getreturn()+'}'
@@ -664,7 +670,7 @@ class Seed(object):
             otype = self.conf["return"][0]["type"]
         else:
             otype = type
-        stag = otype + ":"  + tag
+        stag = self.get_group()+":"+otype + ":"  + tag
 
         #Add output of current function
         last_entry = lpkt[len(lpkt)-1]
@@ -694,7 +700,7 @@ class Seed(object):
 
         if dispatch:
             self.add_flight_pkt(lpkt)
-            self.context.getTx().put((tag,otype,lpkt))
+            self.context.getTx().put((self.get_group(), tag,otype,lpkt))
 
         return lpkt
 

@@ -59,6 +59,7 @@ class Pumpkin(Daemon):
         self.context.setExecContext(ex_cntx)
         self.context.setSupernodeList(SUPERNODES)
         self.context.set_local_ip(get_lan_ip())
+        self.context.__pumpkin = self
 
         self.zmq_context = zmq.Context()
         pass
@@ -137,6 +138,31 @@ class Pumpkin(Daemon):
         threading.Timer(10, self._checkLocalPeers, [zmq_context]).start()
 
         pass
+
+    def load_seed(self, file):
+        context = self.context
+        _,tail = os.path.split(file)
+        modname = tail[:-3]
+        if( file[-2:] == "py"):
+            log.debug("Found seed: "+file)
+            file_header = ""
+            fh = open(file, "r")
+            fhd = fh.read()
+            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+
+            if m:
+                conf = m.group(1).replace("##","")
+                if conf:
+                    d = json.loads(conf)
+                    if not "auto-load" in d.keys() or d["auto-load"] == True:
+                        imp.load_source(modname,file)
+
+                        klass = PmkSeed.hplugins[modname](context)
+                        PmkSeed.iplugins[modname] = klass
+                        klass.on_load()
+                        klass.set_conf(d)
+
+        return modname
 
     def startContext(self):
         context = self.context
@@ -286,48 +312,51 @@ class Pumpkin(Daemon):
                         modname = fl[:-3]
                         #ext = fl[-2:]
 
-                        if( fl[-2:] == "py"):
-                            log.debug("Found seed: "+fullpath)
-                            file_header = ""
-                            fh = open(fullpath, "r")
-                            fhd = fh.read()
-                            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+                        self.load_seed(fullpath)
 
-                            if m:
-                                conf = m.group(1).replace("##","")
-                                if conf:
-                                    d = json.loads(conf)
-                                    if not "auto-load" in d.keys() or d["auto-load"] == True:
-                                        imp.load_source(modname,fullpath)
-
-                                        klass = PmkSeed.hplugins[modname](context)
-                                        PmkSeed.iplugins[modname] = klass
-                                        klass.on_load()
-                                        klass.set_conf(d)
+                        # if( fl[-2:] == "py"):
+                        #     log.debug("Found seed: "+fullpath)
+                        #     file_header = ""
+                        #     fh = open(fullpath, "r")
+                        #     fhd = fh.read()
+                        #     m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+                        #
+                        #     if m:
+                        #         conf = m.group(1).replace("##","")
+                        #         if conf:
+                        #             d = json.loads(conf)
+                        #             if not "auto-load" in d.keys() or d["auto-load"] == True:
+                        #                 imp.load_source(modname,fullpath)
+                        #
+                        #                 klass = PmkSeed.hplugins[modname](context)
+                        #                 PmkSeed.iplugins[modname] = klass
+                        #                 klass.on_load()
+                        #                 klass.set_conf(d)
 
                 else:
                     seedfp = context.singleSeed()
-                    seedfpa = seedfp.split("/")
-                    seedsp = seedfpa[len(seedfpa) -1 ]
-                    modname = seedsp[:-3]
-                    if( seedsp[-2:] == "py"):
-                        log.debug("Found seed: "+seedfp)
-                        file_header = ""
-                        #try:
-                        imp.load_source(modname,seedfp)
-
-                        fh = open(seedfp, "r")
-                        fhd = fh.read()
-                        m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
-
-                        if m:
-                            conf = m.group(1).replace("##","")
-                            if conf:
-                                d = json.loads(conf)
-                                klass = PmkSeed.hplugins[modname](context)
-                                PmkSeed.iplugins[modname] = klass
-                                klass.on_load()
-                                klass.set_conf(d)
+                    self.load_seed(seedfp)
+                    # seedfpa = seedfp.split("/")
+                    # seedsp = seedfpa[len(seedfpa) -1 ]
+                    # modname = seedsp[:-3]
+                    # if( seedsp[-2:] == "py"):
+                    #     log.debug("Found seed: "+seedfp)
+                    #     file_header = ""
+                    #     #try:
+                    #     imp.load_source(modname,seedfp)
+                    #
+                    #     fh = open(seedfp, "r")
+                    #     fhd = fh.read()
+                    #     m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+                    #
+                    #     if m:
+                    #         conf = m.group(1).replace("##","")
+                    #         if conf:
+                    #             d = json.loads(conf)
+                    #             klass = PmkSeed.hplugins[modname](context)
+                    #             PmkSeed.iplugins[modname] = klass
+                    #             klass.on_load()
+                    #             klass.set_conf(d)
 
             except Exception as e:
                 log.error("Import error "+ str(e))
@@ -346,7 +375,9 @@ class Pumpkin(Daemon):
 
             log.debug("Registry dump: "+context.getProcGraph().dumpExternalRegistry())
 
-
+            seedmonitor = PacketFileMonitor(context, context.getWorkingDir()+"seeds/", ext="py")
+            seedmonitor.start()
+            context.addThread(seedmonitor)
 
             edispatch = ExternalDispatch(context)
             context.setExternalDispatch(edispatch)

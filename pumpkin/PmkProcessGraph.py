@@ -111,9 +111,11 @@ class ProcessGraph(object):
                     istype = eo["itype"]+":"+isp
                     if istype == "NONE:NONE":
                            istype = "INJECTION"
+                    istype = eo["group"] +":"+ istype
                     ostype = eo["otype"]+":"+osp
                     if ostype == "NONE:NONE":
                         ostype = "EXTRACTION"
+                    ostype = eo["group"] +":"+ ostype
                     G.add_edge(istype, ostype, function=eo["name"])
                 if istype in self.tagroute.keys():
                     self.tagroute[istype].append(eo)
