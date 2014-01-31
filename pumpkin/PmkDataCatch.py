@@ -46,9 +46,10 @@ class PacketFileMonitor(SThread):
                         pktd =  open (pktf, "r").read()
                         pktdj = json.loads(pktd)
                         pkt_len = len(pktdj)
-                        type = pktdj[pkt_len - 1]["stag"].split(":")[0]
-                        tag = pktdj[pkt_len - 1]["stag"].split(":")[1]
-                        self.context.getTx().put((tag,type,pktdj))
+                        group = pktdj[pkt_len - 1]["stag"].split(":")[0]
+                        type = pktdj[pkt_len - 1]["stag"].split(":")[1]
+                        tag = pktdj[pkt_len - 1]["stag"].split(":")[2]
+                        self.context.getTx().put((group, tag,type,pktdj))
 
 
                 except Exception as e:

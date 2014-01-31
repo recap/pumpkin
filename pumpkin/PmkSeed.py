@@ -420,7 +420,7 @@ class Seed(object):
                 log.debug("Resending packet: "+str(pkt))
                 state = pkt[0]["t_state"]
                 otype = pkt[0]["t_otype"]
-                self.context.getTx().put((state, otype, pkt))
+                self.context.getTx().put((self.get_group(), state, otype, pkt))
                 pass
             pkt[0]["ttl"] = str(ttl)
 
