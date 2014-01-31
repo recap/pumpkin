@@ -330,7 +330,7 @@ class FileServer(Thread):
     def __ensure_dir(self, f):
         d = os.path.dirname(f)
         if not os.path.exists(d):
-            os.makedirs(d)
+            os.makedirs(d,mode=0775)
 
     def stop(self):
         self.__stop.set()

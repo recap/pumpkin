@@ -45,7 +45,7 @@ def _ensure_dir(f):
         d = os.path.dirname(f)
         if not os.path.exists(d):
             log.debug(d + " does not exist, creating...")
-            os.makedirs(d)
+            os.makedirs(d,mode=0775)
         pass
 
 def _get_nextport(port, prot="TCP"):
