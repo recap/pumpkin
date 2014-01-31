@@ -46,9 +46,22 @@ class PacketFileMonitor(SThread):
                         pktd =  open (pktf, "r").read()
                         pktdj = json.loads(pktd)
                         pkt_len = len(pktdj)
-                        group = pktdj[pkt_len - 1]["stag"].split(":")[0]
-                        type = pktdj[pkt_len - 1]["stag"].split(":")[1]
-                        tag = pktdj[pkt_len - 1]["stag"].split(":")[2]
+
+                        stag_p = pktdj[pkt_len - 1]["stag"].split(":")
+
+                        if len(stag_p) < 3:
+                            group = "public"
+                            type = stag_p[0]
+                            tag = stag_p[1]
+                        else:
+                            group = stag_p[0]
+                            type = stag_p[1]
+                            tag = stag_p[2]
+
+                        # group = pktdj[pkt_len - 1]["stag"].split(":")[0]
+                        # type = pktdj[pkt_len - 1]["stag"].split(":")[1]
+                        # tag = pktdj[pkt_len - 1]["stag"].split(":")[2]
+
                         self.context.getTx().put((group, tag,type,pktdj))
 
 

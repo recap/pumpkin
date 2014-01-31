@@ -16,7 +16,7 @@
     },
     {},
     {
-        "stag": "StringFileTar:XSimX1X2",
+        "stag": "public:StringFileTar:XSimX1X2",
         "data": "/data/c466f181-98ea09ac.tar.gz",
         "exstate": "0000",
         "func": "StubModel"

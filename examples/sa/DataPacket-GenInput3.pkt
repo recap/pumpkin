@@ -16,7 +16,7 @@
     },
     {},
     {
-        "stag": "StringCSV:SAInput",
+        "stag": "public:StringCSV:SAInput",
         "data": "/data/testje3.txt,10",
         "exstate": "0000",
         "func": "GenInput"
