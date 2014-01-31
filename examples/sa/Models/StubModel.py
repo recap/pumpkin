@@ -5,6 +5,7 @@ __author__ = 'reggie'
 ##"object_name": "StubModel",
 ##"object_poi": "vph-101",
 ##"group" : "public",
+##"remoting" : "False",
 ##"parameters": [
 ##                 {
 ##                      "name": "StubModelParam",

@@ -5,8 +5,9 @@ __author__ = 'reggie'
 ##{
 ##"object_name": "processor",
 ##"object_poi": "my-processor-1234",
-##"auto-load": true,
+##"auto-load": True,
 ##"group" : "public",
+##"remoting" : False,
 ##"parameters": [
 ##                  {
 ##                      "name": "data",

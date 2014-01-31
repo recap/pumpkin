@@ -385,6 +385,15 @@ class Seed(object):
     def getpoi(self):
         return self.poi
 
+    def is_remoting(self):
+        if "remoting" in self.conf.keys():
+            if self.conf["remoting"] == "True":
+                return "True"
+        return "False"
+
+
+
+
     def get_group(self):
         if "group" in self.conf.keys():
             return self.conf["group"]
@@ -435,6 +444,7 @@ class Seed(object):
     def getConfEntry(self):
         js = '{ "name" : "'+self.get_name()+'", \
         "group" : "'+self.get_group()+'",\
+        "remoting" : "'+self.is_remoting()+'",\
        "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.get_parameters()+',' \
        ''+self.getreturn()+'}'

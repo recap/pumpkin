@@ -186,6 +186,9 @@ class EndpointPicker(object):
         no_entries = len(route["endpoints"])
         if no_entries == 1:
             return route["endpoints"][0]
+        if route["remoting"] == "False":
+            return route["endpoints"][0]
+
 
         if not route_id in self.route_index.keys():
             self.route_index[route_id] = -1
