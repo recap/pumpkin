@@ -331,6 +331,7 @@ class FileServer(Thread):
         d = os.path.dirname(f)
         if not os.path.exists(d):
             os.makedirs(d,mode=0775)
+            os.chmod(d,0775)
 
     def stop(self):
         self.__stop.set()

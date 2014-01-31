@@ -452,6 +452,7 @@ class Seed(object):
         if not os.path.exists(d):
             log.debug(d + " does not exist, creating...")
             os.makedirs(d, mode=0775)
+            os.chmod(d,0775)
         pass
 
     def __getEps(self):
