@@ -388,6 +388,8 @@ class Seed(object):
     def get_group(self):
         if "group" in self.conf.keys():
             return self.conf["group"]
+        else:
+            return "public"
 
 
     def set_conf(self, jconf):
