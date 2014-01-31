@@ -4,6 +4,7 @@ __author__ = 'reggie'
 ##{
 ##"object_name": "StubModel",
 ##"object_poi": "vph-101",
+##"group" : "public",
 ##"parameters": [
 ##                 {
 ##                      "name": "StubModelParam",
@@ -54,6 +55,28 @@ class StubModel(PmkSeed.Seed):
         #shutil.copy(self.wd+"DataPacket.pkt", self.wd+"rx/DataPacket.pkt")
         pass
 
+    def split(self, pkt, data):
+        """ Split the pkt into many packets to distribute processing.
+            In this case we need to untar the X1 X2 Xsim csv files,
+            grab a single entry from each file into a new file for X1' X2' Xsim'
+            retar the files and dispatch.
+
+            After splitting and dispatching packets. A termination packet needs to be sent with the number
+            of packets as its payload like so:
+
+            # lpkt = self.last_fragment_pkt(pkt, frag_no+1)
+            # self.dispatch(lpkt, str(frag_no-1), "XSimX1X2", type="FileString")
+
+            Where:
+                lpkt is a termination packet
+                frag_no is the number of split packets
+
+
+            When implemented change the return to True else split will not be invoked.
+        """
+
+        return False
+
 
     def run(self, pkt, TarFile):
 
@@ -61,12 +84,42 @@ class StubModel(PmkSeed.Seed):
 
         new_file_name = self.get_ship_id(pkt)+"-"+self.get_cont_id(pkt)+"-"+self.get_name()
         self.logger.debug("Adding stub Xsim-ouput.csv to tar file ["+filep+"]")
-        #fout = self._add_to_tar("/data/Xsim-output.csv", filep, postfix=self.get_cont_id(pkt), rename=new_file_name)
         fout = self._add_to_tar("/data/Xsim-output.csv", rpath, rename=new_file_name)
 
         if fout:
             self.logger.debug("Dispatching file: "+str(fout))
             self.dispatch(pkt,"file://"+str(fout), "XsimOut")
-
         pass
 
+
+    def merge(self, pkt, data):
+        """ Merging does the opposite of splitting. Merge function is called
+            after every run(). To make sure all split packets are received we
+            can keep a counter as below. After all packets are received you can
+            merge the data into a new packet.
+
+
+        # if self.is_last_fragment(pkt):
+        #     self.last_received = True
+        #
+        #     # Number of split packets expected
+        #     self.exp_pkts = int(data)
+        # else:
+        #
+        #     # Counter to keep track of split packets
+        #     self.packt_co += 1
+        #     self.str_pkts.append(pkt)
+        #
+        # # Merge when all packets received
+        # if self.packt_co == self.exp_pkts:
+        #     for spkt in self.str_pkts:
+        #         pkt_data = self.get_pkt_data(spkt)
+        #         # Do Merging Untat, combine, retar
+        #
+        #
+        #     npkt = self.clean_header(pkt)
+        #     self.dispatch(npkt,"file://"+filepath, "XsimOut")
+
+
+        """
+        pass

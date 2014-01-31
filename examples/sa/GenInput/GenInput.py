@@ -4,6 +4,7 @@ __author__ = 'reggie'
 ##{
 ##"object_name": "GenInput",
 ##"object_poi": "vph-101",
+##"group" : "public",
 ##"parameters": [
 ##                 {
 ##                      "name": "GenInputParam",
