@@ -27,7 +27,8 @@ class PacketFileMonitor(SThread):
 
         #mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE  # watched events
         #mask = pyinotify.IN_CREATE  # watched events
-        mask = pyinotify.IN_CLOSE_WRITE  # watched events
+        #mask = pyinotify.IN_CLOSE_WRITE|pyinotify.ALL_EVENTS  # watched events
+        mask = pyinotify.IN_CLOSE_WRITE|pyinotify.IN_MOVE_SELF|pyinotify.IN_MOVED_TO
 
         class PTmp(ProcessEvent):
             def __init__(self,context):
@@ -35,39 +36,52 @@ class PacketFileMonitor(SThread):
                 self.tx = self.context.getTx()
                 pass
 
+            def load_pkt(self, pktf):
+                if( pktf[-3:] == "pkt"):
+                    pktd =  open (pktf, "r").read()
+                    pktdj = json.loads(pktd)
+                    pkt_len = len(pktdj)
+
+                    stag_p = pktdj[pkt_len - 1]["stag"].split(":")
+
+                    if len(stag_p) < 3:
+                        group = "public"
+                        type = stag_p[0]
+                        tag = stag_p[1]
+                    else:
+                        group = stag_p[0]
+                        type = stag_p[1]
+                        tag = stag_p[2]
+
+                    self.context.getTx().put((group, tag,type,pktdj))
+
+            def process_IN_MOVE_SELF(self, event):
+                pktf = os.path.join(event.path, event.name)
+                #log.info("MOVE SELF "+pktf)
+                try:
+                    self.load_pkt(pktf)
+                except Exception as e:
+                    log.error("Loading paket: "+pktf)
+
+            def process_IN_MOVED_TO(self, event):
+                pktf = os.path.join(event.path, event.name)
+                #log.info("MOVE TO "+pktf)
+                try:
+                    self.load_pkt(pktf)
+                except Exception as e:
+                    log.error("Loading paket: "+pktf)
+
             def process_IN_CLOSE_WRITE(self, event):
                 try:
                     pktf = os.path.join(event.path, event.name)
-                    if pktf[-4:] == "part":
-                        pktf = pktf.replace(".part","")
-                        time.sleep(1)
-
-                    if( pktf[-3:] == "pkt"):
-                        pktd =  open (pktf, "r").read()
-                        pktdj = json.loads(pktd)
-                        pkt_len = len(pktdj)
-
-                        stag_p = pktdj[pkt_len - 1]["stag"].split(":")
-
-                        if len(stag_p) < 3:
-                            group = "public"
-                            type = stag_p[0]
-                            tag = stag_p[1]
-                        else:
-                            group = stag_p[0]
-                            type = stag_p[1]
-                            tag = stag_p[2]
-
-                        # group = pktdj[pkt_len - 1]["stag"].split(":")[0]
-                        # type = pktdj[pkt_len - 1]["stag"].split(":")[1]
-                        # tag = pktdj[pkt_len - 1]["stag"].split(":")[2]
-
-                        self.context.getTx().put((group, tag,type,pktdj))
-
+                    #log.debug("INOTIFY CLOSE_WRITE 2: " + str(pktf))
+                    self.load_pkt(pktf)
 
                 except Exception as e:
                     log.error("Loading paket: "+pktf)
-                    pass
+
+
+
 
 
             def process_IN_DELETE(self, event):
@@ -80,33 +94,30 @@ class PacketFileMonitor(SThread):
                 self.tx = self.context.getTx()
                 pass
 
+            def load_seed(self, seed_fp):
+                if( seed_fp[-2:] == "py"):
+                    context = self.context
+                    seed_name = context.load_seed(seed_fp)
+                    klass = PmkSeed.iplugins[seed_name]
+                    js = klass.getConfEntry()
+                    self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
 
-            def process_IN_MOVE(self, event):
-                seed_fp = os.path.join(event.path, event.name)
-                log.info("MOVE MOE "+seed_fp)
 
-            def process_IN_CLOSE_WRITE(self, event):
+            def process_IN_MOVED_TO(self, event):
                 try:
                     seed_fp = os.path.join(event.path, event.name)
-
-                    if seed_fp[-4:] == "part":
-                        seed_fp = seed_fp.replace(".part","")
-                        time.sleep(1)
-
-
-                    if( seed_fp[-2:] == "py"):
-                        context = self.context
-                        seed_name = context.load_seed(seed_fp)
-                        klass = PmkSeed.iplugins[seed_name]
-                        js = klass.getConfEntry()
-                        self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
-
-
+                    self.load_seed(seed_fp)
                 except Exception as e:
                     log.error("Loading paket: "+seed_fp)
                     pass
 
-
+            def process_IN_CLOSE_WRITE(self, event):
+                try:
+                    seed_fp = os.path.join(event.path, event.name)
+                    self.load_seed(seed_fp)
+                except Exception as e:
+                    log.error("Loading paket: "+seed_fp)
+                    pass
 
             def process_IN_DELETE(self, event):
                 print log.debug("Remove: %s" %  os.path.join(event.path, event.name))
