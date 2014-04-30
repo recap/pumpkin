@@ -43,6 +43,5 @@ class greet(PmkSeed.Seed):
         dispatched and received by a collector.
         """
         greeting = "Hello " + str(name)
-        time.sleep(5)
         self.dispatch(pkt, greeting, "GREETING")
         pass
