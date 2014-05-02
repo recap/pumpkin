@@ -468,6 +468,10 @@ def main():
                        help='daemonize start|stop|restart')
     parser.add_argument('-c', action='store', dest="config", default="./pumpkin.cfg",
                        help='config file')
+    parser.add_argument('--ack',action="store_true",
+                       help='turn on data packet acknowledgments.')
+    parser.add_argument('--persistent',action="store_true",
+                       help='keep packets on disk.')
 
     parser.add_argument('--version', action='version', version='%(prog)s '+pmk.VERSION)
     args = parser.parse_args()
@@ -478,7 +482,7 @@ def main():
     if args.daemon == "start":
         log.info("Starting Pumpkin Daemon")
         context = P.getContext()
-        context.setAttributes(args)
+        context.set_attributes(args)
         P.start()
     if args.daemon == "stop":
         P.stop()
@@ -486,7 +490,7 @@ def main():
         P.restart()
     if args.daemon == None:
         context = P.getContext()
-        context.setAttributes(args)
+        context.set_attributes(args)
         UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
         config = ConfigParser.RawConfigParser(allow_no_value=True)
         if os.path.exists(args.config):

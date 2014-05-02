@@ -262,17 +262,18 @@ class Seed(object):
         return [ip, port, rpath, file]
 
     def ack_pkt(self, pkt):
-        dpkt = copy.deepcopy(pkt)
-        dpkt[0]["state"] = "PACK_OK"
-        pkt_id = self.get_pkt_id(dpkt)
-        self._lock_in_fpkts.acquire()
-        self.context.pktReady(dpkt)
-        if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
-        self._lock_in_fpkts.release()
-        if not pkt[0]["last_func"] == None:
-             exdisp = self.context.getExternalDispatch()
-             exdisp.send_to_last(dpkt)
-        pass
+        if self.context.with_acks():
+            dpkt = copy.deepcopy(pkt)
+            dpkt[0]["state"] = "PACK_OK"
+            pkt_id = self.get_pkt_id(dpkt)
+            self._lock_in_fpkts.acquire()
+            self.context.pktReady(dpkt)
+            if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
+            self._lock_in_fpkts.release()
+            if not pkt[0]["last_func"] == None:
+                 exdisp = self.context.getExternalDispatch()
+                 exdisp.send_to_last(dpkt)
+            pass
 
 
     def pack_ok(self, pkt):
@@ -317,9 +318,18 @@ class Seed(object):
 
 
             pkt[0]["state"] = "PROCESSING"
-            self._lock_in_fpkts.acquire()
-            self.in_flight_pkts[pkt_id] = pkt
-            self._lock_in_fpkts.release()
+
+            if self.context.with_shelve():
+                self._lock_in_fpkts.acquire()
+                shelve = self.context.get_pkt_shelve()
+                shelve[str(pkt_id)] = pkt
+                self._lock_in_fpkts.release()
+
+            if self.context.with_acks():
+                self._lock_in_fpkts.acquire()
+                self.in_flight_pkts[pkt_id] = pkt
+                self._lock_in_fpkts.release()
+
             try:
                 self.__inc_pkt_counter()
 
@@ -414,26 +424,26 @@ class Seed(object):
     def pkt_checker_t(self):
         log.debug("Starting pkt checker thread")
         #time.sleep(10)
+        if self.context.with_acks():
+            #while 1:
+            interval = 30
+            reset = 60
+            self._lock_fpkts.acquire()
 
-        #while 1:
-        interval = 30
-        reset = 60
-        self._lock_fpkts.acquire()
+            for k in self.flight_pkts.keys():
+                pkt = self.flight_pkts[k]
+                ttl = int(pkt[0]["ttl"])
+                ttl = ttl - interval
+                if ttl <= 0:
+                    ttl = reset
+                    log.debug("Resending packet: "+str(pkt))
+                    state = pkt[0]["t_state"]
+                    otype = pkt[0]["t_otype"]
+                    self.context.getTx().put((self.get_group(), state, otype, pkt))
+                    pass
+                pkt[0]["ttl"] = str(ttl)
 
-        for k in self.flight_pkts.keys():
-            pkt = self.flight_pkts[k]
-            ttl = int(pkt[0]["ttl"])
-            ttl = ttl - interval
-            if ttl <= 0:
-                ttl = reset
-                log.debug("Resending packet: "+str(pkt))
-                state = pkt[0]["t_state"]
-                otype = pkt[0]["t_otype"]
-                self.context.getTx().put((self.get_group(), state, otype, pkt))
-                pass
-            pkt[0]["ttl"] = str(ttl)
-
-        self._lock_fpkts.release()
+            self._lock_fpkts.release()
 
         #threading.Timer(interval, self.pkt_checker_t).start()
 
@@ -557,6 +567,11 @@ class Seed(object):
         #box = box + 1
         header["container"] = cont
         return lpkt
+
+    def get_pkt_fragment_no(self, pkt):
+        lpkt = copy.deepcopy(pkt)
+        header = lpkt[0]
+        return int(header["fragment"])
 
     def fragment_pkt(self, pkt, frag_no):
         lpkt = copy.deepcopy(pkt)

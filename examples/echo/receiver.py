@@ -6,7 +6,6 @@ __author__ = 'reggie'
 ##"object_name": "receiver",
 ##"object_poi": "my-receiver-1234",
 ##"auto-load": true,
-##"group" : "public",
 ##"parameters": [
 ##                  {
 ##                      "name": "data",

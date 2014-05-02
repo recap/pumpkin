@@ -53,15 +53,43 @@ class MainContext(object):
             self.proc_graph = ProcessGraph()
             self.__exec_context = None
             self.zmq_context = None
-            self.working_dir = "./.pumpkin/"+self.__uuid
+            self.working_dir = "~/.pumpkin/"+self.__uuid
             self.file_dir = None
             self.external_dispatch = None
             self.openfiles = []
             self.peers = {}
 
-
+            self.__rabbitmq = None
+            self.__rabbitmq_cred = ()
 
             pass
+
+        def fallback_rabbitmq(self):
+            if self.__attrs.rabbitmq_fallback:
+                return True
+            else:
+                return False
+            pass
+
+        def set_rabbitmq(self, rabbitmq):
+            self.__rabbitmq = rabbitmq
+
+        def set_rabbitmq_cred(self, host, port=5672, username=None, password=None, virtual_host="soa"):
+            self.__rabbitmq_cred = (host, port, username, password, virtual_host)
+
+        def get_rabbitmq_cred(self):
+            return self.__rabbitmq_cred
+
+        def get_rabbitmq(self):
+            return self.__rabbitmq
+
+        def with_acks(self):
+            return self.__attrs.ack
+
+        def with_shelve(self):
+            return self.__attrs.persistent
+
+
 
         def load_seed(self, file):
 
@@ -99,6 +127,14 @@ class MainContext(object):
             self.pkt_shelve[pkt_id] = pkt
             pass
 
+        def get_pkt_from_shelve(self,pkt_id):
+
+            if pkt_id in self.pkt_shelve:
+                spkt = self.pkt_shelve[pkt_id]
+                return spkt
+            else:
+                return False
+
         def isPktShelved(self, pkt):
 
             pkt_id = str(self.getPktId(pkt))
@@ -111,7 +147,7 @@ class MainContext(object):
                     return True
             return False
 
-        def getPktShelve(self):
+        def get_pkt_shelve(self):
             return self.pkt_shelve
 
         def setExternalDispatch(self, dispatch):
@@ -162,6 +198,7 @@ class MainContext(object):
         #    #    return "ipc:///tmp/"+self.getUuid()
         #    return "inproc://"+self.getUuid()
 
+
         def isZMQEndpoint(self, entry):
             e = str(entry[1])
             if "zmq" in e.lower():
@@ -170,6 +207,9 @@ class MainContext(object):
 
         def getEndpoints(self):
             return self.endpoints
+
+        def get_group(self):
+            return self.__attrs.group
 
         def hasRx(self):
             return self.__attrs.rxdir
@@ -268,12 +308,24 @@ class MainContext(object):
             fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
             log.addHandler(fh)
 
-        def setAttributes(self, attributes):
+        def is_debug(self):
+            attributes = self.__attrs
+            if attributes.debug:
+                return True
+            else:
+                return False
+
+
+        def set_attributes(self, attributes):
             self.__attrs = attributes
             if attributes.debug:
                 log.setLevel(logging.DEBUG)
             else:
                 log.setLevel(logging.INFO)
+
+            #if self.__attrs.rabbitmq_host:
+            #    a = self.__attrs
+            #    self.set_rabbitmq_cred(host=a.rabbitmq_host, username=a.rabbitmq_user, password=a.rabbitmq_pass, virtual_host=a.rabbitmq_vhost)
 
 
 
