@@ -50,10 +50,11 @@ class ProcessGraph(object):
                     if loc == "remote":
                         eep["priority"] = 10
                     d["endpoints"].append(eep)
+                    log.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
                     self.__reg_update = True
                     self.__display_graph = True
         else:
-            log.info("Discovered new peer: "+e["name"]+" at "+e["endpoints"][0]["ep"])
+            log.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
             if loc == "remote":
                 for ep in e["endpoints"]:
                     ep["priority"] = 10
