@@ -186,7 +186,7 @@ class EndpointPicker(object):
         no_entries = len(route["endpoints"])
         if no_entries == 1:
             return route["endpoints"][0]
-        if route["remoting"] == "False":
+        if route["remoting"] == False:
             return route["endpoints"][0]
 
 

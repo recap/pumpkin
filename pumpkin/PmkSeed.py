@@ -397,9 +397,9 @@ class Seed(object):
 
     def is_remoting(self):
         if "remoting" in self.conf.keys():
-            if self.conf["remoting"] == "True":
-                return "True"
-        return "False"
+            if self.conf["remoting"] == True:
+                return True
+        return False
 
 
 
@@ -454,7 +454,7 @@ class Seed(object):
     def getConfEntry(self):
         js = '{ "name" : "'+self.get_name()+'", \
         "group" : "'+self.get_group()+'",\
-        "remoting" : "'+self.is_remoting()+'",\
+        "remoting" : '+str(self.is_remoting()).lower()+',\
        "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.get_parameters()+',' \
        ''+self.getreturn()+'}'

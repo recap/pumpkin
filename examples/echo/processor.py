@@ -6,7 +6,7 @@ __author__ = 'reggie'
 ##"object_name": "processor",
 ##"object_poi": "my-processor-1234",
 ##"auto-load": true,
-##"remoting" : false,
+##"remoting" : true,
 ##"parameters": [
 ##                  {
 ##                      "name": "data",
@@ -85,6 +85,7 @@ class processor(PmkSeed.Seed):
         run run().
         """
         print "PROCESSOR: "+data
+        time.sleep(30)
         #self.ack_pkt(pkt)
         self.dispatch(pkt, data, "PROCESSED")
         pass
