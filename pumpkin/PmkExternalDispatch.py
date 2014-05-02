@@ -184,6 +184,7 @@ class EndpointPicker(object):
     def pick_route(self, route):
         route_id = route["name"]
         no_entries = len(route["endpoints"])
+        log.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
         if no_entries == 1:
             return route["endpoints"][0]
         if route["remoting"] == False:

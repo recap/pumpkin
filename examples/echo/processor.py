@@ -66,6 +66,8 @@ class processor(PmkSeed.Seed):
             the number of fragments.
         """
 
+
+        time.sleep(5)
         frag_no = 1
         for a in data:
 
@@ -85,7 +87,6 @@ class processor(PmkSeed.Seed):
         run run().
         """
         print "PROCESSOR: "+data
-        time.sleep(30)
         #self.ack_pkt(pkt)
         self.dispatch(pkt, data, "PROCESSED")
         pass

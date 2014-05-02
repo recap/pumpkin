@@ -89,7 +89,8 @@ class MainContext(object):
         def with_shelve(self):
             return self.__attrs.persistent
 
-
+        def get_broadcast_rate(self):
+            return int(self.__attrs.brate)
 
         def load_seed(self, file):
 

@@ -395,6 +395,12 @@ class Seed(object):
     def getpoi(self):
         return self.poi
 
+    def is_non_local(self):
+        if "non-local" in self.conf.keys():
+            if self.conf["non-local"] == True:
+                return True
+        return False
+
     def is_remoting(self):
         if "remoting" in self.conf.keys():
             if self.conf["remoting"] == True:

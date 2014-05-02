@@ -208,7 +208,7 @@ class Pumpkin(Daemon):
         context.addThread(udplisten)
 
 
-        udpbc = Broadcaster(context, int(context.getAttributeValue().bcport))
+        udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
         udpbc.start()
         context.addThread(udpbc)
 
@@ -472,6 +472,8 @@ def main():
                        help='turn on data packet acknowledgments.')
     parser.add_argument('--persistent',action="store_true",
                        help='keep packets on disk.')
+    parser.add_argument('--brate', action='store', dest="brate", default=30,
+                       help='broadcast UDP port.')
 
     parser.add_argument('--version', action='version', version='%(prog)s '+pmk.VERSION)
     args = parser.parse_args()
