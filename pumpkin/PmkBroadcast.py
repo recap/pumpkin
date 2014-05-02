@@ -62,25 +62,25 @@ def get_lan_ip():
     #FIXME get_cloud_ip() is a hack for SC should be removed
     ip = get_cloud_ip()
     if not ip:
-        ip = gethostbyname(gethostname())
-        if ip.startswith("127.") and os.name != "nt":
-            interfaces = [
-                "eth0",
-                "eth1",
-                "eth2",
-                "wlan0",
-                "wlan1",
-                "wifi0",
-                "ath0",
-                "ath1",
-                "ppp0",
-                ]
-            for ifname in interfaces:
-                try:
-                    ip = get_interface_ip(ifname)
-                    break
-                except:
-                    pass
+        # ip = gethostbyname(gethostname())
+        # if ip.startswith("127.") and os.name != "nt":
+        interfaces = [
+            "eth0",
+            "eth1",
+            "eth2",
+            "wlan0",
+            "wlan1",
+            "wifi0",
+            "ath0",
+            "ath1",
+            "ppp0",
+            ]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                break
+            except:
+                pass
     return ip
 
 def get_zmq_supernodes(node_list):
