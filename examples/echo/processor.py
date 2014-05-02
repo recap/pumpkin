@@ -67,7 +67,7 @@ class processor(PmkSeed.Seed):
         """
 
 
-        time.sleep(5)
+        time.sleep(10)
         frag_no = 1
         for a in data:
 

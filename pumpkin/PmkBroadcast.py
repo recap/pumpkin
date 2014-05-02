@@ -112,7 +112,7 @@ class ZMQBroadcaster(SThread):
 
         while True:
             if not self.context.getProcGraph().isRegistryModified():
-                time.sleep(10)
+                time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 #log.debug("Publishing new registry data on ["+self.sn+"]")
                 sock.send(data)
