@@ -73,10 +73,10 @@ class processor(PmkSeed.Seed):
 
             npkt = self.fragment_pkt(pkt, frag_no)
             frag_no += 1
-            #self.dispatch(npkt, a, "RAW", type="DataString")
+            self.dispatch(npkt, a, "RAW", type="DataString")
 
         lpkt = self.last_fragment_pkt(pkt, frag_no+1)
-        #self.dispatch(lpkt, str(frag_no-1), "RAW", type="DataString")
+        self.dispatch(lpkt, str(frag_no-1), "RAW", type="DataString")
 
         return True
 

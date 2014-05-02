@@ -47,8 +47,8 @@ class sender(PmkSeed.Seed):
         # f.close()
         #time.sleep(45)
 
-        #self.dispatch(pkt, "The quick brown fox jumps over the lazy dog", "RAW")
-        self.dispatch(pkt, "ABCDEFGHIJK","RAW")
+        self.dispatch(pkt, "The quick brown fox jumps over the lazy dog", "RAW")
+
 
         #npkt = self.duplicate_pkt_new_box(pkt)
         # for x in range(1,3):
