@@ -89,6 +89,9 @@ class MainContext(object):
         def with_shelve(self):
             return self.__attrs.persistent
 
+        def is_ghost(self):
+            return self.__attrs.ghost
+
         def get_broadcast_rate(self):
             return int(self.__attrs.brate)
 
@@ -251,7 +254,7 @@ class MainContext(object):
         def setEndpoints(self):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
-                self.__attrs.eps = "inproc://*;tcp://*:*"
+                self.__attrs.eps = "inproc://*;tcp://*:*;ipc://*"
                 #self.__attrs.eps = "tcp://*:*"
             epl = self.__attrs.eps.split(";")
             for ep in epl:
@@ -271,7 +274,7 @@ class MainContext(object):
                         self.openfiles.append("/tmp/"+self.getUuid())
                     else:
                         s = ep
-                    self.endpoints.append( (s, "zmq.IPC", "zmq.PULL", 2) )
+                    self.endpoints.append( (s, "zmq.IPC", "zmq.PULL", 5) )
                     log.debug("Added endpoint: "+s)
 
                 elif prot == "tcp:":

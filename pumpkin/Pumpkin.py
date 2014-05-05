@@ -193,14 +193,16 @@ class Pumpkin(Daemon):
         context.zmq_context = zmq_context
         #PmkShared.ZMQ_PUB_PORT  = PmkShared._get_nextport(ZMQ_PUB_PORT, "TCP")
         PmkShared.ZMQ_ENDPOINT_PORT = PmkShared._get_nextport(ZMQ_ENDPOINT_PORT, "TCP")
+        log.debug("ZMQ endpoint port: "+str(PmkShared.ZMQ_ENDPOINT_PORT))
         PmkShared.TFTP_FILE_SERVER_PORT  = PmkShared._get_nextport(TFTP_FILE_SERVER_PORT, "UDP")
 
         context.setEndpoints()
 
-        #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
-        zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
-        zmqbc.start()
-        context.addThread(zmqbc)
+        if not context.is_ghost():
+            #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
+            zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            zmqbc.start()
+            context.addThread(zmqbc)
 
         #Listen for UDP broadcasts on LAN
         udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
@@ -231,16 +233,17 @@ class Pumpkin(Daemon):
 
         ftpdir = wd + 'tx/'
 
-        #TFTP for sending files between pumpkins
-        tftpserver = TftpServer(context, ftpdir, PmkShared.TFTP_FILE_SERVER_PORT)
-        tftpserver.start()
-        context.setFileDir(ftpdir)
-        context.addThread(tftpserver)
+        if not context.is_ghost():
+            #TFTP for sending files between pumpkins
+            tftpserver = TftpServer(context, ftpdir, PmkShared.TFTP_FILE_SERVER_PORT)
+            tftpserver.start()
+            context.setFileDir(ftpdir)
+            context.addThread(tftpserver)
 
-        #FTP for user access of working directory
-        ftpserver = FtpServer(context, context.getWorkingDir())
-        ftpserver.start()
-        context.addThread(ftpserver)
+            #FTP for user access of working directory
+            ftpserver = FtpServer(context, context.getWorkingDir())
+            ftpserver.start()
+            context.addThread(ftpserver)
 
 
 
@@ -256,7 +259,7 @@ class Pumpkin(Daemon):
             context.addThread(pfm)
 
 
-        if context.isSupernode():
+        if context.isSupernode() and not context.is_ghost():
             log.debug("In supernode mode")
             #udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
             #udplisten.start()
@@ -474,6 +477,9 @@ def main():
                        help='keep packets on disk.')
     parser.add_argument('--brate', action='store', dest="brate", default=30,
                        help='broadcast UDP port.')
+    parser.add_argument('--ghost', action='store_true',
+                       help='run on a node with another pumpkin.')
+
 
     parser.add_argument('--version', action='version', version='%(prog)s '+pmk.VERSION)
     args = parser.parse_args()
