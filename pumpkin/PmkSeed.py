@@ -223,23 +223,25 @@ class Seed(object):
         if not os.path.isfile(fp):
             fp = self.context.getWorkingDir() +"/"+ source
             fp = fp.replace("//","/")
-            if os.path.isfile(fp):
-                if not destination:
-                    destination = self.context.getWorkingDir()
-                t = tarfile.open(fp)
-                z = t.getmembers()
 
-                t.extractall(destination)
-                t.close()
-                if rename:
-                    for d in z:
-                        if os.path.isdir(destination+d.name):
-                            shutil.move(destination+d.name,destination+rename)
+        if os.path.isfile(fp):
+            if not destination:
+                destination = self.context.getWorkingDir()
+            t = tarfile.open(fp)
+            z = t.getmembers()
 
-                new_dst = self.context.getWorkingDir()+str(z[0])
-                return z
-            else:
-                log.error("Input file not found ["+source+"]")
+
+            t.extractall(destination)
+            t.close()
+            if rename:
+                for d in z:
+                    if os.path.isdir(destination+d.name):
+                        shutil.move(destination+d.name,destination+rename)
+
+            new_dst = self.context.getWorkingDir()+str(z[0])
+            return z
+        else:
+            log.error("Input file not found ["+source+"]")
 
 
     def moveto_fileserver(self, filename):

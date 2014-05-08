@@ -31,21 +31,53 @@ class producer(PmkSeed.Seed):
         pass
 
 
+    # def run(self, pkt):
+    #     """ Write to a file and send it to a
+    #         consumer.
+    #     """
+    #     wd = self.context.getWorkingDir()
+    #     fs = self.context.getFileDir()
+    #     fn = "testfile.txt"
+    #
+    #     full_wfn = wd+"/"+fn
+    #
+    #     f = open(full_wfn, 'w')
+    #     f.write("some data")
+    #     f.close()
+    #
+    #     self.dispatch(pkt,"file://"+full_wfn, "PRE_PROC")
+    #
+    #
+    #     pass
+
     def run(self, pkt):
         """ Write to a file and send it to a
             consumer.
         """
         wd = self.context.getWorkingDir()
-        fs = self.context.getFileDir()
-        fn = "testfile.txt"
+        dir = "testdir"
+        full_dir = wd + "/" + dir
+        fn1 = "testfile.txt"
+        fn2 = "testfile2.txt"
 
-        full_wfn = wd+"/"+fn
+        self._ensure_dir(full_dir)
 
-        f = open(full_wfn, 'w')
-        f.write("some data")
-        f.close()
+        full_wfn1 = full_dir+"/"+fn1
+        full_wfn2 = full_dir+"/"+fn2
 
-        self.dispatch(pkt,"file://"+full_wfn, "PRE_PROC")
+        f1 = open(full_wfn1, 'w')
+        f1.write("some data for file 1")
+        f1.close()
+
+        f2 = open(full_wfn2, 'w')
+        f2.write("some data for file 2")
+        f2.close()
+
+        archive = self._tar_to_gz(dir, suffix="001")
+
+        self.logger.info("Archive: "+archive)
+
+        self.dispatch(pkt,"file://"+archive, "PRE_PROC")
 
 
         pass
