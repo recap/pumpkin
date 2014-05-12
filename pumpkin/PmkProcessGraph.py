@@ -59,6 +59,7 @@ class ProcessGraph(object):
                     c = i
                     break
             if c > -1:
+                log.info("Removed stale entry for seed "+name+" at "+ep)
                 del e["endpoints"][c]
 
 
@@ -67,13 +68,13 @@ class ProcessGraph(object):
         keys_for_removal = []
         for key in self.ttl.keys():
             self.ttl[key] -= self.INT_TTL
-            if self.ttl[key] < 0:
+            if self.ttl[key] <= 0:
                 self.__del_ep(key)
                 keys_for_removal.append(key)
 
 
         for rk in keys_for_removal:
-            del self.ttl["rk"]
+            del self.ttl[rk]
 
         self.rlock.release()
 
@@ -98,9 +99,12 @@ class ProcessGraph(object):
                 for dep in d["endpoints"]:
                     if dep["ep"] == eep["ep"]:
                         found = True
+                        self.__reset_ep_ttl(e["name"], eep["ep"])
+
                 if not found:
                     if loc == "remote":
                         eep["priority"] = 10
+                        self.__reset_ep_ttl(e["name"], eep["ep"])
                     d["endpoints"].append(eep)
                     log.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
                     self.__reg_update = True
@@ -110,7 +114,8 @@ class ProcessGraph(object):
             if loc == "remote":
                 for ep in e["endpoints"]:
                     ep["priority"] = 10
-                    self.ttl[ep["ep"]] = self.MAX_TTL
+                    self.__reset_ep_ttl(e["name"], ep["ep"])
+
             registry[e["name"]] = e
             self.__reg_update = True
             self.__display_graph = True
