@@ -234,7 +234,7 @@ class ProcessGraph(object):
         return d
 
     def __determine(self, ep):
-        if int(ep["priority"]) < 5:
+        if int(ep["priority"]) < 15:
             return False
         else:
             return True

@@ -285,7 +285,7 @@ class MainContext(object):
                         addr[1] = str(PmkShared.ZMQ_ENDPOINT_PORT)
 
                     s = "tcp://"+addr[0]+":"+addr[1]
-                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 5) )
+                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
                     log.debug("Added endpoint: "+s)
 
                 #TODO uncomment once tftp is integrated
