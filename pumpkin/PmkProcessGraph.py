@@ -224,11 +224,18 @@ class ProcessGraph(object):
         self.rlock.acquire()
         ne = copy.deepcopy(self.registry)
         self.rlock.release()
-
-        for f in ne.values():
-            #Filter out endpoints with less than priority 5. Any priority less than 5
-            #is reserved for local communication such as IPC, INPROC, FILES
+        tmp_keys = []
+        for k in ne.keys():
+            f = ne[k]
+            #Filter out endpoints with less than priority 15. Any priority less than 5
+            #is reserved for local communication such as IPC, INPROC, FILES and remote TCP
             f["endpoints"][:] = [x for x in f["endpoints"] if self.__determine(x)]
+            if len(f["endpoints"]) == 0:
+                tmp_keys.append(k)
+
+        for rk in tmp_keys:
+            del ne[rk]
+
 
         d = json.dumps(ne)
         return d
