@@ -14,6 +14,8 @@ from PmkShared import *
 
 class ProcessGraph(object):
 
+    MAX_TTL = 60 #seconds
+    INT_TTL = 15 #seconds
     def __init__(self):
 
         self.registry = {}
@@ -23,9 +25,59 @@ class ProcessGraph(object):
         self.rlock = threading.RLock()
         self.graph = nx.DiGraph()
         self.tagroute = {}
+        self.ttl = {}
 
+        threading.Timer(self.INT_TTL, self.__update_registry_t).start()
 
     pass
+
+    def __key(self,name, ep):
+        return name+":|:"+ep
+
+    def __reset_ep_ttl(self, name, ep):
+        key = self.__key(name, ep)
+        self.ttl[key] = self.MAX_TTL
+        pass
+
+    def __subtract_ep_ttl(self, name, ep, sub_count):
+        key = self.__key(name,ep)
+        if key in self.ttl.keys():
+            self.ttl[key] -= sub_count
+        pass
+    def __split_key(self, key):
+        spl = key.split(":|:")
+        return (spl[0], spl[1])
+
+    def __del_ep(self, key):
+
+        name, ep = self.__split_key(key)
+        if name in self.registry.keys():
+            e = self.registry[name]
+            c = -1
+            for i in range(len(e["endpoints"])):
+                if e["endpoints"][i]["ep"] == ep:
+                    c = i
+                    break
+            if c > -1:
+                del e["endpoints"][c]
+
+
+    def __update_registry_t(self):
+        self.rlock.acquire()
+        keys_for_removal = []
+        for key in self.ttl.keys():
+            self.ttl[key] -= self.INT_TTL
+            if self.ttl[key] < 0:
+                self.__del_ep(key)
+                keys_for_removal.append(key)
+
+
+        for rk in keys_for_removal:
+            del self.ttl["rk"]
+
+        self.rlock.release()
+
+        threading.Timer(self.INT_TTL, self.__update_registry_t).start()
 
     def updateRegistry(self, entry, loc="remote"):
 
@@ -58,6 +110,7 @@ class ProcessGraph(object):
             if loc == "remote":
                 for ep in e["endpoints"]:
                     ep["priority"] = 10
+                    self.ttl[ep["ep"]] = self.MAX_TTL
             registry[e["name"]] = e
             self.__reg_update = True
             self.__display_graph = True
