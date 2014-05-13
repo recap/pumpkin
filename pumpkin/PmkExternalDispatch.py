@@ -283,19 +283,19 @@ class ZMQPacketDispatch(Dispatch):
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
         self.ep = connect_to
-        self.soc.setsockopt(zmq.HWM, 1)
+        self.soc.setsockopt(zmq.HWM, 0)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         log.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
 
     def dispatch(self, pkt):
 
-        #try:
+        try:
             log.debug("BEFORE SEND")
             self.soc.send(pkt, zmq.NOBLOCK)
             log.debug("AFTER SEND")
-        #except zmq.ZMQError as e:
-        #    log.error(str(e))
+        except zmq.ZMQError as e:
+            raise
 
     def close(self):
         self.soc.close()
