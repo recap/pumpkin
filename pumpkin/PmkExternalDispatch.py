@@ -193,7 +193,7 @@ class EndpointPicker(object):
         log.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
         if no_entries == 1:
             return route["endpoints"][0]
-        if route["remoting"] == False:
+        if route["remoting"] == False and no_entries > 0:
             return route["endpoints"][0]
 
 
