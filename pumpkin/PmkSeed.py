@@ -409,15 +409,11 @@ class Seed(object):
                 return True
         return False
 
-
-
-
     def get_group(self):
         if "group" in self.conf.keys():
             return self.conf["group"]
         else:
             return "public"
-
 
     def set_conf(self, jconf):
         self.conf = jconf
@@ -653,8 +649,6 @@ class Seed(object):
              exdisp = self.context.getExternalDispatch()
              exdisp.send_to_last(dpkt)
         pass
-
-
 
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 

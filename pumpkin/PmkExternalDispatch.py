@@ -114,26 +114,32 @@ class ExternalDispatch(SThread):
                         dcpkt.append(next_hop)
                         #pkt.remove( pkt[len(pkt)-1] )
                         #log.debug(json.dumps(pkt))
-                        if ep in self.dispatchers.keys():
-                            disp = self.dispatchers[ep]
-                            disp.dispatch(json.dumps(dcpkt))
-                            #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                        else:
-                            disp = None
-                            if entry["mode"] == "zmq.PULL":
-                                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                                #disp = ZMQPacketDispatch(self.context)
-                                #disp = self.gdisp
-
-                            if not disp == None:
-                                self.dispatchers[ep] = disp
-                                disp.connect(ep)
+                        try:
+                            if ep in self.dispatchers.keys():
+                                disp = self.dispatchers[ep]
                                 disp.dispatch(json.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
-                                log.error("No dispatchers found for: "+ep)
+                                disp = None
+                                if entry["mode"] == "zmq.PULL":
+                                    disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                    #disp = ZMQPacketDispatch(self.context)
+                                    #disp = self.gdisp
+
+                                if not disp == None:
+                                    self.dispatchers[ep] = disp
+                                    disp.connect(ep)
+                                    disp.dispatch(json.dumps(dcpkt))
+                                    #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                                else:
+                                    log.error("No dispatchers found for: "+ep)
+                        except error as e:
+                            log.error("Error sending packet, requeueing")
+                            #Requeue
+                            tx.put((group, state, otype, pkt))
+
 
                 #if r["endpoints"][0]:
                 #    entry = r["endpoints"][0]
@@ -248,10 +254,7 @@ class ZMQPacketPublish(Dispatch):
         self.soc.bind(connect_to)
 
     def dispatch(self, pkt):
-        try:
             self.soc.send(pkt)
-        except zmq.ZMQError as e:
-            log.error(str(e))
 
     def close(self):
         self.soc.close()
@@ -278,10 +281,10 @@ class ZMQPacketDispatch(Dispatch):
 
     def dispatch(self, pkt):
 
-        try:
+        #try:
             self.soc.send(pkt)
-        except zmq.ZMQError as e:
-            log.error(str(e))
+        #except zmq.ZMQError as e:
+        #    log.error(str(e))
 
     def close(self):
         self.soc.close()
