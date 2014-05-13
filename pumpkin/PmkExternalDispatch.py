@@ -287,7 +287,7 @@ class ZMQPacketDispatch(Dispatch):
 
         if str(parts[0]).lower() == "tcp":
             log.debug("Checking ep..."+parts[1]+" "+parts[2])
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock = socket(AF_INET, SOCK_STREAM)
             result = sock.connect_ex((parts[1], int(parts[2])))
             if result == 0:
                 log.debug("ep open: "+ep)
