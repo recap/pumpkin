@@ -118,7 +118,7 @@ class ExternalDispatch(SThread):
                         dcpkt.append(next_hop)
                         #pkt.remove( pkt[len(pkt)-1] )
                         #log.debug(json.dumps(pkt))
-                        try:
+                        #try:
                             if ep in self.dispatchers.keys():
                                 disp = self.dispatchers[ep]
                                 disp.dispatch(json.dumps(dcpkt))
@@ -139,10 +139,10 @@ class ExternalDispatch(SThread):
 
                                 else:
                                     log.error("No dispatchers found for: "+ep)
-                        except:
-                            log.error("Error sending packet, requeueing")
-                            #Requeue
-                            tx.put((group, state, otype, pkt))
+                        #except:
+                        #    log.error("Error sending packet, requeueing")
+                        #    #Requeue
+                        #    tx.put((group, state, otype, pkt))
 
 
                 #if r["endpoints"][0]:
@@ -293,6 +293,7 @@ class ZMQPacketDispatch(Dispatch):
                 log.debug("ep open: "+ep)
                 return True
             else:
+                log.debug("ep closed: "+ep)
                 log.warn("Detected closed ep: "+ep)
                 return False
         return True
