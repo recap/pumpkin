@@ -7,6 +7,8 @@ import time
 import Queue
 import zmq
 import copy
+import re
+import socket
 import networkx as nx
 
 
@@ -266,6 +268,8 @@ class ZMQPacketPublish(Dispatch):
 
 
 class ZMQPacketDispatch(Dispatch):
+
+
     def __init__(self, context, zmqcontext=None):
         Dispatch.__init__(self)
         self.context = context
@@ -278,7 +282,17 @@ class ZMQPacketDispatch(Dispatch):
         else:
             self.zmq_cntx = zmqcontext
 
-    #def __check_ep(self, ep):
+    def __check_ep(self, ep):
+        parts = re.split('://|:', ep)
+        if str(parts[0]).lower() == "tcp":
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex((parts[1],parts[2]))
+            if result == 0:
+                return True
+            else:
+                log.warn("Detected closed ep: "+ep)
+                return False
+        return True
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
@@ -291,9 +305,10 @@ class ZMQPacketDispatch(Dispatch):
     def dispatch(self, pkt):
 
         #try:
-            log.debug("BEFORE SEND")
+            if not self.__check_ep(self.ep):
+                raise Exception("Endpoint closed")
             self.soc.send(pkt, zmq.NOBLOCK)
-            log.debug("AFTER SEND")
+
         #except zmq.ZMQError as e:
         #    raise
 
