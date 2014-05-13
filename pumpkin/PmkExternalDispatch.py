@@ -270,6 +270,7 @@ class ZMQPacketDispatch(Dispatch):
         Dispatch.__init__(self)
         self.context = context
         self.soc = None
+        self.ep = None
         log.debug("Created ZMQPacketDispatch")
         if (zmqcontext == None):
             log.debug("Creating zmq context")
@@ -277,15 +278,18 @@ class ZMQPacketDispatch(Dispatch):
         else:
             self.zmq_cntx = zmqcontext
 
+    #def __check_ep(self, ep):
+
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        self.ep = connect_to
         #self.soc.setsockopt(zmq.HWM, 100)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         log.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
 
     def dispatch(self, pkt):
-
+            self.soc.connect(self.ep)
         #try:
             self.soc.send(pkt)
         #except zmq.ZMQError as e:
