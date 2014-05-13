@@ -119,26 +119,26 @@ class ExternalDispatch(SThread):
                         #pkt.remove( pkt[len(pkt)-1] )
                         #log.debug(json.dumps(pkt))
                         #try:
-                            if ep in self.dispatchers.keys():
-                                disp = self.dispatchers[ep]
+                        if ep in self.dispatchers.keys():
+                            disp = self.dispatchers[ep]
+                            disp.dispatch(json.dumps(dcpkt))
+                            #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                        else:
+                            disp = None
+                            if entry["mode"] == "zmq.PULL":
+                                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                #disp = ZMQPacketDispatch(self.context)
+                                #disp = self.gdisp
+
+                            if not disp == None:
+                                self.dispatchers[ep] = disp
+                                disp.connect(ep)
                                 disp.dispatch(json.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
-                                disp = None
-                                if entry["mode"] == "zmq.PULL":
-                                    disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                                    #disp = ZMQPacketDispatch(self.context)
-                                    #disp = self.gdisp
-
-                                if not disp == None:
-                                    self.dispatchers[ep] = disp
-                                    disp.connect(ep)
-                                    disp.dispatch(json.dumps(dcpkt))
-                                    #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                                else:
-                                    log.error("No dispatchers found for: "+ep)
+                                log.error("No dispatchers found for: "+ep)
                         #except:
                         #    log.error("Error sending packet, requeueing")
                         #    #Requeue
