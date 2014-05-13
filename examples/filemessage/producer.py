@@ -79,7 +79,7 @@ class producer(PmkSeed.Seed):
 
         self.dispatch(pkt,"file://"+archive, "PRE_PROC")
 
-        self.duplicate_pkt_new_box()
+
 
 
         pass

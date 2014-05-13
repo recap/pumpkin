@@ -103,6 +103,8 @@ class ExternalDispatch(SThread):
                     #pep = self.context.getProcGraph().getPriorityEndpoint(r)
                     ##eep = self.context.getProcGraph().getExternalEndpoints(r)
                     pep = ep_sched.pick_route(r)
+                    if not pep:
+                        continue
                     oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                     dcpkt[0]["last_contact"] = oep[0]
 
@@ -190,6 +192,9 @@ class EndpointPicker(object):
     def pick_route(self, route):
         route_id = route["name"]
         no_entries = len(route["endpoints"])
+        if no_entries == 0:
+            return False
+
         log.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
         if no_entries == 1:
             return route["endpoints"][0]
