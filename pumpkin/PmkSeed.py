@@ -655,6 +655,14 @@ class Seed(object):
         pkt = copy.deepcopy(dpkt)
 
         #log.debug("Caller for dispatch function: "+inspect.stack()[1][3])
+        if str(msg).startswith("file://") and not self.is_final(pkt):
+            dst = self.context.getFileDir()
+            _,path,file,src,_ = self.fileparts(msg)
+
+            shutil.move(src,dst)
+            #msg = "tftp://"+self.context.get_local_ip()+"/"+file
+            msg = self.context.getFileServerEndPoint()+"/"+file
+
         caller = inspect.stack()[1][3]
         if self.is_fragment(pkt) and caller == "run":
             if not type:
@@ -677,13 +685,7 @@ class Seed(object):
             return
 
 
-        if str(msg).startswith("file://") and not self.is_final(pkt):
-            dst = self.context.getFileDir()
-            _,path,file,src,_ = self.fileparts(msg)
 
-            shutil.move(src,dst)
-            #msg = "tftp://"+self.context.get_local_ip()+"/"+file
-            msg = self.context.getFileServerEndPoint()+"/"+file
 
         if fragment:
             lpkt = copy.deepcopy(pkt)
