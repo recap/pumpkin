@@ -348,12 +348,16 @@ class Seed(object):
 
                         wdf = self.context.getWorkingDir()+"/rx/"+file
                         client.download(file, wdf)
-                        nargs.append("file://"+wdf)
+                        furl = "file://"+wdf
+                        nargs.append(furl)
+                        self.set_pkt_data(pkt,furl)
+
                         for x in range (1,len(args)-1):
                             nargs.append(args[x])
 
                         if pstate == "MERGE":
                             self.merge(pkt,*nargs)
+                            return
                         else:
                             if self.is_fragment(pkt):
                                 self.run(pkt,*nargs)
@@ -637,6 +641,11 @@ class Seed(object):
         data = pkt[l-2]["data"]
         return data
 
+    def set_pkt_data(self,pkt,data):
+        l = len(pkt)
+        pkt[l-2]["data"] = data
+        return pkt
+
     def merge_pkt(self, pkt):
         dpkt = pkt#copy.deepcopy(pkt)
         dpkt[0]["state"] = "MERGE"
@@ -659,7 +668,10 @@ class Seed(object):
             dst = self.context.getFileDir()
             _,path,file,src,_ = self.fileparts(msg)
 
-            shutil.move(src,dst)
+            if not os.path.isfile(dst+file):
+                shutil.move(src,dst)
+            else:
+                log.warn("Trying to overwrite: "+str(dst))
             #msg = "tftp://"+self.context.get_local_ip()+"/"+file
             msg = self.context.getFileServerEndPoint()+"/"+file
 
