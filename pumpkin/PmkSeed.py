@@ -671,7 +671,7 @@ class Seed(object):
             if not os.path.isfile(dst+file):
                 shutil.move(src,dst)
             else:
-                log.warn("Trying to overwrite: "+str(dst))
+                log.warn("Trying to overwrite: "+str(dst+file))
             #msg = "tftp://"+self.context.get_local_ip()+"/"+file
             msg = self.context.getFileServerEndPoint()+"/"+file
 
