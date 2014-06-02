@@ -13,6 +13,7 @@ import networkx as nx
 import json
 import logging
 import inspect
+import zmq
 
 import PmkShared
 
@@ -48,14 +49,21 @@ class Seed(object):
 
 
 
-    _pkt_counter_interval = 1.0
+    _pkt_counter_interval = 10.0
 
 
     def __init__(self, context, poi="Unset"):
         #logging.basicConfig(filename=context.getWorkingDir()+self.get_name()+".log", format='%(levelname)s:%(message)s', level=logging.DEBUG)
+        f = logging.Formatter(fmt='%(levelname)s-%(name)s:%(asctime)s:%(message)s',datefmt='%H:%M:%S')
         self.logger = logging.getLogger(self.get_name())
         fh = logging.FileHandler(context.getWorkingDir()+"logs/"+self.get_name()+".log")
+        fh.setFormatter(f)
         self.logger.addHandler(fh)
+        if context.is_debug():
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
+
         self.logger.info("Initialised seed: "+self.get_name())
 
         self.context = context
@@ -66,44 +74,49 @@ class Seed(object):
         self._lock_fpkts = threading.Lock()
         self._lock_in_fpkts = threading.Lock()
         self.in_flight_pkts = {}
-        self.pkt_checker_t()
         self.ttf = None
-        #self.sclock = time.clock()
         self._lock_telemetrics = threading.Lock()
         self._pkt_counter = 0
+        self._in_pkts = 0
+        self._out_pkts = 0
         self._avg_pkt_proc_time = 1
         self._avg_ingress = 0
         self._avg_outgress = 0
+        self._state_counter = {}
+
+        self._in_and_list = []
+        self._in_all_list = []
+        self._out_all_list = []
+        self._out_and_list = []
 
 
-        self._update_pkt_counter_t()
-
-        #threading.Timer(10, self.pkt_checker_t).start()
-        #try:
-        #thread.start_new_thread(self.pkt_checker_t)
-        #except:
-         #   log.error("Unable to start pkt checker thread.")
-
-
+        self.__routine_checks_t()
+        if self.context.with_acks():
+            self.pkt_checker_t()
         pass
 
 
-    def _update_pkt_counter_t(self):
+    def __routine_checks_t(self):
         self._lock_telemetrics.acquire()
         self._avg_ingress = 0
 
         if self._pkt_counter > 0:
             self._avg_ingress = float(self._pkt_counter / self._pkt_counter_interval)
-            self._pkt_counter_interval = 1
-        else:
-            self._pkt_counter_interval = 10
 
-        log.debug(self.get_name()+" avg pkt ingress: "+str(self._avg_ingress)+" pkt/s  ["+str(self._pkt_counter)+"]["+str(len(self.flight_pkts))+"]")
+        self.logger.debug(self.get_name()+" avg pkt ingress: "+str(self._avg_ingress)+" pkt/s  ["+str(self._pkt_counter)+"]["+str(len(self.flight_pkts))+"]")
         self._pkt_counter = 0
+
+        lmsg = ""
+        for s in self._state_counter.keys():
+           pkts = self._state_counter[s]
+           lmsg += s+" "+str(pkts)+";"
+        if lmsg:
+           self.logger.debug(lmsg)
+
 
         self._lock_telemetrics.release()
 
-        threading.Timer(self._pkt_counter_interval, self._update_pkt_counter_t).start()
+        threading.Timer(self._pkt_counter_interval, self.__routine_checks_t).start()
 
 
 
@@ -113,7 +126,8 @@ class Seed(object):
         cont_id =  str(uuid.uuid4())[:8]
         pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : 0, "state": "NEW", \
                     "c_tag" : "NONE:NONE", "ttl" : '0',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
-                    "last_contact" : "None", "last_func" : "None", "last_timestamp" : 0})
+                    "last_contact" : "None", "las"
+                                             "t_func" : "None", "last_timestamp" : 0})
         #Place holder for data automaton
         g = nx.DiGraph()
         in_tags = self.get_in_tag_list()
@@ -132,6 +146,10 @@ class Seed(object):
         pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
 
         return pkt
+
+    def get_new_box(self):
+        return str(uuid.uuid4())[:8]
+
 
     def get_new_container(self):
         return str(uuid.uuid4())[:8]
@@ -302,6 +320,31 @@ class Seed(object):
         self._lock_in_fpkts.release()
         return False
 
+    def inc_state_counter(self, state):
+        self._lock_telemetrics.acquire()
+
+        if state in self._state_counter.keys():
+            self._state_counter[state] += 1
+        else:
+            self._state_counter[state] = 1
+
+        self._lock_telemetrics.release()
+
+    def get_state_counters(self):
+        return json.dumps(self._state_counter, separators=(',',':') )
+
+    def get_all_counters(self):
+        total_in = 0
+        total_out = 0
+        for cnt in self._state_counter.keys():
+            if "IN" in cnt:
+                total_in += int(self._state_counter[cnt])
+            if "OUT" in cnt:
+                total_out += int(self._state_counter[cnt])
+
+        return (total_in, total_out)
+
+
     def __inc_pkt_counter(self):
         self._lock_telemetrics.acquire()
         self._pkt_counter += 1
@@ -317,8 +360,8 @@ class Seed(object):
         pkt_id = self.get_pkt_id(pkt)
         pstate =  pkt[0]["state"]
         if not self.is_duplicate(pkt):
-
-
+            tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
+            self.inc_state_counter(tstag)
             pkt[0]["state"] = "PROCESSING"
 
             if self.context.with_shelve():
@@ -337,43 +380,38 @@ class Seed(object):
 
                 nargs = []
                 if(args[0]):
-                    msg = str(args[0])
-                    if(msg.startswith("tftp://")):
-                        ip, port, rpath, file = self.__endpoint_parts(msg)
-                        if ip in self.tftp_sessions.keys():
-                            client = self.tftp_sessions[ip]
-                        else:
-                            client = tftpy.TftpClient(ip, int(port))
-                            self.tftp_sessions[ip] = client
-
-                        wdf = self.context.getWorkingDir()+"/rx/"+file
-                        client.download(file, wdf)
-                        furl = "file://"+wdf
-                        nargs.append(furl)
-                        self.set_pkt_data(pkt,furl)
-
-                        for x in range (1,len(args)-1):
-                            nargs.append(args[x])
-
-                        if pstate == "MERGE":
-                            self.merge(pkt,*nargs)
-                            return
-                        else:
-                            if self.is_fragment(pkt):
-                                self.run(pkt,*nargs)
+                    #msg = str(args[0])
+                    for msg in args[0].split(','):
+                        if(msg.startswith("tftp://")):
+                            ip, port, rpath, file = self.__endpoint_parts(msg)
+                            if ip in self.tftp_sessions.keys():
+                                client = self.tftp_sessions[ip]
                             else:
-                                if not self.split(pkt, *nargs):
-                                    self.run(pkt,*nargs)
-                            return
+                                client = tftpy.TftpClient(ip, int(port))
+                                self.tftp_sessions[ip] = client
+
+                            wdf = self.context.getWorkingDir()+"/rx/"+file
+                            client.download(file, wdf)
+                            furl = "file://"+wdf
+                            nargs.append(furl)
+                            self.set_pkt_data(pkt,furl)
+                        else:
+                            nargs.append(msg)
+
+                    for x in range (1,len(args)-1):
+                        nargs.append(args[x])
 
                 if pstate == "MERGE":
-                    self.merge(pkt, *args)
+                    self.merge(pkt,*nargs)
+                    return
                 else:
                     if self.is_fragment(pkt):
-                        self.run(pkt,*args)
+                        self.run(pkt,*nargs)
                     else:
-                        if not self.split(pkt, *args):
-                            self.run(pkt,*args)
+                        if not self.split(pkt, *nargs):
+                            self.run(pkt,*nargs)
+                    return
+
 
             except Exception as e:
                 log.error(str(e))
@@ -417,10 +455,69 @@ class Seed(object):
         if "group" in self.conf.keys():
             return self.conf["group"]
         else:
-            return "public"
+            group = self.context.get_group()
+            if group:
+                return group
+            else:
+                return "public"
+
+    def get_conf(self):
+        return self.conf
+
 
     def set_conf(self, jconf):
         self.conf = jconf
+        pass
+
+    def pre_load(self, jconf):
+        self.conf = jconf
+
+        if len(self.conf["parameters"]) > 0:
+            for p in self.conf["parameters"]:
+                type = p["type"]
+                tag_list = p["state"].split("|")
+                for t in tag_list:
+                    if not "&" in t:
+                        transition = self.get_group()+":"+type+":"+t
+                        self._in_all_list.append(transition)
+                    else:
+                        and_list = t.split("&")
+                        for a in and_list:
+                            transition = self.get_group()+":"+type+":"+a
+                            self._in_and_list.append(transition)
+                            self._in_all_list.append(transition)
+        else:
+            self._in_all_list.append("NONE:NONE")
+
+
+
+        if len(self.conf["return"]) > 0:
+            for p in self.conf["return"]:
+                type = p["type"]
+                tag_list = p["state"].split("|")
+                for t in tag_list:
+                    if not "&" in t:
+                        transition = self.get_group()+":"+type+":"+t
+                        self._out_all_list.append(transition)
+                    else:
+                        and_list = t.split("&")
+                        for a in and_list:
+                            transition = self.get_group()+":"+type+":"+a
+                            self._out_and_list.append(transition)
+                            self._out_all_list.append(transition)
+
+        else:
+            self._out_all_list.append("NONE:NONE")
+
+        pass
+
+    def post_load(self):
+        if self.context.fallback_rabbitmq():
+            rabbitmq = self.context.get_rabbitmq()
+            if rabbitmq:
+                for q in self.get_in_tag_list():
+                    log.debug("Adding RabbitMQ monitor: "+str(q))
+                    rabbitmq.add_monitor_queue(q, self.__class__.__name__)
         pass
 
     def hasInputs(self):
@@ -430,14 +527,11 @@ class Seed(object):
         return False
 
     def pkt_checker_t(self):
-        log.debug("Starting pkt checker thread")
-        #time.sleep(10)
         if self.context.with_acks():
-            #while 1:
+            self.logger.debug("Starting pkt checker thread")
             interval = 30
             reset = 60
             self._lock_fpkts.acquire()
-
             for k in self.flight_pkts.keys():
                 pkt = self.flight_pkts[k]
                 ttl = int(pkt[0]["ttl"])
@@ -452,26 +546,25 @@ class Seed(object):
                 pkt[0]["ttl"] = str(ttl)
 
             self._lock_fpkts.release()
-
-        #threading.Timer(interval, self.pkt_checker_t).start()
-
-         #   time.sleep(10)
+            threading.Timer(interval, self.pkt_checker_t).start()
 
         pass
 
     def getConfEntry(self):
-        js = '{ "name" : "'+self.get_name()+'", \
+        js = '{ "name" : "'+self.get_group()+':'+self.get_name()+'", \
         "group" : "'+self.get_group()+'",\
-        "remoting" : '+str(self.is_remoting()).lower()+',\
+        "remoting" : "'+str(self.is_remoting())+'",\
        "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.get_parameters()+',' \
        ''+self.getreturn()+'}'
 
-       # js = '{ "name" : "'+self.get_name()+'", \
-       #"zmq_endpoint" : [ {"ep" : "'+self.context.endpoints[0]+'", "cuid" : "'+self.context.getUuid()+'"} ],' \
-       #''+self.get_parameters()+',' \
-       #''+self.getreturn()+'}'
         return js
+
+    def get_last_stag(self, pkt):
+        l = len(pkt) - 1
+        stag = pkt[l]["stag"].split(":")
+        l2 = len(stag) - 1
+        return str(stag[l2])
 
     def _ensure_dir(self, f):
         if not f[len(f)-1] == "/":
@@ -492,30 +585,10 @@ class Seed(object):
         return aep
 
     def get_in_tag_list(self):
-        ret = []
-        if len(self.conf["parameters"]) > 0:
-            for p in self.conf["parameters"]:
-                type = p["type"]
-                tag_list = p["state"].split("|")
-                for t in tag_list:
-                    transition = type+":"+t
-                    ret.append(transition)
-        else:
-            ret.append("NONE:NONE")
-        return ret
+        return self._in_all_list
 
     def get_out_tag_list(self):
-        ret = []
-        if len(self.conf["return"]) > 0:
-            for p in self.conf["return"]:
-                type = p["type"]
-                tag_list = p["state"].split("|")
-                for t in tag_list:
-                    transition = type+":"+t
-                    ret.append(transition)
-        else:
-            ret.append("NONE:NONE")
-        return ret
+        return self._out_all_list
 
     def get_parameters(self):
         if len(self.conf["parameters"]) > 0:
@@ -532,7 +605,8 @@ class Seed(object):
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
     def fork_dispatch(self, pkt, msg, state):
-        self.dispatch(pkt, msg, state, fragment=True)
+        npkt = self.duplicate_pkt_new_box(pkt)
+        self.dispatch(npkt, msg, state)
         pass
 
     def ifFile(self, msg):
@@ -675,6 +749,7 @@ class Seed(object):
             #msg = "tftp://"+self.context.get_local_ip()+"/"+file
             msg = self.context.getFileServerEndPoint()+"/"+file
 
+        #very slow stack inspect
         caller = inspect.stack()[1][3]
         if self.is_fragment(pkt) and caller == "run":
             if not type:
@@ -695,9 +770,6 @@ class Seed(object):
 
             self.merge_pkt(pkt)
             return
-
-
-
 
         if fragment:
             lpkt = copy.deepcopy(pkt)
@@ -729,7 +801,10 @@ class Seed(object):
 
 
 
-        lpkt[0]["state"] = "WAITING_PACK"
+        if self.context.with_acks():
+            lpkt[0]["state"] = "WAITING_PACK"
+        else:
+            lpkt[0]["state"] = "TRANSIT"
         lpkt[0]["c_tag"] = stag
         lpkt[0]["ttl"] = '60'
         lpkt[0]["t_state"] = tag
@@ -737,37 +812,127 @@ class Seed(object):
         lpkt[0]["last_func"] = self.__class__.__name__
 
         if lpkt[0]["stop_func"] == self.__class__.__name__:
-            lpkt[0]["state"] == "PACK_OK"
+            if self.context.with_acks():
+                lpkt[0]["state"] == "PACK_OK"
+            else:
+                lpkt[0]["state"] == "DONE"
             log.debug("Stop function reached ["+lpkt[0]["stop_func"]+"]")
-            self.ack_pkt(lpkt)
+            if self.context.with_acks():
+                self.ack_pkt(lpkt)
             return
 
         if dispatch:
-            self.add_flight_pkt(lpkt)
+            if self.context.with_acks():
+                self.add_flight_pkt(lpkt)
+
+            if self.context.with_shelve():
+                pkt_id = self.get_pkt_id(lpkt)
+                self._lock_in_fpkts.acquire()
+                shelve = self.context.get_pkt_shelve()
+                shelve[str(pkt_id)] = pkt
+                self._lock_in_fpkts.release()
+
             self.context.getTx().put((self.get_group(), tag,otype,lpkt))
 
         return lpkt
 
+    def error(self,pkt, msg=None, type="ERROR", tag="ERROR"):
+
+        lpkt = pkt
+        caller = "run"
+        stag = "ERROR"
+        lpkt_id = self.get_pkt_id(pkt)
+        if not type:
+            otype = self.conf["return"][0]["type"]
+        else:
+            otype = type
+        stag = self.get_group()+":"+otype + ":"  + tag
+
+        tstag = "OUT:"+self.__class__.__name__+":"+stag
+        self.inc_state_counter(tstag)
+
+        #Add output of current function
+        last_entry = lpkt[len(lpkt)-1]
+        pkt_e = {}
+        pkt_e["stag"] = stag
+        pkt_e["func"] = self.__class__.__name__+"."+caller
+        pkt_e["exstate"] = "0001"
+        pkt_e["data"] = msg
+        pkt_e["ep"] = last_entry["ep"]
+        lpkt[len(lpkt)-1] = pkt_e
+
+
+        lpkt[0]["state"] = "ERROR"
+        lpkt[0]["c_tag"] = stag
+        lpkt[0]["ttl"] = '60'
+        lpkt[0]["t_state"] = tag
+        lpkt[0]["t_otype"] = otype
+        lpkt[0]["last_func"] = self.__class__.__name__
+
+
+        if self.context.with_shelve():
+            pkt_id = self.get_pkt_id(lpkt)
+            self._lock_in_fpkts.acquire()
+            shelve = self.context.get_pkt_shelve()
+            shelve[str(pkt_id)] = pkt
+            self._lock_in_fpkts.release()
+
+
+        pass
+
+
+
+    def finalize(self,pkt, msg=None, type="END", tag="END"):
+
+        lpkt = pkt
+        caller = "run"
+        stag = "END"
+        lpkt_id = self.get_pkt_id(pkt)
+        if not type:
+            otype = self.conf["return"][0]["type"]
+        else:
+            otype = type
+        stag = self.get_group()+":"+otype + ":"  + tag
+
+        tstag = "OUT:"+self.__class__.__name__+":"+stag
+        self.inc_state_counter(tstag)
+
+        #Add output of current function
+        last_entry = lpkt[len(lpkt)-1]
+        pkt_e = {}
+        pkt_e["stag"] = stag
+        pkt_e["func"] = self.__class__.__name__+"."+caller
+        pkt_e["exstate"] = "0001"
+        pkt_e["data"] = msg
+        pkt_e["ep"] = last_entry["ep"]
+        lpkt[len(lpkt)-1] = pkt_e
+
+
+        lpkt[0]["state"] = "DONE"
+        lpkt[0]["c_tag"] = stag
+        lpkt[0]["ttl"] = '60'
+        lpkt[0]["t_state"] = tag
+        lpkt[0]["t_otype"] = otype
+        lpkt[0]["last_func"] = self.__class__.__name__
+
+
+        if self.context.with_shelve():
+            pkt_id = self.get_pkt_id(lpkt)
+            self._lock_in_fpkts.acquire()
+            shelve = self.context.get_pkt_shelve()
+            shelve[str(pkt_id)] = pkt
+            self._lock_in_fpkts.release()
+
+
+        pass
+
 
 
     def add_flight_pkt(self,pkt):
+        """
+            Add packet to ACK buffer.
+        """
         pkt_id = self.get_pkt_id(pkt)
-
-        # while 1:
-        #     if len(self.flight_pkts) < PKT_PROCESS_WINDOW:
-        #         self._lock_fpkts.acquire()
-        #         self.flight_pkts[pkt_id] = pkt
-        #         self._lock_fpkts.release()
-        # #        return
-        #         break
-        #     else:
-        #         log.debug("Process window full for "+self.__class__.__name__)
-        #         time.sleep(3)
-        #         #log.debug(str(pkt))
-        #         #threading.Timer(20, self.add_flight_pkt, [pkt]).start()
-
-
-
         self._lock_fpkts.acquire()
         self.flight_pkts[pkt_id] = pkt
         self._lock_fpkts.release()

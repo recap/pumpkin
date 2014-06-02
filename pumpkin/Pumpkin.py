@@ -10,6 +10,9 @@ import logging
 import shutil
 import errno
 import ConfigParser
+import cProfile, pstats
+import pika
+
 
 
 
@@ -119,6 +122,7 @@ class Pumpkin(Daemon):
         return shelf
 
     def _checkLocalPeers(self, zmq_context):
+        local_peers = None
         try:
             local_peers = self._shelve_safe_open("/tmp/pumpkin")
 
@@ -133,7 +137,8 @@ class Pumpkin(Daemon):
             local_peers.close()
         except Exception as er:
             log.error(str(er))
-            local_peers.close()
+            if local_peers:
+                local_peers.close()
 
         threading.Timer(10, self._checkLocalPeers, [zmq_context]).start()
 
@@ -159,8 +164,10 @@ class Pumpkin(Daemon):
 
                         klass = PmkSeed.hplugins[modname](context)
                         PmkSeed.iplugins[modname] = klass
+                        klass.pre_load(d)
                         klass.on_load()
-                        klass.set_conf(d)
+                        klass.post_load()
+
 
         return modname
 
@@ -245,7 +252,18 @@ class Pumpkin(Daemon):
             ftpserver.start()
             context.addThread(ftpserver)
 
+        edispatch = ExternalDispatch(context)
+        context.setExternalDispatch(edispatch)
+        edispatch.start()
+        context.addThread(edispatch)
 
+        if context.fallback_rabbitmq():
+            host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+            credentials = pika.PlainCredentials(username, password)
+
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+            rabbitmq = RabbitMQMonitor(context, connection)
+            context.set_rabbitmq(rabbitmq)
 
         if context.hasRx():
             rxdir = context.hasRx()
@@ -261,13 +279,6 @@ class Pumpkin(Daemon):
 
         if context.isSupernode() and not context.is_ghost():
             log.debug("In supernode mode")
-            #udplisten = BroadcastListener(context, UDP_BROADCAST_PORT)
-            #udplisten.start()
-            #context.addThread(udplisten)
-
-            #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
-            #zmqbc.start()
-            #context.addThread(zmqbc)
 
             http = HttpServer(context)
             http.start()
@@ -314,52 +325,12 @@ class Pumpkin(Daemon):
                         fullpath = context.getTaskDir()+"/"+fl
                         modname = fl[:-3]
                         #ext = fl[-2:]
-
                         self.load_seed(fullpath)
-
-                        # if( fl[-2:] == "py"):
-                        #     log.debug("Found seed: "+fullpath)
-                        #     file_header = ""
-                        #     fh = open(fullpath, "r")
-                        #     fhd = fh.read()
-                        #     m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
-                        #
-                        #     if m:
-                        #         conf = m.group(1).replace("##","")
-                        #         if conf:
-                        #             d = json.loads(conf)
-                        #             if not "auto-load" in d.keys() or d["auto-load"] == True:
-                        #                 imp.load_source(modname,fullpath)
-                        #
-                        #                 klass = PmkSeed.hplugins[modname](context)
-                        #                 PmkSeed.iplugins[modname] = klass
-                        #                 klass.on_load()
-                        #                 klass.set_conf(d)
 
                 else:
                     seedfp = context.singleSeed()
                     self.load_seed(seedfp)
-                    # seedfpa = seedfp.split("/")
-                    # seedsp = seedfpa[len(seedfpa) -1 ]
-                    # modname = seedsp[:-3]
-                    # if( seedsp[-2:] == "py"):
-                    #     log.debug("Found seed: "+seedfp)
-                    #     file_header = ""
-                    #     #try:
-                    #     imp.load_source(modname,seedfp)
-                    #
-                    #     fh = open(seedfp, "r")
-                    #     fhd = fh.read()
-                    #     m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
-                    #
-                    #     if m:
-                    #         conf = m.group(1).replace("##","")
-                    #         if conf:
-                    #             d = json.loads(conf)
-                    #             klass = PmkSeed.hplugins[modname](context)
-                    #             PmkSeed.iplugins[modname] = klass
-                    #             klass.on_load()
-                    #             klass.set_conf(d)
+
 
             except Exception as e:
                 log.error("Import error "+ str(e))
@@ -382,11 +353,6 @@ class Pumpkin(Daemon):
             seedmonitor.start()
             context.addThread(seedmonitor)
 
-            edispatch = ExternalDispatch(context)
-            context.setExternalDispatch(edispatch)
-            edispatch.start()
-            context.addThread(edispatch)
-
             idispatch = InternalDispatch(context)
             idispatch.start()
             context.addThread(idispatch)
@@ -400,10 +366,6 @@ class Pumpkin(Daemon):
             inj.start()
             context.addThread(inj)
             #####################################################################
-
-
-
-
 
             if context.hasShell():
                 cmdp = Shell(context)
@@ -429,6 +391,8 @@ def main():
     requests_log.setLevel(logging.WARNING)
     #log.setLevel(logging.INFO)
 
+    requests_log = logging.getLogger("pika")
+    requests_log.setLevel(logging.WARNING)
 
     ###################TEST###############################3
 
@@ -480,6 +444,18 @@ def main():
     parser.add_argument('--ghost', action='store_true',
                        help='run on a node with another pumpkin.')
 
+    parser.add_argument('--group', action='store', dest="group", default="default",
+                       help='node group')
+    parser.add_argument('--profile',action="store_true",
+                       help='profile code.')
+
+    parser.add_argument('--rabbitmq_fallback', action='store_true',
+                       help='use rabbitmq')
+    parser.add_argument('--rbt_host', action='store', dest='rabbitmq_host', default=None)
+    parser.add_argument('--rbt_user', action='store', dest='rabbitmq_user', default=None)
+    parser.add_argument('--rbt_pass', action='store', dest='rabbitmq_pass', default=None)
+    parser.add_argument('--rbt_vhost', action='store', dest='rabbitmq_vhost', default=None)
+
 
     parser.add_argument('--version', action='version', version='%(prog)s '+pmk.VERSION)
     args = parser.parse_args()
@@ -498,19 +474,41 @@ def main():
         P.restart()
     if args.daemon == None:
         context = P.getContext()
-        context.set_attributes(args)
-        UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
         config = ConfigParser.RawConfigParser(allow_no_value=True)
         if os.path.exists(args.config):
             config.read(args.config)
             PmkShared.SUPERNODES = config.get("supernodes", "hosts").split(",")
-            x = 10
+            if args.group == "default" and config.has_option("pumpkin", "group"):
+                args.group = config.get("pumpkin", "group")
+            if args.rabbitmq_host == None and config.has_option("rabbitmq","host"):
+                args.rabbitmq_host = config.get("rabbitmq", "host")
+                args.rabbitmq_user = config.get("rabbitmq", "user")
+                args.rabbitmq_pass = config.get("rabbitmq", "pass")
+                if config.has_option("rabbitmq", "vhost"):
+                    args.rabbitmq_vhost = config.get("rabbitmq", "vhost")
+
+                args.rabbitmq_fallback = config.getboolean("rabbitmq", "fallback")
+
+            if config.has_option("pumpkin","persistent"):
+                args.persistent = config.get("pumpkin", "persistent")
+
             pass
+        context.set_attributes(args)
 
+        UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
 
-        P.startContext()
+        if not args.profile:
+            P.startContext()
+        else:
+            profiler = cProfile.Profile()
+            profiler.runctx("P.startContext()", globals(), locals())
         #Handle SIGINT
         def signal_handler(signal, frame):
+                if args.profile:
+                    stats = pstats.Stats(profiler)
+                    stats.strip_dirs().sort_stats('cumulative').print_stats()
+                    profiler.enable()
+
                 P.stopContext()
 
 

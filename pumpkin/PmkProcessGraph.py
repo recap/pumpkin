@@ -6,6 +6,7 @@ import time
 import thread
 import threading
 import copy
+import re
 
 from networkx.readwrite import json_graph
 
@@ -165,8 +166,11 @@ class ProcessGraph(object):
         G = self.graph
         for xo in self.registry.keys():
             eo = self.registry[xo]
-            for isp in eo["istate"].split('|'):
-                for osp in eo["ostate"].split('|'):
+            #for isp in eo["istate"].split('|'):
+            #    for osp in eo["ostate"].split('|'):
+            for isp in re.split('\||\&', eo["istate"]):
+                for osp in re.split('\||\&', eo["ostate"]):
+
                     istype = eo["itype"]+":"+isp
                     if istype == "NONE:NONE":
                            istype = "INJECTION"

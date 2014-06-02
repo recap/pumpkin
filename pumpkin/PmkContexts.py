@@ -327,9 +327,9 @@ class MainContext(object):
             else:
                 log.setLevel(logging.INFO)
 
-            #if self.__attrs.rabbitmq_host:
-            #    a = self.__attrs
-            #    self.set_rabbitmq_cred(host=a.rabbitmq_host, username=a.rabbitmq_user, password=a.rabbitmq_pass, virtual_host=a.rabbitmq_vhost)
+            if self.__attrs.rabbitmq_host:
+                a = self.__attrs
+                self.set_rabbitmq_cred(host=a.rabbitmq_host, username=a.rabbitmq_user, password=a.rabbitmq_pass, virtual_host=a.rabbitmq_vhost)
 
 
 

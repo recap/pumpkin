@@ -10,6 +10,7 @@ import copy
 import re
 import socket
 import networkx as nx
+import pika
 
 
 
@@ -25,9 +26,6 @@ class tx(Queue):
         Queue.__init__(self)
         pass
 
-
-
-
 class ExternalDispatch(SThread):
 
     def __init__(self, context):
@@ -37,7 +35,28 @@ class ExternalDispatch(SThread):
         self.redispatchers = {}
         self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
         #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
+
+        self.graph = self.context.getProcGraph()
+        self.tx = self.context.getTx()
+        self.ep_sched = EndpointPicker(self.context)
+
+        if self.context.fallback_rabbitmq():
+            #host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+            #credentials = pika.PlainCredentials(username, password)
+            #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+            self.connection = self.__open_rabbitmq_connection()
+            self.channel = self.connection.channel()
+            self.delared_queues = {}
+            #self.channel.queue_declare(queue=self.queue)
+
         pass
+
+    def __open_rabbitmq_connection(self):
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        #channel = self.connection.channel()
+        return connection
 
     def getProtoFromEP(self, ep):
         ep.split("://")
@@ -64,7 +83,120 @@ class ExternalDispatch(SThread):
 
         pass
 
+    def send_express(self, otag, pkt):
+        ntag = None
+
+        if pkt[1]:
+            g = json_graph.loads(pkt[1])
+
+            if otag in g:
+                d = g[otag]
+
+                if d:
+                    ntag = d.keys()[0]
+
+
+
+        if self.context.fallback_rabbitmq():
+            ep = str(otag)
+            if ep in self.dispatchers.keys():
+                disp = self.dispatchers[ep]
+                disp.dispatch(json.dumps(pkt))
+            else:
+                disp = RabbitMQDispatch(self.context)
+                self.dispatchers[ep] = disp
+                disp.connect(ep)
+                disp.dispatch(unicode(json.dumps(pkt)))
+                s = json.dumps(pkt)
+            return
+
+        routes = None
+        while 1:
+            routes = self.graph.getRoutes(otag)
+            if routes:
+                 log.debug("Found routes: "+json.dumps(routes))
+                 break
+            else:
+                time.sleep(5)
+
+
+        if routes:
+            for r in routes:
+
+                dcpkt = copy.copy(pkt)
+
+                rtag = r["otype"]+":"+r["ostate"]
+                if (ntag and ntag == rtag) or not ntag:
+
+                    #pep = self.context.getProcGraph().getPriorityEndpoint(r)
+                    ##eep = self.context.getProcGraph().getExternalEndpoints(r)
+
+                    pep = self.ep_sched.pick_route(r)
+                    if not pep:
+                        continue
+                    oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
+                    dcpkt[0]["last_contact"] = oep[0]
+
+                    if pep:
+                        entry = pep
+                        ep = pep["ep"]
+                        next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
+                        dcpkt.append(next_hop)
+
+
+                        if ep in self.dispatchers.keys():
+                            disp = self.dispatchers[ep]
+                            disp.dispatch(json.dumps(dcpkt))
+                            #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                        else:
+                            disp = None
+                            if entry["mode"] == "zmq.PULL":
+                                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                #disp = ZMQPacketDispatch(self.context)
+                                #disp = self.gdisp
+
+                            if entry["mode"] == "amqp.PUSH":
+                                disp = RabbitMQDispatch(self.context)
+                                pass
+
+                            if not disp == None:
+                                self.dispatchers[ep] = disp
+                                disp.connect(ep)
+                                disp.dispatch(json.dumps(dcpkt))
+                                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                            else:
+                                log.error("No dispatchers found for: "+ep)
+        pass
+
+    def __loop_body(self):
+        group, state, otype, pkt = self.tx.get(True)
+        otag = group+":"+otype+":"+state
+        self.send_express(otag, pkt)
+        pass
+
     def run(self):
+        #graph = self.context.getProcGraph()
+        #tx = self.context.getTx()
+        #ep_sched = EndpointPicker(self.context)
+
+        #soc = self.zmq_context.socket(zmq.PULL)
+        #soc.bind("inproc://internal-bus")
+
+        while True:
+            self.__loop_body()
+
+            if self.stopped():
+                log.debug("Exiting thread "+self.__class__.__name__)
+                for ep in self.dispatchers.keys():
+                    disp = disp = self.dispatchers[ep]
+                    disp.close()
+                break
+            else:
+                continue
+
+    def run_old(self):
         graph = self.context.getProcGraph()
         tx = self.context.getTx()
         ep_sched = EndpointPicker(self.context)
@@ -82,9 +214,6 @@ class ExternalDispatch(SThread):
 
                     if d:
                         ntag = d.keys()[0]
-
-
-
 
 
             while 1:
@@ -217,7 +346,6 @@ class EndpointPicker(object):
                 self.route_index[route_id] = s_idx
                 return ep
 
-
         #
         # for ep in route['endpoints']:
         #     if not self.is_local_ext_ep(ep):
@@ -235,8 +363,6 @@ class EndpointPicker(object):
         #             bep = ep
         #             prt = p
         #
-
-
 
 
 class Dispatch(object):
@@ -266,7 +392,6 @@ class ZMQPacketPublish(Dispatch):
 
     def close(self):
         self.soc.close()
-
 
 class ZMQPacketDispatch(Dispatch):
 
@@ -354,6 +479,38 @@ class ZMQPacketVentilate(Dispatch):
 
     def close(self):
         self.soc.close()
+
+class RabbitMQDispatch(Dispatch):
+    def __init__(self, context):
+        Dispatch.__init__(self)
+        self.context = context
+        self.connection = None
+        self.channel = None
+        self.otag = None
+        log.debug("Created RabbitMQDisptach")
+        pass
+
+    def __open_rabbitmq_connection(self):
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        #channel = self.connection.channel()
+        return connection
+
+    def connect(self, connect_to):
+        self.otag = connect_to
+        self.connection = self.__open_rabbitmq_connection()
+        self.channel = self.connection.channel()
+        self.channel.queue_declare(queue=str(self.otag), durable=True)
+
+    def dispatch(self, pkt):
+        self.channel.basic_publish(exchange='',routing_key=self.otag,body=pkt)
+        pass
+
+    def close(self):
+        self.connetion.close()
+
+
 
 #class ExternalDispatch2(Thread):
 #    def __init__(self, context):
