@@ -134,7 +134,7 @@ class ZMQBroadcaster(SThread):
                 data = self.context.getProcGraph().dumpExternalRegistry()
 
                 if cmd_str:
-                    if data:
+                    if len(data) > 5:
                         data = data[:-1]
                         data = data+","+cmd_str+"}"
                     else:
@@ -152,7 +152,7 @@ class ZMQBroadcaster(SThread):
                 self.context.getProcGraph().ackRegistryUpdate()
 
                 if cmd_str:
-                    if data:
+                    if len(data) > 5:
                         data = data[:-1]
                         data = data+","+cmd_str+"}"
                     else:
