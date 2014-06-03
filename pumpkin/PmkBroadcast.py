@@ -9,8 +9,11 @@ import hashlib
 import struct
 import fcntl
 import zmq
+import Queue
 import subprocess as sp
 #import netifaces
+
+from Queue import *
 
 from select import select
 from socket import *
@@ -19,6 +22,11 @@ import PmkShared
 
 
 from PmkShared import *
+
+class cmd(Queue):
+    def __init__(self):
+        Queue.__init__(self)
+        pass
 
 def get_cloud_ip():
      x = sp.Popen("ip addr show | grep  172.16 | awk '{print $2}'", stdout= sp.PIPE, shell=True).stdout.read().split("/")[0]
@@ -97,6 +105,7 @@ class ZMQBroadcaster(SThread):
         self.context = context
         self.sn = sn
         self.zmq_cntx = zmq_context
+        self.cmd = self.context.get_cmd_queue()
 
     def run(self):
         log.info("Starting thread: "+self.__class__.__name__)
@@ -110,16 +119,23 @@ class ZMQBroadcaster(SThread):
             sock.close()
             return
 
-        test_str = '"cmd" : {"id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
-        while True:
 
+        test_str = '"cmd" : {"type" : "arp", "id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
+
+        while True:
+            try:
+                cmd_str = self.cmd.get_nowait()
+            except Queue.Empty as e:
+                pass
 
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
 
-                data = data[:-1]
-                data = data+","+test_str+"}"
+                if cmd_str:
+                    data = data[:-1]
+                    data = data+","+cmd_str+"}"
+
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)
@@ -130,8 +146,11 @@ class ZMQBroadcaster(SThread):
             if self.context.getProcGraph().isRegistryModified():
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 self.context.getProcGraph().ackRegistryUpdate()
-                data = data[:-1]
-                data = data+","+test_str+"}"
+
+                if cmd_str:
+                    data = data[:-1]
+                    data = data+","+cmd_str+"}"
+
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)
@@ -163,7 +182,19 @@ class ZMQBroadcastSubscriber(SThread):
                 if not (k == "cmd"):
                     self.context.getProcGraph().updateRegistry(d[k])
                 else:
+
                     log.debug('Command dedected: '+str(d[k]))
+                    if(d[k]["type"] == "arp"):
+                        pkt_id = d[k]["id"]
+                        pkt = self.context.get_pkt_from_shelve(pkt_id)
+                        if pkt:
+                            ep = d[k]["reply-to"]
+                            pkt[0]["state"] = "ARP_OK"
+                            exdisp = self.context.getExternalDispatch()
+                            exdisp.send_to_ep(pkt, ep)
+
+
+
 
 
 

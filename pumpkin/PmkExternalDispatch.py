@@ -62,6 +62,22 @@ class ExternalDispatch(SThread):
         ep.split("://")
         return ep[0]
 
+    def send_to_ep(self, pkt, ep):
+
+        if ep in self.redispatchers.keys():
+            disp = self.redispatchers[ep]
+            disp.dispatch(json.dumps(pkt))
+        else:
+            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+            if not disp == None:
+                self.redispatchers[ep] = disp
+                disp.connect(ep)
+                disp.dispatch(json.dumps(pkt))
+
+            else:
+                log.error("No dispatchers found for: "+ep)
+
+        pass
     def send_to_last(self, pkt):
         ep = pkt[0]["last_contact"]
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher

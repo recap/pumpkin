@@ -186,6 +186,7 @@ class Pumpkin(Daemon):
         context.log_to_file()
 
         context.startPktShelve("PktStore")
+        context.startPktShelve2("RemotePktStore")
 
 
 

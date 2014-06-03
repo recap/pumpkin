@@ -12,6 +12,7 @@ import PmkShared
 
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
+from PmkBroadcast import *
 
 from PmkProcessGraph import *
 
@@ -45,6 +46,7 @@ class MainContext(object):
             self.__threads = []
             self.rx = rx()
             self.tx = tx()
+            self.cmd = cmd()
             self.registry = {}
             self.__ip = "127.0.0.1"
             self.endpoints = []
@@ -61,6 +63,8 @@ class MainContext(object):
 
             self.__rabbitmq = None
             self.__rabbitmq_cred = ()
+
+            self.pkt_shelve_2 = None
 
             pass
 
@@ -122,6 +126,11 @@ class MainContext(object):
             self.pkt_shelve = shelve.open(self.working_dir+"/"+filename)
             pass
 
+        def startPktShelve2(self, filename):
+            self.pkt_shelve_2 = shelve.open(self.working_dir+"/"+filename)
+            pass
+
+
         def getPktId(self, pkt):
             id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
             return id
@@ -131,13 +140,33 @@ class MainContext(object):
             self.pkt_shelve[pkt_id] = pkt
             pass
 
-        def get_pkt_from_shelve(self,pkt_id):
+        def put_pkt_in_shelve(self, pkt):
+            shlf = self.pkt_shelve
+            pkt_id = str(self.getPktId(pkt))
+            shlf["pkt_id"] = pkt
 
-            if pkt_id in self.pkt_shelve:
-                spkt = self.pkt_shelve[pkt_id]
-                return spkt
+        def put_pkt_in_shelve2(self, pkt):
+            shlf = self.pkt_shelve2
+            pkt_id = str(self.getPktId(pkt))
+            shlf["pkt_id"] = pkt
+
+        def get_pkt_from_shelve(self,pkt_id):
+            pkt_id_parts = pkt_id.split(':')
+            ret = []
+            if len(pkt_id_parts) < 4:
+                for k in self.pkt_shelve.keys():
+                    if pkt_id in k:
+                        ret.append(self.pkt_shelve[k])
+            else:
+                if pkt_id in self.pkt_shelve.keys():
+                    spkt = self.pkt_shelve[pkt_id]
+                    ret.append(spkt)
+
+            if len(ret) > 0:
+                return ret
             else:
                 return False
+
 
         def isPktShelved(self, pkt):
 
@@ -165,8 +194,6 @@ class MainContext(object):
             self.file_dir = file_dir
             pass
 
-
-
         def getFileDir(self):
             return self.file_dir
 
@@ -180,6 +207,7 @@ class MainContext(object):
         def setExecContext(self, cntx):
             self.__exec_contex = cntx
             pass
+
         def getExecContext(self):
             return self.__exec_contex
 
@@ -388,6 +416,9 @@ class MainContext(object):
 
         def getTx(self):
             return self.tx
+
+        def get_cmd_queue(self):
+            return self.cmd
 
 
         def close(self):

@@ -50,6 +50,9 @@ class InternalDispatch(SThread):
             #         #self._packed_pkts += 1
             #         #log.debug("PACKED pkts: "+str(self._packed_pkts))
             #         continue
+            if pkt[0]["state"] == "ARP_OK":
+                log.debug("Received ARP_OK: "+json.dumps(pkt))
+                continue
 
             l = len(pkt)
             func = pkt[l-1]["func"]

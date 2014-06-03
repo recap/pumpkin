@@ -158,14 +158,24 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_response(200)
             s.send_header("Content-type", "application/json")
             s.end_headers()
+
+            cmd_queue = context.get_cmd_queue()
+
             rep = ""
             parts = s.path.split("?")
             pkt_id = parts[1]
+            cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+context.get_our_pub_ep()+'"}'
+            cmd_queue.put(cmd_str)
             pkt = context.get_pkt_from_shelve(pkt_id)
-            if pkt:
-                rep += json.dumps(pkt)
+
+            rep = "["
+            for pkt in context.get_pkt_from_shelve(pkt_id):
+                rep += json.dumps(pkt)+","
+            if len(rep) > 1:
+                rep = rep[:-1]
+                rep += "]"
             else:
-                rep += "{unavailable_info}"
+                rep = "{unavailable_info}"
 
             s.wfile.write(str(rep))
 
