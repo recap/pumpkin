@@ -194,11 +194,11 @@ class ZMQBroadcastSubscriber(SThread):
                     if(d[k]["type"] == "arp"):
                         pkt_id = d[k]["id"]
                         pkt = self.context.get_pkt_from_shelve(pkt_id)
-                        if pkt:
+                        for p in pkt:
                             ep = d[k]["reply-to"]
-                            pkt[0]["state"] = "ARP_OK"
+                            p[0]["state"] = "ARP_OK"
                             exdisp = self.context.getExternalDispatch()
-                            exdisp.send_to_ep(pkt, ep)
+                            exdisp.send_to_ep(p, ep)
 
 
 
