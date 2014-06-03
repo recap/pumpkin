@@ -198,6 +198,7 @@ class ZMQBroadcastSubscriber(SThread):
                             ep = d[k]["reply-to"]
                             p[0]["state"] = "ARP_OK"
                             exdisp = self.context.getExternalDispatch()
+                            log.debug("Sending ARP response: "+json.dumps(p))
                             exdisp.send_to_ep(p, ep)
 
 

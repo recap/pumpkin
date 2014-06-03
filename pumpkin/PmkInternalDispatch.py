@@ -27,7 +27,7 @@ class InternalDispatch(SThread):
         rx = self.context.getRx()
         while 1:
             pkts = rx.get(True)
-            #log.debug("Packet received: \n"+pkts)
+            log.debug("Packet received: \n"+pkts)
             pkt = json.loads(pkts)
             #Check for PACK
             if pkt[0]["state"] == "PACK_OK":
