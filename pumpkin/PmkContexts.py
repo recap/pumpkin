@@ -153,6 +153,7 @@ class MainContext(object):
             shlf["pkt_id"] = pkt
 
         def get_pkt_from_shelve(self,pkt_id):
+            pkt_id = str(pkt_id)
             pkt_id_parts = pkt_id.split(':')
             ret = []
             if len(pkt_id_parts) < 4:
@@ -167,6 +168,7 @@ class MainContext(object):
             return ret
 
         def get_pkt_from_shelve2(self,pkt_id):
+            pkt_id = str(pkt_id)
             pkt_id_parts = pkt_id.split(':')
             ret = []
             if len(pkt_id_parts) < 4:
