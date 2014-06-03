@@ -52,6 +52,7 @@ class InternalDispatch(SThread):
             #         continue
             if pkt[0]["state"] == "ARP_OK":
                 log.debug("Received ARP_OK: "+json.dumps(pkt))
+                self.context.put_pkt_in_shelve2(pkt)
                 continue
 
             l = len(pkt)

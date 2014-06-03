@@ -162,10 +162,7 @@ class MainContext(object):
                     spkt = self.pkt_shelve[pkt_id]
                     ret.append(spkt)
 
-            if len(ret) > 0:
-                return ret
-            else:
-                return False
+            return ret
 
 
         def isPktShelved(self, pkt):

@@ -172,6 +172,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             rep = "["
             for pkt in context.get_pkt_from_shelve(pkt_id):
                 rep += json.dumps(pkt)+","
+            for pkt in context.get_pkt_from_shelve2(pkt_id):
+                rep += json.dumps(pkt)+","
             if len(rep) > 1:
                 rep = rep[:-1]
                 rep += "]"

@@ -13,7 +13,7 @@ import Queue
 import subprocess as sp
 #import netifaces
 
-from Queue import *
+#from Queue import *
 
 from select import select
 from socket import *
@@ -23,9 +23,9 @@ import PmkShared
 
 from PmkShared import *
 
-class cmd(Queue):
+class cmd(Queue.Queue):
     def __init__(self):
-        Queue.__init__(self)
+        Queue.Queue.__init__(self)
         pass
 
 def get_cloud_ip():
@@ -121,8 +121,9 @@ class ZMQBroadcaster(SThread):
 
 
         test_str = '"cmd" : {"type" : "arp", "id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
-
+        
         while True:
+            cmd_str = None
             try:
                 cmd_str = self.cmd.get_nowait()
             except Queue.Empty as e:
