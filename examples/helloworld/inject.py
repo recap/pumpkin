@@ -38,10 +38,10 @@ class inject(PmkSeed.Seed):
         tell us "hello"
         """
         self.dispatch(pkt, "World", "UNGREETED")
-        self.fork_dispatch(pkt, "Mars", "UNGREETED")
-        self.fork_dispatch(pkt, "Venus", "UNGREETED")
-        self.fork_dispatch(pkt, "Jupiter", "UNGREETED")
-        self.fork_dispatch(pkt, "Mercury", "UNGREETED")
+        #self.fork_dispatch(pkt, "Mars", "UNGREETED")
+        #self.fork_dispatch(pkt, "Venus", "UNGREETED")
+        #self.fork_dispatch(pkt, "Jupiter", "UNGREETED")
+        #self.fork_dispatch(pkt, "Mercury", "UNGREETED")
 
 
         pass

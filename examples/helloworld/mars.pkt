@@ -17,7 +17,7 @@
     },
     {},
     {
-        "stag": "String:UNGREETED",
+        "stag": "default:String:UNGREETED",
         "data": "Mars",
         "exstate": "0000",
         "func": ""

@@ -44,6 +44,7 @@ class PacketFileMonitor(SThread):
 
                     stag_p = pktdj[pkt_len - 1]["stag"].split(":")
 
+
                     if len(stag_p) < 3:
                         group = "public"
                         type = stag_p[0]
@@ -57,7 +58,7 @@ class PacketFileMonitor(SThread):
 
             def process_IN_MOVE_SELF(self, event):
                 pktf = os.path.join(event.path, event.name)
-                #log.info("MOVE SELF "+pktf)
+                log.info("MOVE SELF "+pktf)
                 try:
                     self.load_pkt(pktf)
                 except Exception as e:
@@ -65,7 +66,7 @@ class PacketFileMonitor(SThread):
 
             def process_IN_MOVED_TO(self, event):
                 pktf = os.path.join(event.path, event.name)
-                #log.info("MOVE TO "+pktf)
+                log.info("MOVE TO "+pktf)
                 try:
                     self.load_pkt(pktf)
                 except Exception as e:
@@ -74,7 +75,7 @@ class PacketFileMonitor(SThread):
             def process_IN_CLOSE_WRITE(self, event):
                 try:
                     pktf = os.path.join(event.path, event.name)
-                    #log.debug("INOTIFY CLOSE_WRITE 2: " + str(pktf))
+                    log.info("INOTIFY CLOSE_WRITE 2: " + str(pktf))
                     self.load_pkt(pktf)
 
                 except Exception as e:

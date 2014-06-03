@@ -145,6 +145,8 @@ class MainContext(object):
             pkt_id = str(self.getPktId(pkt))
             shlf["pkt_id"] = pkt
 
+
+
         def put_pkt_in_shelve2(self, pkt):
             shlf = self.pkt_shelve2
             pkt_id = str(self.getPktId(pkt))
@@ -160,6 +162,20 @@ class MainContext(object):
             else:
                 if pkt_id in self.pkt_shelve.keys():
                     spkt = self.pkt_shelve[pkt_id]
+                    ret.append(spkt)
+
+            return ret
+
+        def get_pkt_from_shelve2(self,pkt_id):
+            pkt_id_parts = pkt_id.split(':')
+            ret = []
+            if len(pkt_id_parts) < 4:
+                for k in self.pkt_shelve2.keys():
+                    if pkt_id in k:
+                        ret.append(self.pkt_shelve2[k])
+            else:
+                if pkt_id in self.pkt_shelve2.keys():
+                    spkt = self.pkt_shelve2[pkt_id]
                     ret.append(spkt)
 
             return ret
