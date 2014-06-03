@@ -121,7 +121,7 @@ class ZMQBroadcaster(SThread):
 
 
         test_str = '"cmd" : {"type" : "arp", "id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
-        
+
         while True:
             cmd_str = None
             try:
@@ -134,8 +134,11 @@ class ZMQBroadcaster(SThread):
                 data = self.context.getProcGraph().dumpExternalRegistry()
 
                 if cmd_str:
-                    data = data[:-1]
-                    data = data+","+cmd_str+"}"
+                    if data:
+                        data = data[:-1]
+                        data = data+","+cmd_str+"}"
+                    else:
+                        data = "{"+cmd_str+"}"
 
                 sock.send(data)
                 if self.stopped():
@@ -149,8 +152,11 @@ class ZMQBroadcaster(SThread):
                 self.context.getProcGraph().ackRegistryUpdate()
 
                 if cmd_str:
-                    data = data[:-1]
-                    data = data+","+cmd_str+"}"
+                    if data:
+                        data = data[:-1]
+                        data = data+","+cmd_str+"}"
+                    else:
+                        data = "{"+cmd_str+"}"
 
                 sock.send(data)
                 if self.stopped():
