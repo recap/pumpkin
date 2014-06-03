@@ -110,11 +110,15 @@ class ZMQBroadcaster(SThread):
             sock.close()
             return
 
+        test_str = '{"id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
         while True:
+
+
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 #log.debug("Publishing new registry data on ["+self.sn+"]")
+                data = data+","+test_str
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)
@@ -126,6 +130,7 @@ class ZMQBroadcaster(SThread):
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 self.context.getProcGraph().ackRegistryUpdate()
                 #log.debug("Publishing new registry data")
+                data = data+","+test_str
                 sock.send(data)
                 if self.stopped():
                     log.debug("Exiting thread: "+self.__class__.__name__)

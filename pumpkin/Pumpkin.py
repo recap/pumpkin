@@ -73,7 +73,7 @@ class Pumpkin(Daemon):
 
     def stopContext(self):
 
-        local_peers = self._shelve_safe_open("/tmp/pumpkin")
+        local_peers = self._shelve_safe_open("/tmp/pumpkin.shelve")
         if self.context.getUuid() in local_peers: del local_peers[self.context.getUuid()]
         local_peers.close()
 
@@ -124,7 +124,7 @@ class Pumpkin(Daemon):
     def _checkLocalPeers(self, zmq_context):
         local_peers = None
         try:
-            local_peers = self._shelve_safe_open("/tmp/pumpkin")
+            local_peers = self._shelve_safe_open("/tmp/pumpkin.shelve")
 
             for p in local_peers:
                 if p not in self.context.peers:

@@ -361,7 +361,6 @@ class Seed(object):
         pstate =  pkt[0]["state"]
         if not self.is_duplicate(pkt):
             tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
-            self.inc_state_counter(tstag)
             pkt[0]["state"] = "PROCESSING"
 
             if self.context.with_shelve():
@@ -406,9 +405,11 @@ class Seed(object):
                     return
                 else:
                     if self.is_fragment(pkt):
+                        self.inc_state_counter(tstag)
                         self.run(pkt,*nargs)
                     else:
                         if not self.split(pkt, *nargs):
+                            self.inc_state_counter(tstag)
                             self.run(pkt,*nargs)
                     return
 
@@ -786,7 +787,11 @@ class Seed(object):
             otype = self.conf["return"][0]["type"]
         else:
             otype = type
+
         stag = self.get_group()+":"+otype + ":"  + tag
+
+        tstag = "OUT:"+self.__class__.__name__+":"+stag
+        self.inc_state_counter(tstag)
 
         #Add output of current function
         last_entry = lpkt[len(lpkt)-1]
