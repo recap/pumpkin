@@ -233,7 +233,7 @@ class ZMQPacketMonitor(SThread):
         pkt = json.loads(pkts)
         #Check for PACK
         if pkt[0]["state"] == "PACK_OK":
-            #log.debug("PACK packet: "+pkts)
+            log.debug("PACK packet: "+pkts)
             seed = pkt[0]["last_func"]
 
             if seed in PmkSeed.iplugins.keys():
@@ -252,6 +252,10 @@ class ZMQPacketMonitor(SThread):
         #         #self._packed_pkts += 1
         #         #log.debug("PACKED pkts: "+str(self._packed_pkts))
         #         continue
+        if pkt[0]["state"] == "ARP_OK":
+            log.debug("Received ARP_OK: "+json.dumps(pkt))
+            self.context.put_pkt_in_shelve2(pkt)
+            return True
 
         l = len(pkt)
         func = pkt[l-1]["func"]

@@ -37,6 +37,7 @@ class inject(PmkSeed.Seed):
         inject a single data "world" to a greeter which will
         tell us "hello"
         """
+        #self.logger.info("Blabla")
         self.dispatch(pkt, "World", "UNGREETED")
         #self.fork_dispatch(pkt, "Mars", "UNGREETED")
         #self.fork_dispatch(pkt, "Venus", "UNGREETED")

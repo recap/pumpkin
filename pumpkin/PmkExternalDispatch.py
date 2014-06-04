@@ -453,6 +453,7 @@ class ZMQPacketDispatch(Dispatch):
         #try:
             #if not self.__check_ep(self.ep):
             #    raise Exception("Endpoint closed")
+            log.debug("SENDING")
             self.soc.send(pkt, zmq.NOBLOCK)
 
         #except zmq.ZMQError as e:
