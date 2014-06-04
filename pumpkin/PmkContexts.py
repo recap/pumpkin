@@ -143,14 +143,14 @@ class MainContext(object):
         def put_pkt_in_shelve(self, pkt):
             shlf = self.pkt_shelve
             pkt_id = str(self.getPktId(pkt))
-            shlf["pkt_id"] = pkt
+            shlf[pkt_id] = pkt
 
 
 
         def put_pkt_in_shelve2(self, pkt):
             shlf = self.pkt_shelve_2
             pkt_id = str(self.getPktId(pkt))
-            shlf["pkt_id"] = pkt
+            shlf[pkt_id] = pkt
 
         def get_pkt_from_shelve(self,pkt_id):
             pkt_id = str(pkt_id)
