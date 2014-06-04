@@ -164,7 +164,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             rep = ""
             parts = s.path.split("?")
             pkt_id = parts[1]
-            cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+context.get_our_pub_ep()+'"}'
+            cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+context.get_our_endpoint("tcp://")+'"}'
             log.debug("Queueing command: "+cmd_str)
             cmd_queue.put(cmd_str)
             #pkt = context.get_pkt_from_shelve(pkt_id)
