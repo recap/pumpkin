@@ -231,9 +231,10 @@ class ZMQPacketMonitor(SThread):
 
     def proccess_pkt(self, pkts):
         pkt = json.loads(pkts)
+        log.debug("PACKET RECEIVED: "+pkts)
         #Check for PACK
         if pkt[0]["state"] == "PACK_OK":
-            log.debug("PACK packet: "+pkts)
+
             seed = pkt[0]["last_func"]
 
             if seed in PmkSeed.iplugins.keys():
