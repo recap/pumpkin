@@ -372,11 +372,11 @@ class MainContext(object):
 
         def set_attributes(self, attributes):
             self.__attrs = attributes
-            # logger = logging.getLogger()
-            # if attributes.debug:
-            #     logger.setLevel(logging.DEBUG)
-            # else:
-            #     logger.setLevel(logging.INFO)
+            logger = logging.getLogger()
+            if attributes.debug:
+                logger.setLevel(logging.DEBUG)
+            else:
+                logger.setLevel(logging.INFO)
 
             if self.__attrs.rabbitmq_host:
                 a = self.__attrs

@@ -460,6 +460,7 @@ def main():
     else:
         initialize_logger("./", True)
 
+
     requests_log = logging.getLogger("tftpy")
     requests_log.setLevel(logging.WARNING)
     #logging.setLevel(logging.INFO)

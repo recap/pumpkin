@@ -53,7 +53,7 @@ def initialize_logger(output_dir, console=True):
     if console:
        # create console handler and set level to info
        handler = logging.StreamHandler()
-       handler.setLevel(logging.INFO)
+       handler.setLevel(logging.DEBUG)
        formatter = logging.Formatter("%(levelname)s - %(message)s")
        handler.setFormatter(formatter)
        logger.addHandler(handler)
