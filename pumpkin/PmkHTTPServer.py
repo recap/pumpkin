@@ -58,13 +58,13 @@ class HttpServer(SThread):
         PORT_NUMBER = HTTP_TCP_PORT # Maybe set this to 9000.
         server_class = BaseHTTPServer.HTTPServer
         httpd = server_class((HOST_NAME, PORT_NUMBER),  MyHandler)
-        log.info("Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER))
+        logging.info("Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER))
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
             pass
         httpd.server_close()
-        log.info("Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER))
+        logging.info("Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER))
 
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -74,7 +74,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.end_headers()
     def do_GET(s):
         """Respond to a GET request."""
-        log.debug("Request "+s.path)
+        logging.debug("Request "+s.path)
         context = PmkContexts.MainContext(None)
 
         if s.path == "/d3":
@@ -167,7 +167,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             oep = context.get_our_endpoint("tcp://")
             if oep:
                 cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+oep[0]+'"}'
-                log.debug("Queueing command: "+cmd_str)
+                logging.debug("Queueing command: "+cmd_str)
                 cmd_queue.put(cmd_str)
             #pkt = context.get_pkt_from_shelve(pkt_id)
 
@@ -195,7 +195,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             container = "None"
             #print parts[1]
             pkt_dec = base64.decodestring(parts[1])
-            log.debug("Decoded packet: "+pkt_dec)
+            logging.debug("Decoded packet: "+pkt_dec)
             # pktd = parts[1]
             pktdj = json.loads(pkt_dec)
             pkt_len = len(pktdj)
@@ -222,7 +222,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             context.getTx().put((group, tag,type,pktdj))
 
 
-            log.debug("Submit packet through http: "+pkt_id)
+            logging.debug("Submit packet through http: "+pkt_id)
             rep = '{"packet_ref":'+pkt_id+', "timestamp":'+str(dt)+'}'
 
             s.wfile.write(rep)
@@ -277,24 +277,24 @@ class HttpServer_OLD(SThread):
             try:
                 conn, addr = s.accept()
             except timeout:
-                #log.debug("Timeout")
+                #logging.debug("Timeout")
                 if self.stopped():
-                    log.debug("Exiting thread "+self.__class__.__name__)
+                    logging.debug("Exiting thread "+self.__class__.__name__)
                     break
                 else:
-                    #log.debug("HTTP timeout")
+                    #logging.debug("HTTP timeout")
                     continue
-            log.debug('HTTP Connection address:'+ str(addr))
+            logging.debug('HTTP Connection address:'+ str(addr))
 
             data = conn.recv(HTTP_BUFFER_SIZE)
             if not data: break
-            #log.debug("HTTP data: "+data)
+            #logging.debug("HTTP data: "+data)
             if "favicon" in data:
                 conn.close()
                 continue
 
             rep = ""
-            #log.debug(data)
+            #logging.debug(data)
             h = Head(data)
             if not h.module:
              #   sf = self.getSize("./pumpkin/force.html")
@@ -305,7 +305,7 @@ class HttpServer_OLD(SThread):
              #   with open ("./pumpkin/force.html", "r") as myfile:
              #       data = str(myfile.readlines())
              #   rep = str(prot) + str(data)
-             #   log.debug(rep)
+             #   logging.debug(rep)
                 rep = self.context.getProcGraph().dumpGraph()
                 #self.context.getProcGraph().dumpGraphToFile("state.json")
             else:
@@ -320,7 +320,7 @@ class HttpServer_OLD(SThread):
                     #print rep
             #    conn.send(str(rt))
             #else:
-            #    log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
+            #    logging.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
             #self.context.getProcGraph().dumpGraphToFile("./pumpkin/miserables.json")
 
 
@@ -338,7 +338,7 @@ class HttpServer_OLD(SThread):
             #    print rt
             #    conn.send(str(rt))
             #else:
-            #    log.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
+            #    logging.warn("Trying to invoke module with HTTP: "+h.module+" but doe not exist.")
 
             #conn.close()
         pass

@@ -13,6 +13,7 @@ class Shell(cmd.Cmd):
     def do_display(self, message):
         self.context.getProcGraph().showGraph()
         pass
+
     def do_quitsh(self, message):
         print "Quitting Shell"
         return(1)

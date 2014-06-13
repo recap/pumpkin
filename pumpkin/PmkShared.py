@@ -33,18 +33,55 @@ SUPERNODES = [ "127.0.0.1"]
 
 # Initialize the logger.
 #logging.basicConfig()
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-log = logging.getLogger('pumpkin')
+##logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+##log = logging.getLogger('pumpkin')
 
-#log.setLevel(logging.DEBUG)
-log.setLevel(logging.INFO)
+
+#logging.setLevel(logging.DEBUG)
+##logging.setLevel(logging.INFO)
+
+
+
+def initialize_logger(output_dir, console=True):
+    logger = logging.getLogger()
+    for h in logger.handlers:
+        logger.removeHandler(h)
+
+    logger.setLevel(logging.DEBUG)
+
+
+    if console:
+       # create console handler and set level to info
+       handler = logging.StreamHandler()
+       handler.setLevel(logging.INFO)
+       formatter = logging.Formatter("%(levelname)s - %(message)s")
+       handler.setFormatter(formatter)
+       logger.addHandler(handler)
+
+    # create error file handler and set level to error
+    #handler = logging.FileHandler(os.path.join(output_dir, "error.log"),"w", encoding=None, delay="true")
+    #handler.setLevel(logging.ERROR)
+    #formatter = logging.Formatter("%(levelname)s - %(message)s")
+    #handler.setFormatter(formatter)
+    #logger.addHandler(handler)
+
+    # create debug file handler and set level to debug
+    handler = logging.FileHandler(os.path.join(output_dir, "all.log"),"w")
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
+
+
 
 def _ensure_dir(f):
         if not f[len(f)-1] == "/":
                 f = f +"/"
         d = os.path.dirname(f)
         if not os.path.exists(d):
-            log.debug(d + " does not exist, creating...")
+            logging.debug(d + " does not exist, creating...")
             os.makedirs(d,mode=0775)
             os.chmod(d,0775)
         pass
@@ -64,7 +101,7 @@ def _get_nextport(port, prot="TCP"):
              except Exception as e:
                  sock.close()
                  err = True
-                 log.warn("Port already in use: "+str(lport))
+                 logging.warn("Port already in use: "+str(lport))
                  lport += 1
 
                  continue

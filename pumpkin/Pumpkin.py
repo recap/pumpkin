@@ -65,6 +65,7 @@ class Pumpkin(Daemon):
         self.context.__pumpkin = self
 
         self.zmq_context = zmq.Context()
+
         pass
 
 
@@ -82,7 +83,7 @@ class Pumpkin(Daemon):
             th.stop()
             #th.join()
         time.sleep(2)
-        log.info("Exiting Pumpkin")
+        logging.info("Exiting Pumpkin")
         pass
 
     def run(self):
@@ -129,14 +130,14 @@ class Pumpkin(Daemon):
             for p in local_peers:
                 if p not in self.context.peers:
                     self.context.peers[p] = local_peers[p]
-                    log.debug("Subscribing to new Peer ["+local_peers[p]+"]")
+                    logging.debug("Subscribing to new Peer ["+local_peers[p]+"]")
                     zmqsub = ZMQBroadcastSubscriber(self.context, zmq_context, local_peers[p])
                     zmqsub.start()
                     self.context.addThread(zmqsub)
 
             local_peers.close()
         except Exception as er:
-            log.error(str(er))
+            logging.error(str(er))
             if local_peers:
                 local_peers.close()
 
@@ -149,7 +150,7 @@ class Pumpkin(Daemon):
         _,tail = os.path.split(file)
         modname = tail[:-3]
         if( file[-2:] == "py"):
-            log.debug("Found seed: "+file)
+            logging.debug("Found seed: "+file)
             file_header = ""
             fh = open(file, "r")
             fhd = fh.read()
@@ -173,9 +174,9 @@ class Pumpkin(Daemon):
 
     def startContext(self):
         context = self.context
-        log.info("Node assigned UID: "+context.getUuid())
-        log.info("Exec context: "+context.getExecContext())
-        log.info("Node bound to IP: "+context.get_local_ip())
+        logging.info("Node assigned UID: "+context.getUuid())
+        logging.info("Exec context: "+context.getExecContext())
+        logging.info("Node bound to IP: "+context.get_local_ip())
         home = expanduser("~")
         wd = home+"/.pumpkin/"+context.getUuid()+"/"
         context.working_dir = wd
@@ -187,12 +188,10 @@ class Pumpkin(Daemon):
 
         context.startPktShelve("PktStore")
         context.startPktShelve2("RemotePktStore")
+        if context.is_speedy():
+            logging.info("Running in speedy gonzales mode")
 
-
-
-
-
-        log.debug("Working directory: "+context.getWorkingDir())
+        logging.debug("Working directory: "+context.getWorkingDir())
 
         #context.openfiles.append(context.getWorkingDir())
 
@@ -201,7 +200,7 @@ class Pumpkin(Daemon):
         context.zmq_context = zmq_context
         #PmkShared.ZMQ_PUB_PORT  = PmkShared._get_nextport(ZMQ_PUB_PORT, "TCP")
         PmkShared.ZMQ_ENDPOINT_PORT = PmkShared._get_nextport(ZMQ_ENDPOINT_PORT, "TCP")
-        log.debug("ZMQ endpoint port: "+str(PmkShared.ZMQ_ENDPOINT_PORT))
+        logging.debug("ZMQ endpoint port: "+str(PmkShared.ZMQ_ENDPOINT_PORT))
         PmkShared.TFTP_FILE_SERVER_PORT  = PmkShared._get_nextport(TFTP_FILE_SERVER_PORT, "UDP")
 
         context.setEndpoints()
@@ -279,7 +278,7 @@ class Pumpkin(Daemon):
 
 
         if context.isSupernode() and not context.is_ghost():
-            log.debug("In supernode mode")
+            logging.debug("In supernode mode")
 
             http = HttpServer(context)
             http.start()
@@ -313,7 +312,7 @@ class Pumpkin(Daemon):
 
             for sn in get_zmq_supernodes(PmkShared.SUPERNODES):
                 if not str(sn).__contains__("127.0.0.1"):
-                    log.debug("Subscribing to: "+sn)
+                    logging.debug("Subscribing to: "+sn)
                     zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
                     zmqsub.start()
                     context.addThread(zmqsub)
@@ -334,7 +333,7 @@ class Pumpkin(Daemon):
 
 
             except Exception as e:
-                log.error("Import error "+ str(e))
+                logging.error("Import error "+ str(e))
                 pass
 
 
@@ -343,12 +342,12 @@ class Pumpkin(Daemon):
             for x in PmkSeed.iplugins.keys():
                klass = PmkSeed.iplugins[x]
                js = klass.getConfEntry()
-               #log.debug(js)
+               #logging.debug(js)
                context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
                #context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
                #context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
 
-            log.debug("Registry dump: "+context.getProcGraph().dumpExternalRegistry())
+            logging.debug("Registry dump: "+context.getProcGraph().dumpExternalRegistry())
 
             seedmonitor = PacketFileMonitor(context, context.getWorkingDir()+"seeds/", ext="py")
             seedmonitor.start()
@@ -384,16 +383,7 @@ from SocketServer import ThreadingMixIn
 
 def main():
 
-    log = logging.getLogger("pumpkin")
-    log.setLevel(logging.DEBUG)
 
-
-    requests_log = logging.getLogger("tftpy")
-    requests_log.setLevel(logging.WARNING)
-    #log.setLevel(logging.INFO)
-
-    requests_log = logging.getLogger("pika")
-    requests_log.setLevel(logging.WARNING)
 
     ###################TEST###############################3
 
@@ -457,18 +447,37 @@ def main():
     parser.add_argument('--rbt_pass', action='store', dest='rabbitmq_pass', default=None)
     parser.add_argument('--rbt_vhost', action='store', dest='rabbitmq_vhost', default=None)
 
+    parser.add_argument('--gonzales', action='store_true',
+                       help='disable certain slow features for faster streaming.')
+
+
 
     parser.add_argument('--version', action='version', version='%(prog)s '+pmk.VERSION)
     args = parser.parse_args()
+
+    if args.shell:
+        initialize_logger("./", False)
+    else:
+        initialize_logger("./", True)
+
+    requests_log = logging.getLogger("tftpy")
+    requests_log.setLevel(logging.WARNING)
+    #logging.setLevel(logging.INFO)
+
+    requests_log = logging.getLogger("pika")
+    requests_log.setLevel(logging.WARNING)
+
 
 
     P = Pumpkin()
 
     if args.daemon == "start":
-        log.info("Starting Pumpkin Daemon")
+        logging.info("Starting Pumpkin daemon")
         context = P.getContext()
         context.set_attributes(args)
         P.start()
+        root = logging.getLogger()
+
     if args.daemon == "stop":
         P.stop()
     if args.daemon == "restart":
@@ -513,7 +522,7 @@ def main():
                 P.stopContext()
 
 
-                log.info("Exiting Bye Bye")
+                logging.info("Exiting Bye Bye")
                 ##Ugly kill because threads zmq are not behaving
                 os.system("kill -9 "+str(os.getpid()))
 

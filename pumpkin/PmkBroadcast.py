@@ -108,14 +108,14 @@ class ZMQBroadcaster(SThread):
         self.cmd = self.context.get_cmd_queue()
 
     def run(self):
-        log.info("Starting thread: "+self.__class__.__name__)
+        logging.info("Starting thread: "+self.__class__.__name__)
         sock = self.zmq_cntx.socket(zmq.PUB)
         try:
             #sock.bind("tcp://*:"+str(self.port))
             sock.bind(self.sn)
 
         except Exception as er:
-            log.warn("ZMQ Broadcaster disabled (another is already running)")
+            logging.warn("ZMQ Broadcaster disabled (another is already running)")
             sock.close()
             return
 
@@ -142,7 +142,7 @@ class ZMQBroadcaster(SThread):
 
                 sock.send(data)
                 if self.stopped():
-                    log.debug("Exiting thread: "+self.__class__.__name__)
+                    logging.debug("Exiting thread: "+self.__class__.__name__)
                     break
                 else:
                     continue
@@ -160,7 +160,7 @@ class ZMQBroadcaster(SThread):
 
                 sock.send(data)
                 if self.stopped():
-                    log.debug("Exiting thread: "+self.__class__.__name__)
+                    logging.debug("Exiting thread: "+self.__class__.__name__)
                     break
                 else:
                     continue
@@ -183,14 +183,14 @@ class ZMQBroadcastSubscriber(SThread):
         while True:
 
             data = sock.recv()
-            log.debug("Incomming data from ["+self.zmq_endpoint+"]: "+data)
+            logging.debug("Incomming data from ["+self.zmq_endpoint+"]: "+data)
             d = json.loads(data)
             for k in d.keys():
                 if not (k == "cmd"):
                     self.context.getProcGraph().updateRegistry(d[k])
                 else:
 
-                    log.debug('Command dedected: '+str(d[k]))
+                    logging.debug('Command dedected: '+str(d[k]))
                     if(d[k]["type"] == "arp"):
                         pkt_id = d[k]["id"]
                         pkt = self.context.get_pkt_from_shelve(pkt_id)
@@ -198,7 +198,7 @@ class ZMQBroadcastSubscriber(SThread):
                             ep = d[k]["reply-to"]
                             p[0]["state"] = "ARP_OK"
                             exdisp = self.context.getExternalDispatch()
-                            log.debug("Sending ARP response: "+json.dumps(p))
+                            logging.debug("Sending ARP response: "+json.dumps(p))
                             exdisp.send_to_ep(p, ep)
 
 
@@ -219,12 +219,12 @@ class BroadcastListener(Thread):
         pass
 
     def run(self):
-        log.info("Starting broadcast listener on port "+str(self.__port))
+        logging.info("Starting broadcast listener on port "+str(self.__port))
         sok = socket(AF_INET, SOCK_DGRAM)
         try:
             sok.bind(('', self.__port))
         except Exception as er:
-            log.warn("Broadcast listener disabled (another is already running)")
+            logging.warn("Broadcast listener disabled (another is already running)")
             sok.close()
             return
 
@@ -234,16 +234,16 @@ class BroadcastListener(Thread):
                 data, wherefrom = sok.recvfrom(4096, 0)
 
             except(timeout):
-                #log.debug("Timeout")
+                #logging.debug("Timeout")
                 if self.stopped():
-                    log.debug("Exiting thread")
+                    logging.debug("Exiting thread")
                     break
                 else:
                     continue
-            log.debug("Broadcast received from: "+repr(wherefrom))
-            log.debug("Broadcast data: "+data)
+            logging.debug("Broadcast received from: "+repr(wherefrom))
+            logging.debug("Broadcast data: "+data)
             #datam = hashlib.md5(data).hexdigest()
-            #log.debug("MD5 data: "+datam)
+            #logging.debug("MD5 data: "+datam)
             self.handle(data,wherefrom)
 
             #reply = self.__context.dumpRegistry()
@@ -271,8 +271,8 @@ class BroadcastListener(Thread):
 
             #uid = d["uid"]
             #if not uid in self.bclist:
-            #    log.info("Discovered new peer: "+uid)
-            #    log.debug("New peer data: "+data)
+            #    logging.info("Discovered new peer: "+uid)
+            #    logging.debug("New peer data: "+data)
 
             #self.bclist[uid] = d
             #port = int(d["comms"][0]["port"])
@@ -282,10 +282,10 @@ class BroadcastListener(Thread):
             #self.tested[wherefrom[0]] = True
 
         except:
-            log.error("Broadcast receiving JSON error.")
-            log.debug("##############")
-            log.debug(data)
-            log.debug("##############")
+            logging.error("Broadcast receiving JSON error.")
+            logging.debug("##############")
+            logging.debug(data)
+            logging.debug("##############")
             pass
 
 
@@ -306,7 +306,7 @@ class Broadcaster(SThread):
         pass
 
     def run(self):
-        log.debug("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
+        logging.debug("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
         #sok = socket(AF_INET, SOCK_DGRAM)
         #sok.bind(('', 0))
         #sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
@@ -370,7 +370,7 @@ class FileServer(Thread):
         pass
 
     def run(self):
-        log.info("Starting file server on port "+str(self.__port)+" at root "+str(self.__root))
+        logging.info("Starting file server on port "+str(self.__port)+" at root "+str(self.__root))
 
         self.__server = tftpy.TftpServer(self.__root)
         self.__server.listen("0.0.0.0", TFTP_FILE_SERVER_PORT, 10)
@@ -401,7 +401,7 @@ class FileServer(Thread):
 #        self.poolqueue = {}
 #
 #    def run(self):
-#        log.info("Starting Rendezvous server on port "+str(self.__port))
+#        logging.info("Starting Rendezvous server on port "+str(self.__port))
 #        sok = socket(AF_INET, SOCK_DGRAM)
 #        sok.bind(('', self.__port))
 #        sok.settimeout(5)
@@ -409,25 +409,25 @@ class FileServer(Thread):
 #            try:
 #                data, addr = sok.recvfrom(32)
 #            except timeout:
-#                log.debug("RendezvousServer Timeout")
+#                logging.debug("RendezvousServer Timeout")
 #                if self.stopped():
-#                    log.debug("Exiting RendezvousServer thread")
+#                    logging.debug("Exiting RendezvousServer thread")
 #                    break
 #                else:
 #                    continue
 #
-#            log.info("Connection from %s:%d" % addr)
+#            logging.info("Connection from %s:%d" % addr)
 #            pool = data.strip()
 #            sok.sendto( "ok "+pool, addr )
 #            data, addr = sok.recvfrom(2)
 #            if data != "ok":
 #                continue
-#            log.info("Request received for pool: ", pool)
+#            logging.info("Request received for pool: ", pool)
 #            try:
 #                a, b = self.poolqueue[pool], addr
 #                sok.sendto( self.addr2bytes(a), b )
 #                sok.sendto( self.addr2bytes(b), a )
-#                log.info("Linked", pool)
+#                logging.info("Linked", pool)
 #                del self.poolqueue[pool]
 #            except KeyError:
 #                self.poolqueue[pool] = addr

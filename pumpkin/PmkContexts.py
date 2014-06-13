@@ -7,12 +7,14 @@ import shutil
 import imp
 import PmkSeed
 import re
+import logging
 
 import PmkShared
 
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
 from PmkBroadcast import *
+
 
 from PmkProcessGraph import *
 
@@ -96,6 +98,9 @@ class MainContext(object):
         def is_ghost(self):
             return self.__attrs.ghost
 
+        def is_speedy(self):
+            return self.__attrs.gonzales
+
         def get_broadcast_rate(self):
             return int(self.__attrs.brate)
 
@@ -104,7 +109,7 @@ class MainContext(object):
             _,tail = os.path.split(file)
             modname = tail[:-3]
             if( file[-2:] == "py"):
-                log.debug("Found seed: "+file)
+                logging.debug("Found seed: "+file)
                 file_header = ""
                 fh = open(file, "r")
                 fhd = fh.read()
@@ -287,7 +292,7 @@ class MainContext(object):
                 if str(ep[0]).startswith("tcp://"):
                     tcp_ep = ep
 
-            log.warning("Found no endpoint matching defaulting to tcp")
+            logging.warning("Found no endpoint matching defaulting to tcp")
             return tcp_ep
 
         def get_our_pub_ep(self, proto="tcp"):
@@ -309,7 +314,7 @@ class MainContext(object):
                     else:
                         s = ep
                     self.endpoints.append( (s, "zmq.INPROC", "zmq.PULL", 1) )
-                    log.debug("Added endpoint: "+s)
+                    logging.debug("Added endpoint: "+s)
 
                 elif prot == "ipc:":
                     if prts[1] == "*":
@@ -318,7 +323,7 @@ class MainContext(object):
                     else:
                         s = ep
                     self.endpoints.append( (s, "zmq.IPC", "zmq.PULL", 4) )
-                    log.debug("Added endpoint: "+s)
+                    logging.debug("Added endpoint: "+s)
 
                 elif prot == "tcp:":
                     addr = prts[1].split(":")
@@ -329,7 +334,7 @@ class MainContext(object):
 
                     s = "tcp://"+addr[0]+":"+addr[1]
                     self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
-                    log.debug("Added endpoint: "+s)
+                    logging.debug("Added endpoint: "+s)
 
                 #TODO uncomment once tftp is integrated
                 #elif prot == "tftp:":
@@ -346,14 +351,16 @@ class MainContext(object):
                 #
                 #    s = "tftp://"+addr[0]+":"+addr[1]+"/"+dir_path
                 #    self.endpoints.append( (s, "tftp.UDP", "tftp.SERVER") )
-                #    log.debug("Added endpoint: "+s)
+                #    logging.debug("Added endpoint: "+s)
                 else:
-                    log.warning("Unknown endpoint: "+ep)
+                    logging.warning("Unknown endpoint: "+ep)
 
 
         def log_to_file(self):
-            fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
-            log.addHandler(fh)
+            #fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
+            #logging.addHandler(fh)
+            pass
+
 
         def is_debug(self):
             attributes = self.__attrs
@@ -365,10 +372,11 @@ class MainContext(object):
 
         def set_attributes(self, attributes):
             self.__attrs = attributes
-            if attributes.debug:
-                log.setLevel(logging.DEBUG)
-            else:
-                log.setLevel(logging.INFO)
+            # logger = logging.getLogger()
+            # if attributes.debug:
+            #     logger.setLevel(logging.DEBUG)
+            # else:
+            #     logger.setLevel(logging.INFO)
 
             if self.__attrs.rabbitmq_host:
                 a = self.__attrs

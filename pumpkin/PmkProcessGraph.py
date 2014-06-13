@@ -60,7 +60,7 @@ class ProcessGraph(object):
                     c = i
                     break
             if c > -1:
-                log.info("Removed stale entry for seed "+name+" at "+ep)
+                logging.info("Removed stale entry for seed "+name+" at "+ep)
                 del e["endpoints"][c]
 
 
@@ -90,7 +90,7 @@ class ProcessGraph(object):
         tep = []
         self.rlock.acquire()
         if e["name"] in registry.keys():
-            log.debug("Updating peer: "+e["name"])
+            logging.debug("Updating peer: "+e["name"])
             #d is local registry
             #e is entry to update
             d = registry[e["name"]]
@@ -107,11 +107,11 @@ class ProcessGraph(object):
                         eep["priority"] = 10
                         self.__reset_ep_ttl(e["name"], eep["ep"])
                     d["endpoints"].append(eep)
-                    log.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
+                    logging.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
                     self.__reg_update = True
                     self.__display_graph = True
         else:
-            log.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
+            logging.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
             if loc == "remote":
                 for ep in e["endpoints"]:
                     ep["priority"] = 10
@@ -133,7 +133,7 @@ class ProcessGraph(object):
         self.__display_graph = False
 
     def getRoutes(self, tag):
-        #log.debug("Finding route for "+ tag)
+        #logging.debug("Finding route for "+ tag)
         if tag in self.tagroute:
             return self.tagroute[tag]
 
@@ -253,10 +253,10 @@ class ProcessGraph(object):
     def printRegistry(self):
         for x in self.registry.keys():
             e = self.registry[x]
-            log.info("Name: " + e["name"])
+            logging.info("Name: " + e["name"])
             for p in e["zmq_endpoint"]:
-                log.info("Endpoint: "+p)
-            log.info("Itype: " + e["itype"])
-            log.info("Istate: "+e["istate"])
-            log.info("Otype: " + e["itype"])
-            log.info("Ostate: "+e["istate"])
+                logging.info("Endpoint: "+p)
+            logging.info("Itype: " + e["itype"])
+            logging.info("Istate: "+e["istate"])
+            logging.info("Otype: " + e["itype"])
+            logging.info("Ostate: "+e["istate"])

@@ -40,7 +40,7 @@ class SeedType(type):
         #print(cls, name, cls.__module__)
         if name != "Seed":
             plugins.append(cls)
-            #log.debug("Adding: "+name)
+            #logging.debug("Adding: "+name)
             hplugins[name] = cls
 
 
@@ -259,7 +259,7 @@ class Seed(object):
             new_dst = self.context.getWorkingDir()+str(z[0])
             return z
         else:
-            log.error("Input file not found ["+source+"]")
+            logging.error("Input file not found ["+source+"]")
 
 
     def moveto_fileserver(self, filename):
@@ -304,10 +304,13 @@ class Seed(object):
                 del self.flight_pkts[pkt_id]
             self._lock_fpkts.release()
         else:
-            log.warning("Trying to ACK packet from another function!")
+            logging.warning("Trying to ACK packet from another function!")
         pass
 
     def is_duplicate(self, pkt):
+        if(self.context.is_speedy()):
+            return False
+
         pkt_id = self.get_pkt_id(pkt)
         self._lock_in_fpkts.acquire()
 
@@ -381,7 +384,8 @@ class Seed(object):
                 if(args[0]):
                     #msg = str(args[0])
                     for msg in args[0].split(','):
-                        if(msg.startswith("tftp://")):
+
+                        if ( (not (self.context.is_speedy())) and (msg.startswith("tftp://"))):
                             ip, port, rpath, file = self.__endpoint_parts(msg)
                             if ip in self.tftp_sessions.keys():
                                 client = self.tftp_sessions[ip]
@@ -415,7 +419,7 @@ class Seed(object):
 
 
             except Exception as e:
-                log.error(str(e))
+                logging.error(str(e))
                 self._lock_in_fpkts.acquire()
 
                 if pkt_id in self.in_flight_pkts.keys():
@@ -424,7 +428,7 @@ class Seed(object):
                 self._lock_in_fpkts.release()
                 pass
         else:
-            log.debug("Duplicate packet received: "+pkt_id)
+            logging.debug("Duplicate packet received: "+pkt_id)
             pass
 
     def split(self, pkt, *args):
@@ -517,7 +521,7 @@ class Seed(object):
             rabbitmq = self.context.get_rabbitmq()
             if rabbitmq:
                 for q in self.get_in_tag_list():
-                    log.debug("Adding RabbitMQ monitor: "+str(q))
+                    logging.debug("Adding RabbitMQ monitor: "+str(q))
                     rabbitmq.add_monitor_queue(q, self.__class__.__name__)
         pass
 
@@ -539,7 +543,7 @@ class Seed(object):
                 ttl = ttl - interval
                 if ttl <= 0:
                     ttl = reset
-                    log.debug("Resending packet: "+str(pkt))
+                    logging.debug("Resending packet: "+str(pkt))
                     state = pkt[0]["t_state"]
                     otype = pkt[0]["t_otype"]
                     self.context.getTx().put((self.get_group(), state, otype, pkt))
@@ -572,7 +576,7 @@ class Seed(object):
                 f = f +"/"
         d = os.path.dirname(f)
         if not os.path.exists(d):
-            log.debug(d + " does not exist, creating...")
+            logging.debug(d + " does not exist, creating...")
             os.makedirs(d, mode=0775)
             os.chmod(d,0775)
         pass
@@ -737,21 +741,25 @@ class Seed(object):
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
         pkt = copy.deepcopy(dpkt)
+        caller = "run"
 
-        #log.debug("Caller for dispatch function: "+inspect.stack()[1][3])
-        if str(msg).startswith("file://") and not self.is_final(pkt):
-            dst = self.context.getFileDir()
-            _,path,file,src,_ = self.fileparts(msg)
+        if not self.context.is_speedy():
+        #logging.debug("Caller for dispatch function: "+inspect.stack()[1][3])
+            if str(msg).startswith("file://") and not self.is_final(pkt):
+                dst = self.context.getFileDir()
+                _,path,file,src,_ = self.fileparts(msg)
 
-            if not os.path.isfile(dst+file):
-                shutil.move(src,dst)
-            else:
-                log.warn("Trying to overwrite: "+str(dst+file))
-            #msg = "tftp://"+self.context.get_local_ip()+"/"+file
-            msg = self.context.getFileServerEndPoint()+"/"+file
+                if not os.path.isfile(dst+file):
+                    shutil.move(src,dst)
+                else:
+                    logging.warn("Trying to overwrite: "+str(dst+file))
+                #msg = "tftp://"+self.context.get_local_ip()+"/"+file
+                msg = self.context.getFileServerEndPoint()+"/"+file
 
-        #very slow stack inspect
-        caller = inspect.stack()[1][3]
+        if not self.context.is_speedy():
+            #very slow stack inspect
+            caller = inspect.stack()[1][3]
+
         if self.is_fragment(pkt) and caller == "run":
             if not type:
                  otype = self.conf["return"][0]["type"]
@@ -821,7 +829,7 @@ class Seed(object):
                 lpkt[0]["state"] == "PACK_OK"
             else:
                 lpkt[0]["state"] == "DONE"
-            log.debug("Stop function reached ["+lpkt[0]["stop_func"]+"]")
+            logging.debug("Stop function reached ["+lpkt[0]["stop_func"]+"]")
             if self.context.with_acks():
                 self.ack_pkt(lpkt)
             return
@@ -837,6 +845,7 @@ class Seed(object):
                 shelve[str(pkt_id)] = pkt
                 self._lock_in_fpkts.release()
 
+            #Eats up memory due to queueing
             self.context.getTx().put((self.get_group(), tag,otype,lpkt))
 
         return lpkt
@@ -949,10 +958,10 @@ class Seed(object):
 
 
     def on_load(self):
-        log.warn("Class \""+self.__class__.__name__+"\" called on_load but not implimented.")
+        logging.warn("Class \""+self.__class__.__name__+"\" called on_load but not implimented.")
         pass
 
 
     def on_unload(self):
-        log.warn("Class \""+self.__class__.__name__+"\" called on_unload but not implimented.")
+        logging.warn("Class \""+self.__class__.__name__+"\" called on_unload but not implimented.")
         pass

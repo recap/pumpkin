@@ -27,18 +27,18 @@ class InternalDispatch(SThread):
         rx = self.context.getRx()
         while 1:
             pkts = rx.get(True)
-            log.debug("Packet received: \n"+pkts)
+            logging.debug("Packet received: \n"+pkts)
             pkt = json.loads(pkts)
             #Check for PACK
             if pkt[0]["state"] == "PACK_OK":
-                #log.debug("PACK packet: "+pkts)
+                #logging.debug("PACK packet: "+pkts)
                 seed = pkt[0]["last_func"]
 
                 if seed in PmkSeed.iplugins.keys():
                     klass = PmkSeed.iplugins[seed]
                     klass.pack_ok(pkt)
                     self._packed_pkts += 1
-                    #log.debug("PACKED pkts: "+str(self._packed_pkts))
+                    #logging.debug("PACKED pkts: "+str(self._packed_pkts))
                     continue
             # if pkt[0]["state"] == "MERGE":
             #     seed = pkt[0]["last_func"]
@@ -48,10 +48,10 @@ class InternalDispatch(SThread):
             #         klass.merge(pkt)
             #         #klass.pack_ok(pkt)
             #         #self._packed_pkts += 1
-            #         #log.debug("PACKED pkts: "+str(self._packed_pkts))
+            #         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
             #         continue
             if pkt[0]["state"] == "ARP_OK":
-                log.debug("Received ARP_OK: "+json.dumps(pkt))
+                logging.debug("Received ARP_OK: "+json.dumps(pkt))
                 self.context.put_pkt_in_shelve2(pkt)
                 continue
 
@@ -85,7 +85,7 @@ class Injector(SThread):
                 klass.rawrun()
 
             if self.stopped():
-                log.debug("Exiting thread "+self.__class__.__name__)
+                logging.debug("Exiting thread "+self.__class__.__name__)
                 break
             else:
                 continue
@@ -126,7 +126,7 @@ class RabbitMQMonitor():
                             time.sleep(1)
                         else:
                             self.cnt += 1
-                            log.debug("RabbitMQ received: "+ str(self.cnt))
+                            logging.debug("RabbitMQ received: "+ str(self.cnt))
 
 
                             pkt = json.loads(body)
@@ -145,13 +145,13 @@ class RabbitMQMonitor():
                     else:
                         time.sleep(1)
                 except pika.exceptions.ConnectionClosed as e:
-                    log.warning("Pika connection to "+self.queue+" closed.")
+                    logging.warning("Pika connection to "+self.queue+" closed.")
 
 
 
         # def callback(self, ch, method, properties, body):
         #     self.cnt += 1
-        #     log.debug("RabbitMQ received: "+ str(self.cnt))
+        #     logging.debug("RabbitMQ received: "+ str(self.cnt))
         #     pkt = json.loads(body)
         #     l = len(pkt)
         #     func = None
@@ -190,7 +190,7 @@ class RabbitMQMonitor():
         #     try:
         #         self.channel = self.connection.channel()
         #         self.channel.queue_declare(queue=str(queue2), passive=True,durable=True)
-        #         log.info("Using default rabbitmq queue: "+queue2)
+        #         logging.info("Using default rabbitmq queue: "+queue2)
         #         qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, queue2)
         #         qthread.start()
         #     except Exception as e:
@@ -231,7 +231,7 @@ class ZMQPacketMonitor(SThread):
 
     def proccess_pkt(self, pkts):
         pkt = json.loads(pkts)
-        log.debug("PACKET RECEIVED: "+pkts)
+        logging.debug("PACKET RECEIVED: "+pkts)
         #Check for PACK
         if pkt[0]["state"] == "PACK_OK":
 
@@ -241,7 +241,7 @@ class ZMQPacketMonitor(SThread):
                 klass = PmkSeed.iplugins[seed]
                 klass.pack_ok(pkt)
                 self._packed_pkts += 1
-                #log.debug("PACKED pkts: "+str(self._packed_pkts))
+                #logging.debug("PACKED pkts: "+str(self._packed_pkts))
                 return True
         # if pkt[0]["state"] == "MERGE":
         #     seed = pkt[0]["last_func"]
@@ -251,10 +251,10 @@ class ZMQPacketMonitor(SThread):
         #         klass.merge(pkt)
         #         #klass.pack_ok(pkt)
         #         #self._packed_pkts += 1
-        #         #log.debug("PACKED pkts: "+str(self._packed_pkts))
+        #         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
         #         continue
         if pkt[0]["state"] == "ARP_OK":
-            log.debug("Received ARP_OK: "+json.dumps(pkt))
+            logging.debug("Received ARP_OK: "+json.dumps(pkt))
             self.context.put_pkt_in_shelve2(pkt)
             return True
 
@@ -288,19 +288,19 @@ class ZMQPacketMonitor(SThread):
                 del msg
 
                 # if "REVERSE" in msg:
-                #     log.debug(msg)
+                #     logging.debug(msg)
                 #     ep = msg.split("::")[1]
-                #     log.debug("Reverse connecting to: "+ep)
+                #     logging.debug("Reverse connecting to: "+ep)
                 #     rec = self.zmq_cntx.socket(zmq.PULL)
                 #     rec.connect(ep)
                 #     msg = rec.recv()
-                #     log.debug("Received msg: "+msg)
+                #     logging.debug("Received msg: "+msg)
                 #     #continue
                 #self.rx.put(msg)
-                #log.debug("Message: "+str(msg))
+                #logging.debug("Message: "+str(msg))
             except zmq.ZMQError as e:
                 if self.stopped():
-                    log.debug("Exiting thread "+  self.__class__.__name__)
+                    logging.debug("Exiting thread "+  self.__class__.__name__)
                     soc.close()
                     #zmq_cntx.destroy()
                     #zmq_cntx.term()
@@ -308,10 +308,10 @@ class ZMQPacketMonitor(SThread):
                 else:
                     continue
             # except Exception as e:
-            #     log.error(str(e))
+            #     logging.error(str(e))
 
             #except MemoryError as e:
-            #    log.error(str(e))
+            #    logging.error(str(e))
             #    sys.exit(1)
 
         pass
@@ -342,17 +342,17 @@ class ZMQPacketMonitor(SThread):
 #                    state = fc["state"]
 #                    if not ((int(state) & DRPackets.READY_STATE) == 1):
 #                        func = fc["func"]
-#                        log.debug("Trying invoking local function: "+str(func))
+#                        logging.debug("Trying invoking local function: "+str(func))
 #                        if func in DRPlugin.hplugins:
 #                            klass = DRPlugin.hplugins[func](self.context)
 #                            #klass.on_load()
 #                            rt = klass.run(pkt_data)
 #                            pkt_data = rt
 #                            #xf = klass()
-#                            log.debug("RESULT: "+str(rt))
+#                            logging.debug("RESULT: "+str(rt))
 #                            fc["state"] = DRPackets.READY_STATE
 #                            opkt = "##START-CONF" + json.dumps(d) + "##END-CONF\n"+str(rt)
-#                            log.debug("Out PKT: "+ str(opkt))
+#                            logging.debug("Out PKT: "+ str(opkt))
 #                            #tx.put(opkt)
 #
 #                            #foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
@@ -360,22 +360,22 @@ class ZMQPacketMonitor(SThread):
 #                            #fout.write(strg)
 #                            #fout.flush()
 #                            #fout.close()
-#                            #log.debug("HERE 1")
+#                            #logging.debug("HERE 1")
 #                            #tx.put(d,True)
-#                            #log.debug("HERE 2")
+#                            #logging.debug("HERE 2")
 #                            #break
 #
-#                            #log.debug("Return result: "+str(strg))
+#                            #logging.debug("Return result: "+str(strg))
 #                        else:
-#                            log.debug("No local function "+func+" found")
+#                            logging.debug("No local function "+func+" found")
 #
 #
 #                    else:
-#                        log.debug("Ready moving on")
+#                        logging.debug("Ready moving on")
 #
 #
 #
-#                #log.debug("Packet dispatch: "+str(pkt_header))
+#                #logging.debug("Packet dispatch: "+str(pkt_header))
 
 
 

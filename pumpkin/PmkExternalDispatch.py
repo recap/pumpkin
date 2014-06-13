@@ -75,7 +75,7 @@ class ExternalDispatch(SThread):
                 disp.dispatch(json.dumps(pkt))
 
             else:
-                log.error("No dispatchers found for: "+ep)
+                logging.error("No dispatchers found for: "+ep)
 
         pass
     def send_to_last(self, pkt):
@@ -95,7 +95,7 @@ class ExternalDispatch(SThread):
                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
             else:
-                log.error("No dispatchers found for: "+ep)
+                logging.error("No dispatchers found for: "+ep)
 
         pass
 
@@ -130,7 +130,7 @@ class ExternalDispatch(SThread):
         while 1:
             routes = self.graph.getRoutes(otag)
             if routes:
-                 log.debug("Found routes: "+json.dumps(routes))
+                 logging.debug("Found routes: "+json.dumps(routes))
                  break
             else:
                 time.sleep(5)
@@ -183,7 +183,7 @@ class ExternalDispatch(SThread):
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
-                                log.error("No dispatchers found for: "+ep)
+                                logging.error("No dispatchers found for: "+ep)
         pass
 
     def __loop_body(self):
@@ -204,7 +204,7 @@ class ExternalDispatch(SThread):
             self.__loop_body()
 
             if self.stopped():
-                log.debug("Exiting thread "+self.__class__.__name__)
+                logging.debug("Exiting thread "+self.__class__.__name__)
                 for ep in self.dispatchers.keys():
                     disp = disp = self.dispatchers[ep]
                     disp.close()
@@ -219,7 +219,7 @@ class ExternalDispatch(SThread):
 
         while True:
             group, state, otype, pkt = tx.get(True)
-            #log.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
+            #logging.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
             otag = group+":"+otype+":"+state
             ntag = None
             if pkt[1]:
@@ -234,15 +234,15 @@ class ExternalDispatch(SThread):
 
             while 1:
                 routes = graph.getRoutes(otag)
-                log.debug("Found routes: "+json.dumps(routes))
+                logging.debug("Found routes: "+json.dumps(routes))
                 if routes:
                     break
                 else:
-                    #log.debug("No route found for: "+otag)
+                    #logging.debug("No route found for: "+otag)
                     time.sleep(5)
 
             for r in routes:
-                #log.debug("Route: "+str(r))
+                #logging.debug("Route: "+str(r))
                 dcpkt = copy.copy(pkt)
                 rtag = r["otype"]+":"+r["ostate"]
                 if (ntag and ntag == rtag) or not ntag:
@@ -258,11 +258,11 @@ class ExternalDispatch(SThread):
                     if pep:
                         entry = pep
                         ep = pep["ep"]
-                        #log.debug("Route found for function "+r["name"]+": "+pep["ep"])
+                        #logging.debug("Route found for function "+r["name"]+": "+pep["ep"])
                         next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                         dcpkt.append(next_hop)
                         #pkt.remove( pkt[len(pkt)-1] )
-                        #log.debug(json.dumps(pkt))
+                        #logging.debug(json.dumps(pkt))
                         try:
                             if ep in self.dispatchers.keys():
                                 disp = self.dispatchers[ep]
@@ -283,10 +283,10 @@ class ExternalDispatch(SThread):
                                     #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                                 else:
-                                    log.error("No dispatchers found for: "+ep)
+                                    logging.error("No dispatchers found for: "+ep)
                         except Exception,e:
 
-                            log.error("Error sending packet, requeueing: "+e.message)
+                            logging.error("Error sending packet, requeueing: "+e.message)
                             #Requeue
                             tx.put((group, state, otype, pkt))
 
@@ -294,11 +294,11 @@ class ExternalDispatch(SThread):
                 #if r["endpoints"][0]:
                 #    entry = r["endpoints"][0]
                 #    ep = r["endpoints"][0]["ep"]
-                #    log.debug(r["endpoints"][0]["ep"])
+                #    logging.debug(r["endpoints"][0]["ep"])
                 #    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
                 #    dcpkt.append(next_hop)
                 #    #pkt.remove( pkt[len(pkt)-1] )
-                #    #log.debug(json.dumps(pkt))
+                #    #logging.debug(json.dumps(pkt))
                 #    if ep in self.dispatchers.keys():
                 #        disp = self.dispatchers[ep]
                 #        disp.dispatch(json.dumps(dcpkt))
@@ -313,13 +313,13 @@ class ExternalDispatch(SThread):
                 #            disp.connect(ep)
                 #            disp.dispatch(json.dumps(dcpkt))
                 #        else:
-                #            log.error("No dispatchers found for: "+ep)
+                #            logging.error("No dispatchers found for: "+ep)
 
 
 
 
             if self.stopped():
-                log.debug("Exiting thread "+self.__class__.__name__)
+                logging.debug("Exiting thread "+self.__class__.__name__)
                 for ep in self.dispatchers.keys():
                     disp = disp = self.dispatchers[ep]
                     disp.close()
@@ -343,7 +343,7 @@ class EndpointPicker(object):
         if no_entries == 0:
             return False
 
-        log.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
+        logging.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
         if no_entries == 1:
             return route["endpoints"][0]
         if route["remoting"] == False and no_entries > 0:
@@ -417,9 +417,9 @@ class ZMQPacketDispatch(Dispatch):
         self.context = context
         self.soc = None
         self.ep = None
-        log.debug("Created ZMQPacketDispatch")
+        logging.debug("Created ZMQPacketDispatch")
         if (zmqcontext == None):
-            log.debug("Creating zmq context")
+            logging.debug("Creating zmq context")
             self.zmq_cntx = zmq.Context()
         else:
             self.zmq_cntx = zmqcontext
@@ -428,15 +428,15 @@ class ZMQPacketDispatch(Dispatch):
         parts = re.split('://|:', ep)
 
         if str(parts[0]).lower() == "tcp":
-            log.debug("Checking ep..."+parts[1]+" "+parts[2])
+            logging.debug("Checking ep..."+parts[1]+" "+parts[2])
             sock = socket(AF_INET, SOCK_STREAM)
             result = sock.connect_ex((parts[1], int(parts[2])))
             if result == 0:
-                log.debug("ep open: "+ep)
+                logging.debug("ep open: "+ep)
                 return True
             else:
-                log.debug("ep closed: "+ep)
-                log.warn("Detected closed ep: "+ep)
+                logging.debug("ep closed: "+ep)
+                logging.warn("Detected closed ep: "+ep)
                 return False
         return True
 
@@ -445,7 +445,7 @@ class ZMQPacketDispatch(Dispatch):
         self.ep = connect_to
         #self.soc.setsockopt(zmq.HWM, 1)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
-        log.debug("ZMQ connecting to :"+str(connect_to))
+        logging.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
 
     def dispatch(self, pkt):
@@ -453,7 +453,7 @@ class ZMQPacketDispatch(Dispatch):
         #try:
             #if not self.__check_ep(self.ep):
             #    raise Exception("Endpoint closed")
-            log.debug("SENDING")
+            logging.debug("SENDING")
             self.soc.send(pkt, zmq.NOBLOCK)
 
         #except zmq.ZMQError as e:
@@ -468,9 +468,9 @@ class ZMQPacketVentilate(Dispatch):
         Dispatch.__init__(self)
         self.context = context
         self.soc = None
-        log.debug("Created ZMQPacketVentilate")
+        logging.debug("Created ZMQPacketVentilate")
         if (zmqcontext == None):
-            log.debug("Creating zmq context")
+            logging.debug("Creating zmq context")
             self.zmq_cntx = zmq.Context()
         else:
             self.zmq_cntx = zmqcontext
@@ -481,7 +481,7 @@ class ZMQPacketVentilate(Dispatch):
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
-        log.debug("ZMQ connecting to :"+str(connect_to))
+        logging.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
         self.soc.send("REVERSE::ipc://127.0.0.1:7777")
 
@@ -489,10 +489,10 @@ class ZMQPacketVentilate(Dispatch):
 
         try:
             time.sleep(3)
-            log.debug("Sending")
+            logging.debug("Sending")
             self.sender.send(pkt)
         except zmq.ZMQError as e:
-            log.error(str(e))
+            logging.error(str(e))
 
     def close(self):
         self.soc.close()
@@ -504,7 +504,7 @@ class RabbitMQDispatch(Dispatch):
         self.connection = None
         self.channel = None
         self.otag = None
-        log.debug("Created RabbitMQDisptach")
+        logging.debug("Created RabbitMQDisptach")
         pass
 
     def __open_rabbitmq_connection(self):
@@ -537,30 +537,30 @@ class RabbitMQDispatch(Dispatch):
 #
 #    def run(self):
 #        tx = self.context.getTx()
-#        log.debug("HERE 3")
+#        logging.debug("HERE 3")
 #        d = tx.get(True)
-#        log.debug("HERE 4")
+#        logging.debug("HERE 4")
 #        foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
 #        foutnames = d["container-id"]+d["box-id"]+".pkt"
 #        for fc in d["invoke"]:
 #            state = fc["state"]
 #            if not ((int(state) & DRPackets.READY_STATE) == 1):
 #                func = fc["func"]
-#                log.debug("Function "+func)
+#                logging.debug("Function "+func)
 #                peer = self.context.getMePeer().getPeerForFunc(func)
 #                if not peer == None:
 #                    comm = peer.getTftpComm()
-#                    log.debug("Got comm")
+#                    logging.debug("Got comm")
 #                    if not comm == None:
-#                        log.debug("Comm to "+comm.host+" "+str(comm.port))
+#                        logging.debug("Comm to "+comm.host+" "+str(comm.port))
 #                        client = tftpy.TftpClient(str(comm.host), int(comm.port))
-#                        log.debug("Files: "+foutnames+" "+foutname)
+#                        logging.debug("Files: "+foutnames+" "+foutname)
 #                        tmpf = open(foutname, "r")
 #                        fstr = tmpf.read()
-#                        log.debug("File: "+fstr)
+#                        logging.debug("File: "+fstr)
 #                        tmpf.close()
 #                        client.upload(foutnames.encode('utf-8'),foutname.encode('utf-8'))
 #                        #client.upload("test.pkt","./tx/test.pkt")
 #                        break
 #                else:
-#                    log.warn("No peer found for function "+func)
+#                    logging.warn("No peer found for function "+func)

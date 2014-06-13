@@ -58,35 +58,35 @@ class PacketFileMonitor(SThread):
 
             def process_IN_MOVE_SELF(self, event):
                 pktf = os.path.join(event.path, event.name)
-                log.info("MOVE SELF "+pktf)
+                logging.info("MOVE SELF "+pktf)
                 try:
                     self.load_pkt(pktf)
                 except Exception as e:
-                    log.error("Loading paket: "+pktf)
+                    logging.error("Loading paket: "+pktf)
 
             def process_IN_MOVED_TO(self, event):
                 pktf = os.path.join(event.path, event.name)
-                log.info("MOVE TO "+pktf)
+                logging.info("MOVE TO "+pktf)
                 try:
                     self.load_pkt(pktf)
                 except Exception as e:
-                    log.error("Loading paket: "+pktf)
+                    logging.error("Loading paket: "+pktf)
 
             def process_IN_CLOSE_WRITE(self, event):
                 try:
                     pktf = os.path.join(event.path, event.name)
-                    log.info("INOTIFY CLOSE_WRITE 2: " + str(pktf))
+                    logging.info("INOTIFY CLOSE_WRITE 2: " + str(pktf))
                     self.load_pkt(pktf)
 
                 except Exception as e:
-                    log.error("Loading paket: "+pktf)
+                    logging.error("Loading paket: "+pktf)
 
 
 
 
 
             def process_IN_DELETE(self, event):
-                print log.debug("Remove: %s" %  os.path.join(event.path, event.name))
+                print logging.debug("Remove: %s" %  os.path.join(event.path, event.name))
 
 
         class Seedmp(ProcessEvent):
@@ -109,7 +109,7 @@ class PacketFileMonitor(SThread):
                     seed_fp = os.path.join(event.path, event.name)
                     self.load_seed(seed_fp)
                 except Exception as e:
-                    log.error("Loading paket: "+seed_fp)
+                    logging.error("Loading paket: "+seed_fp)
                     pass
 
             def process_IN_CLOSE_WRITE(self, event):
@@ -117,18 +117,18 @@ class PacketFileMonitor(SThread):
                     seed_fp = os.path.join(event.path, event.name)
                     self.load_seed(seed_fp)
                 except Exception as e:
-                    log.error("Loading paket: "+seed_fp)
+                    logging.error("Loading paket: "+seed_fp)
                     pass
 
             def process_IN_DELETE(self, event):
-                print log.debug("Remove: %s" %  os.path.join(event.path, event.name))
+                print logging.debug("Remove: %s" %  os.path.join(event.path, event.name))
 
         if self.ext == "pkt":
             notifier = Notifier(wm, PTmp(self.context))
             wdd = wm.add_watch(self.dir, mask, rec=True)
 
         if self.ext == "py":
-            log.debug("Adding watch on: "+self.dir)
+            logging.debug("Adding watch on: "+self.dir)
             notifier = Notifier(wm, Seedmp(self.context))
             wdd = wm.add_watch(self.dir, mask, rec=True)
 
