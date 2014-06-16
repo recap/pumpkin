@@ -114,6 +114,13 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
             s.wfile.write(str(rep))
 
+        if s.path =="/routing.json":
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            rep  = context.getProcGraph().dumpRoutingTable()
+
+            s.wfile.write(str(rep))
 
         if s.path =="/packets.json":
             s.send_response(200)

@@ -71,15 +71,22 @@ class ProcessGraph(object):
             self.ttl[key] -= self.INT_TTL
             if self.ttl[key] <= 0:
                 self.__del_ep(key)
+                self.__reg_update = True
                 keys_for_removal.append(key)
 
 
         for rk in keys_for_removal:
             del self.ttl[rk]
 
+        if self.__reg_update == True:
+            self.graph = self.buildGraph()
+
         self.rlock.release()
 
         threading.Timer(self.INT_TTL, self.__update_registry_t).start()
+
+    def dumpRoutingTable(self):
+        return str(self.tagroute)
 
     def updateRegistry(self, entry, loc="remote"):
 
