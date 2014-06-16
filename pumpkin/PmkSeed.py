@@ -383,7 +383,7 @@ class Seed(object):
                 nargs = []
                 if(args[0]):
                     #msg = str(args[0])
-                    for msg in args[0].split(','):
+                    for msg in args[0].split('|,|'):
 
                         if ( (not (self.context.is_speedy())) and (msg.startswith("tftp://"))):
                             ip, port, rpath, file = self.__endpoint_parts(msg)
