@@ -22,7 +22,7 @@ from PmkShared import *
 
 
 class tx(Queue):
-    def __init__(self, maxsize=100):
+    def __init__(self, maxsize=0):
         Queue.__init__(self, maxsize)
         pass
 
