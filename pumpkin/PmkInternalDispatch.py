@@ -12,8 +12,8 @@ from PmkShared import *
 from Queue import *
 
 class rx(Queue):
-    def __init__(self):
-        Queue.__init__(self)
+    def __init__(self, maxsize=0):
+        Queue.__init__(self, maxsize)
         pass
 
 class InternalDispatch(SThread):

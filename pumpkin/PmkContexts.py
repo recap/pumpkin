@@ -46,7 +46,8 @@ class MainContext(object):
             self.__attrs = None
             self.__supernodes = []
             self.__threads = []
-            self.rx = rx()
+
+            self.rx = rx(100000)
             self.tx = tx(100000)
 
             self.cmd = cmd()
