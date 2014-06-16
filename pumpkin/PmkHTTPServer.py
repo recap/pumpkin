@@ -267,6 +267,23 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # s.wfile.write("</body></html>")
 
 
+
+        if s.path == "/seeds.json":
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            s.wfile.write("[")
+
+            rep = ""
+            for x in PmkSeed.iplugins.keys():
+               klass = PmkSeed.iplugins[x]
+               rep += "{ \"name\" : \""+klass.get_fullname()+"\"}"
+               rep += ","
+            if len(rep) > 0:
+                rep = rep[:-1]
+            s.wfile.write(rep)
+            s.wfile.write("]")
+
         if s.path == "/":
             s.send_response(200)
             s.send_header("Content-type", "text/html")

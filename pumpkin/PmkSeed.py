@@ -966,6 +966,10 @@ class Seed(object):
     def get_name(self):
         return self.__class__.__name__
 
+    def get_fullname(self):
+        fname = self.get_group()+":"+self.__class__.__name__
+        return fname
+
 
     def on_load(self):
         logging.warn("Class \""+self.__class__.__name__+"\" called on_load but not implimented.")
