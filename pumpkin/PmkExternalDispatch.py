@@ -22,8 +22,8 @@ from PmkShared import *
 
 
 class tx(Queue):
-    def __init__(self):
-        Queue.__init__(self)
+    def __init__(self, maxsize=100):
+        Queue.__init__(self, maxsize)
         pass
 
 class ExternalDispatch(SThread):

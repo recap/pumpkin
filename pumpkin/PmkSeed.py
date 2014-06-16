@@ -856,7 +856,10 @@ class Seed(object):
                 self._lock_in_fpkts.release()
 
             #Eats up memory due to queueing
-            self.context.getTx().put((self.get_group(), tag,otype,lpkt))
+            #self.context.getTx().put((self.get_group(), tag,otype,lpkt))
+            #txx = self.context.getTx()
+            #logging.debug("Tx Queue: "+str(txx.maxsize))
+            self.context.getTx().put((self.get_group(), tag,otype,lpkt), True)
 
         return lpkt
 
