@@ -48,6 +48,8 @@ class MainContext(object):
             self.__threads = []
             self.rx = rx()
             self.tx = tx()
+            rx.maxsize = 100
+            tx.maxsize = 100
             self.cmd = cmd()
             self.registry = {}
             self.__ip = "127.0.0.1"
