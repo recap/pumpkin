@@ -456,6 +456,15 @@ class Seed(object):
                 return True
         return False
 
+    def is_enabled(self):
+        #TODO: remove
+        return True
+
+        if "enabled" in self.conf.keys():
+            if self.conf["enabled"] == True:
+                return True
+        return False
+
     def get_group(self):
         if "group" in self.conf.keys():
             return self.conf["group"]
@@ -559,6 +568,7 @@ class Seed(object):
         js = '{ "name" : "'+self.get_group()+':'+self.get_name()+'", \
         "group" : "'+self.get_group()+'",\
         "remoting" : "'+str(self.is_remoting())+'",\
+        "enabled" : "'+str(self.is_enabled())+'",\
        "endpoints" : [ '+self.__getEps()+' ],' \
        ''+self.get_parameters()+',' \
        ''+self.getreturn()+'}'

@@ -59,8 +59,9 @@ class filterenglish(PmkSeed.Seed):
         words = set(nltk.wordpunct_tokenize(text))
         return len(words & ENGLISH_STOPWORDS) > len(words & NON_ENGLISH_STOPWORDS)
 
-    def run(self, pkt, tweet):
-        #print "RECEIVED TWEET: "+tweet
+    def run(self, pkt, data):
+        tweet = data
+        print "RECEIVED TWEET: "+tweet
         m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
         if m:
             tw = m.group(2)

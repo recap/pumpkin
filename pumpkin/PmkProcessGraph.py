@@ -148,6 +148,32 @@ class ProcessGraph(object):
 
         return bep
 
+    def stopSeed(self, seed):
+        self.rlock.acquire()
+        if seed in self.registry.keys():
+            entry = self.registry[seed]
+            entry["enabled"] = "False"
+            self.__reg_update = True
+            self.__display_graph = True
+
+        if self.__reg_update == True:
+            self.graph = self.buildGraph()
+        self.rlock.release()
+        return True
+
+    def startSeed(self, seed):
+        self.rlock.acquire()
+        if seed in self.registry.keys():
+            entry = self.registry[seed]
+            entry["enabled"] = "True"
+            self.__reg_update = True
+            self.__display_graph = True
+
+        if self.__reg_update == True:
+            self.graph = self.buildGraph()
+        self.rlock.release()
+        return True
+
     def getExternalEndpoints(self, route):
         eps = []
         bep = None
@@ -163,28 +189,31 @@ class ProcessGraph(object):
 
     def buildGraph(self):
         self.tagroute = {}
+        self.graph = nx.DiGraph()
         G = self.graph
+
         for xo in self.registry.keys():
             eo = self.registry[xo]
-            #for isp in eo["istate"].split('|'):
-            #    for osp in eo["ostate"].split('|'):
-            for isp in re.split('\||\&', eo["istate"]):
-                for osp in re.split('\||\&', eo["ostate"]):
+            if (eo["enabled"] == "True"):
+                #for isp in eo["istate"].split('|'):
+                #    for osp in eo["ostate"].split('|'):
+                for isp in re.split('\||\&', eo["istate"]):
+                    for osp in re.split('\||\&', eo["ostate"]):
 
-                    istype = eo["itype"]+":"+isp
-                    if istype == "NONE:NONE":
-                           istype = "INJECTION"
-                    istype = eo["group"] +":"+ istype
-                    ostype = eo["otype"]+":"+osp
-                    if ostype == "NONE:NONE":
-                        ostype = "EXTRACTION"
-                    ostype = eo["group"] +":"+ ostype
-                    G.add_edge(istype, ostype, function=eo["name"])
-                if istype in self.tagroute.keys():
-                    self.tagroute[istype].append(eo)
-                else:
-                    self.tagroute[istype] = []
-                    self.tagroute[istype].append(eo)
+                        istype = eo["itype"]+":"+isp
+                        if istype == "NONE:NONE":
+                               istype = "INJECTION"
+                        istype = eo["group"] +":"+ istype
+                        ostype = eo["otype"]+":"+osp
+                        if ostype == "NONE:NONE":
+                            ostype = "EXTRACTION"
+                        ostype = eo["group"] +":"+ ostype
+                        G.add_edge(istype, ostype, function=eo["name"])
+                    if istype in self.tagroute.keys():
+                        self.tagroute[istype].append(eo)
+                    else:
+                        self.tagroute[istype] = []
+                        self.tagroute[istype].append(eo)
 
 
         return G
@@ -234,7 +263,7 @@ class ProcessGraph(object):
             #Filter out endpoints with less than priority 15. Any priority less than 5
             #is reserved for local communication such as IPC, INPROC, FILES and remote TCP
             f["endpoints"][:] = [x for x in f["endpoints"] if self.__determine(x)]
-            if len(f["endpoints"]) == 0:
+            if len(f["endpoints"]) == 0 or (f["enabled"] == "False"):
                 tmp_keys.append(k)
 
         for rk in tmp_keys:

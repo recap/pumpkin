@@ -107,6 +107,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
             s.wfile.write(str(rep))
 
+        if s.path =="/extgraph.json":
+            rep = context.getProcGraph().dumpExternalRegistry()
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            s.wfile.write(str(rep))
+
+
         if s.path =="/packets.json":
             s.send_response(200)
             s.send_header("Content-type", "application/json")
@@ -183,6 +191,33 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 rep = "{unavailable_info}"
 
             s.wfile.write(str(rep))
+
+        if "stop" in s.path:
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            parts = s.path.split("?")
+            func_name = parts[1]
+            rep = context.getProcGraph().stopSeed(func_name)
+            if rep:
+                s.wfile.write("OK")
+            else:
+                s.wfile.write("ERROR")
+
+        if "start" in s.path:
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            parts = s.path.split("?")
+            func_name = parts[1]
+            rep = context.getProcGraph().startSeed(func_name)
+
+            if rep:
+                s.wfile.write("OK")
+            else:
+                s.wfile.write("ERROR")
 
 
 
