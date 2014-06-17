@@ -274,7 +274,7 @@ class ZMQPacketMonitor(SThread):
         #context = zmq.Context()
         soc = self.zmq_cntx.socket(zmq.PULL)
         soc.setsockopt(zmq.RCVBUF, 2000)
-        #soc.setsockopt(zmq.HWM, 5)
+        #soc.setsockopt(zmq.HWM, 100)
         soc.bind(self.bind_to)
         #soc.setsockopt(zmq.HWM, 1000)
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
