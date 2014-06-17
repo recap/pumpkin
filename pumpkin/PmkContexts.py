@@ -442,6 +442,14 @@ class MainContext(object):
         def getTx(self):
             return self.tx
 
+        def get_rx_size(self):
+            s = self.rx.qsize()
+            return s
+
+        def get_tx_size(self):
+            s = self.tx.qsize()
+            return s
+
         def get_cmd_queue(self):
             return self.cmd
 

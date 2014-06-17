@@ -114,6 +114,18 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
             s.wfile.write(str(rep))
 
+        if s.path =="/txrx.json":
+
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            rx_size = context.get_rx_size()
+            tx_size = context.get_tx_size()
+
+            rep = '{"rx_size" : "'+str(rx_size)+'", "tx_size" : "'+str(tx_size)+'"}'
+
+            s.wfile.write(str(rep))
+
         if s.path =="/routing.json":
             s.send_response(200)
             s.send_header("Content-type", "application/json")
@@ -148,14 +160,16 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             ip = str(context.get_local_ip())
             if not ip:
                 ip = "NONE"
-            rep = '{"timestamp":'+str(tm)+',"ip":'+ip+'}\n'
+            rep = "["
+            rep += '{"timestamp" : '+str(tm)+',"ip" : "'+ip+'"},\n'
             rep = rep + "{"
             for x in PmkSeed.iplugins.keys():
                klass = PmkSeed.iplugins[x]
-               rep = rep + klass.get_name() + ","
+               ent = "\""+klass.get_name() +"\" : \""+ str(klass.is_enabled())+"\""
+               rep = rep + ent + ","
 
             rep = rep[0:len(rep)-1]
-            rep = rep + "}"
+            rep = rep + "},"
 
             total_in = 0
             total_out = 0
@@ -165,8 +179,18 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                tin, tout = klass.get_all_counters()
                total_in += tin
                total_out += tout
-            rep += '\n'
+            rep += ',\n'
             rep = rep + '{"total_in":'+str(total_in)+',"total_out":'+str(total_out)+'}'
+            rep += ","
+
+            rx_size = context.get_rx_size()
+            tx_size = context.get_tx_size()
+
+            rep += '\n'
+            rep += '{"rx_size" : "'+str(rx_size)+'", "tx_size" : "'+str(tx_size)+'"}'
+
+            rep += "]"
+
             s.wfile.write(str(rep))
 
         if "status" in s.path:
