@@ -64,6 +64,8 @@ class ProcessGraph(object):
                 del e["endpoints"][c]
 
 
+
+
     def __update_registry_t(self):
         self.rlock.acquire()
         keys_for_removal = []
@@ -201,7 +203,7 @@ class ProcessGraph(object):
 
         for xo in self.registry.keys():
             eo = self.registry[xo]
-            if (eo["enabled"] == "True"):
+            if (eo["enabled"] == "True") and (len(eo["endpoints"]) > 0):
                 #for isp in eo["istate"].split('|'):
                 #    for osp in eo["ostate"].split('|'):
                 for isp in re.split('\||\&', eo["istate"]):
