@@ -149,6 +149,7 @@ class ExternalDispatch(SThread):
 
                     pep = self.ep_sched.pick_route(r)
                     if not pep:
+                        logging.debug("No Route...")
                         continue
                     oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                     dcpkt[0]["last_contact"] = oep[0]
@@ -251,6 +252,7 @@ class ExternalDispatch(SThread):
                     ##eep = self.context.getProcGraph().getExternalEndpoints(r)
                     pep = ep_sched.pick_route(r)
                     if not pep:
+                        logging.error("No Route...")
                         continue
                     oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                     dcpkt[0]["last_contact"] = oep[0]
