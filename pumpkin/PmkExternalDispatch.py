@@ -342,27 +342,31 @@ class EndpointPicker(object):
     def pick_route(self, route):
         route_id = route["name"]
         no_entries = len(route["endpoints"])
-        if no_entries == 0:
+        try:
+            if no_entries == 0:
+                return False
+
+            logging.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
+            if no_entries == 1:
+                return route["endpoints"][0]
+            if route["remoting"] == False and no_entries > 0:
+                return route["endpoints"][0]
+
+
+            if not route_id in self.route_index.keys():
+                self.route_index[route_id] = -1
+
+            s_idx = self.route_index[route_id]
+            while 1:
+                s_idx += 1
+                s_idx = s_idx % no_entries
+                ep = route["endpoints"][s_idx]
+                if not self.is_local_ext_ep(ep):
+                    self.route_index[route_id] = s_idx
+                    return ep
+        except IndexError:
             return False
-
-        logging.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
-        if no_entries == 1:
-            return route["endpoints"][0]
-        if route["remoting"] == False and no_entries > 0:
-            return route["endpoints"][0]
-
-
-        if not route_id in self.route_index.keys():
-            self.route_index[route_id] = -1
-
-        s_idx = self.route_index[route_id]
-        while 1:
-            s_idx += 1
-            s_idx = s_idx % no_entries
-            ep = route["endpoints"][s_idx]
-            if not self.is_local_ext_ep(ep):
-                self.route_index[route_id] = s_idx
-                return ep
+            pass
 
         #
         # for ep in route['endpoints']:
