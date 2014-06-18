@@ -62,8 +62,6 @@ class InternalDispatch(SThread):
             if ":" in func:
                 func = func.split(":")[1]
 
-            print "FUNC "+func
-
 
             if func in PmkSeed.iplugins.keys():
                 klass = PmkSeed.iplugins[func]
@@ -284,7 +282,8 @@ class ZMQPacketMonitor(SThread):
         while True:
             try:
                 msg = soc.recv()
-                self.proccess_pkt(msg)
+                self.context.getRx().put(msg)
+                #self.proccess_pkt(msg)
                 del msg
 
                 # if "REVERSE" in msg:
