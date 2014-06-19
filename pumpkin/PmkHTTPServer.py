@@ -300,6 +300,32 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # s.wfile.write("<body><p>Submitted Packet: "+pkt_id+" "+str(dt)+"</p>")
             # s.wfile.write("</body></html>")
 
+        if "deploy" in s.path:
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            parts = s.path.split("?")
+            container = "None"
+            print parts[1]
+            seed_dec = base64.decodestring(parts[1])
+
+            logging.debug("Decoded seed: "+seed_dec)
+
+            m = re.search('##"object_name": "(.+?)"(.*)', seed_dec, re.S)
+            if m:
+                file_name = m.group(1)+".py"
+
+                wd = context.getWorkingDir() +"/seeds/"
+                file_path = wd + file_name
+                f = open(file_path, "w")
+                f.write(seed_dec)
+
+                s.wfile.write('{"OK"}')
+            else:
+                s.wfile.write('{"ERROR"}')
+
+
 
 
         if s.path == "/seeds.json":
