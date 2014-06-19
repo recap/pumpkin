@@ -162,14 +162,17 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 ip = "NONE"
             rep = "["
             rep += '{"timestamp" : '+str(tm)+',"ip" : "'+ip+'"},\n'
-            rep = rep + "{"
-            for x in PmkSeed.iplugins.keys():
-               klass = PmkSeed.iplugins[x]
-               ent = "\""+klass.get_name() +"\" : \""+ str(klass.is_enabled())+"\""
-               rep = rep + ent + ","
+            if (len(PmkSeed.iplugins) > 0):
+                rep = rep + "{"
+                for x in PmkSeed.iplugins.keys():
+                   klass = PmkSeed.iplugins[x]
+                   ent = "\""+klass.get_name() +"\" : \""+ str(klass.is_enabled())+"\""
+                   rep = rep + ent + ","
 
-            rep = rep[0:len(rep)-1]
-            rep = rep + "},"
+                rep = rep[0:len(rep)-1]
+                rep = rep + "},"
+            else:
+                rep += "{}"
 
             total_in = 0
             total_out = 0
