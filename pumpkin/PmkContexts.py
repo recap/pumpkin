@@ -123,10 +123,13 @@ class MainContext(object):
                         d = json.loads(conf)
                         if not "auto-load" in d.keys() or d["auto-load"] == True:
                             imp.load_source(modname,file)
+
                             klass = PmkSeed.hplugins[modname](self)
                             PmkSeed.iplugins[modname] = klass
+                            klass.pre_load(d)
                             klass.on_load()
-                            klass.set_conf(d)
+                            klass.post_load()
+
             return modname
 
         def startPktShelve(self, filename):
