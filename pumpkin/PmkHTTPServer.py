@@ -300,6 +300,26 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # s.wfile.write("<body><p>Submitted Packet: "+pkt_id+" "+str(dt)+"</p>")
             # s.wfile.write("</body></html>")
 
+        if "exit" in s.path:
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            parts = s.path.split("?")
+            if len(parts) > 1:
+                secret = str(parts[1])
+                if secret.lower() == "flyingmouse":
+                    context.close()
+                    for th in context.getThreads():
+                        th.stop()
+                        #th.join()
+                    time.sleep(2)
+                    logging.info("Exiting Pumpkin")
+                    ##Ugly kill because threads zmq are not behaving
+                    os.system("kill -9 "+str(os.getpid()))
+                    sys.exit(0)
+
+
         if "deploy" in s.path:
             s.send_response(200)
             s.send_header("Content-type", "application/json")
