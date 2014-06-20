@@ -15,7 +15,8 @@
         "last_contact" : "None"
 
     },
-    {},
+    {
+    },
     {
         "stag": "default:String:UNGREETED",
         "data": "Mars",

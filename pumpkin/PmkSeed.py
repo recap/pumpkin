@@ -456,10 +456,16 @@ class Seed(object):
                 return True
         return False
 
-    def is_enabled(self):
-        #TODO: remove
-        return True
+    def disable(self):
+        if "enabled" in self.conf.keys():
+            self.conf["enabled"] = False
 
+    def enable(self):
+        if "enabled" in self.conf.keys():
+            self.conf["enabled"] = True
+
+
+    def is_enabled(self):
         if "enabled" in self.conf.keys():
             if self.conf["enabled"] == True:
                 return True

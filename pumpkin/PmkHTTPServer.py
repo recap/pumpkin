@@ -234,6 +234,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             parts = s.path.split("?")
             func_name = parts[1]
             rep = context.getProcGraph().stopSeed(func_name)
+
+            if ":" in func_name:
+                func_name = func_name.split(":")[1]
+
+            if func_name in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[func_name]
+                klass.disable()
+
             if rep:
                 s.wfile.write("OK")
             else:
@@ -247,6 +255,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             parts = s.path.split("?")
             func_name = parts[1]
             rep = context.getProcGraph().startSeed(func_name)
+
+
+            if ":" in func_name:
+                func_name = func_name.split(":")[1]
+
+            if func_name in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[func_name]
+                klass.enable()
 
             if rep:
                 s.wfile.write("OK")
