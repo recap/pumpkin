@@ -491,6 +491,8 @@ class Seed(object):
 
     def pre_load(self, jconf):
         self.conf = jconf
+        if not "enabled" in self.conf.keys():
+            self.conf["enabled"] = True
 
         if len(self.conf["parameters"]) > 0:
             for p in self.conf["parameters"]:
