@@ -102,6 +102,9 @@ class PacketFileMonitor(SThread):
                     klass = PmkSeed.iplugins[seed_name]
                     js = klass.getConfEntry()
                     self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+                    if not klass.hasInputs():
+                        #klass.run(klass.__rawpacket())
+                        klass.rawrun()
 
 
             def process_IN_MOVED_TO(self, event):
