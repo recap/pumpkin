@@ -32,7 +32,7 @@ __author__ = 'reggie'
 
 import re
 import nltk
-
+import time
 from pumpkin import PmkSeed
 
 
@@ -41,32 +41,49 @@ class filterenglish(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
+        self.eng_cnt = 0
+        self.neng_cnt = 0
+        self.count = 0
+
 
         pass
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
+        wd = self.context.getWorkingDir()
+        nltk.data.path.append(wd + "nltk_data")
+
+
+        self.ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words('english'))
+        self.NON_ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words()) - self.ENGLISH_STOPWORDS
+
+        self.tm = time.time()
 
         pass
 
     def is_english(self, text):
 
-        nltk.data.path.append("./examples/tweeter/nltk_data")
-        ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words('english'))
-        NON_ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words()) - ENGLISH_STOPWORDS
-
         text = text.lower()
         words = set(nltk.wordpunct_tokenize(text))
-        return len(words & ENGLISH_STOPWORDS) > len(words & NON_ENGLISH_STOPWORDS)
+        return len(words & self.ENGLISH_STOPWORDS) > len(words & self.NON_ENGLISH_STOPWORDS)
 
     def run(self, pkt, data):
         tweet = data
-        print "RECEIVED TWEET: "+tweet
         m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
         if m:
+            self.count += 1
+            if self.count >= 100000:
+                ts = time.time()
+                epoch = ts - self.tm
+                total = self.eng_cnt + self.neng_cnt
+                per = (self.eng_cnt * 100) / total
+                print "milestone: eng ["+str(self.eng_cnt)+", "+str(per)+"%] non-eng ["+str(self.neng_cnt)+"] total ["+str(total)+"] el_time ["+str(epoch)+"]"
+
             tw = m.group(2)
             if self.is_english(tw):
-                self.dispatch(pkt, tweet, "ENGLISH")
-            #else:
-            #    self.dispatch(pkt, tweet, "NONENGLISH")
+                #self.dispatch(pkt, tweet, "ENGLISH")
+                self.eng_cnt += 1
+            else:
+                #self.dispatch(pkt, tweet, "NONENGLISH")
+                self.neng_cnt += 1
         pass
