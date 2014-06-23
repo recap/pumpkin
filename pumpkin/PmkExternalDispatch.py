@@ -177,6 +177,10 @@ class ExternalDispatch(SThread):
                                 disp = RabbitMQDispatch(self.context)
                                 pass
 
+                            if entry["mode"] == "raw.Q":
+                                disp = InternalRxQueue(self.context)
+                                pass
+
                             if not disp == None:
                                 self.dispatchers[ep] = disp
                                 disp.connect(ep)
@@ -505,6 +509,24 @@ class ZMQPacketVentilate(Dispatch):
 
     def close(self):
         self.soc.close()
+
+class InternalRxQueue(Dispatch):
+    def __init__(self, context):
+        Dispatch.__init__(self)
+        self.context = context
+        self.queue = self.context.getRx()
+        pass
+
+    def connect(self, queue):
+        pass
+
+    def dispatch(self, pkt):
+        self.queue.put(pkt)
+        pass
+
+    def close(self):
+        pass
+
 
 class RabbitMQDispatch(Dispatch):
     def __init__(self, context):
