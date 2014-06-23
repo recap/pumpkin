@@ -36,6 +36,9 @@ class sp_tweetinject(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
+        self.eng_cnt = 0
+        self.neng_cnt = 0
+        self.count = 0
 
 
     def on_load(self):
