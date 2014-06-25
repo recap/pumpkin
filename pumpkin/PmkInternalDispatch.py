@@ -25,35 +25,41 @@ class InternalDispatch(SThread):
 
     def run(self):
         rx = self.context.getRx()
+        loads = json.loads
+        keys = PmkSeed.iplugins.keys
+        iplugins = PmkSeed.iplugins
+        speedy = self.context.is_speedy()
         while 1:
             pkts = rx.get(True)
             logging.debug("Packet received: \n"+pkts)
-            pkt = json.loads(pkts)
-            #Check for PACK
-            if pkt[0]["state"] == "PACK_OK":
-                #logging.debug("PACK packet: "+pkts)
-                seed = pkt[0]["last_func"]
+            #pkt = json.loads(pkts)
+            pkt = loads(pkts)
+            if not speedy:
+                #Check for PACK
+                if pkt[0]["state"] == "PACK_OK":
+                    #logging.debug("PACK packet: "+pkts)
+                    seed = pkt[0]["last_func"]
 
-                if seed in PmkSeed.iplugins.keys():
-                    klass = PmkSeed.iplugins[seed]
-                    klass.pack_ok(pkt)
-                    self._packed_pkts += 1
-                    #logging.debug("PACKED pkts: "+str(self._packed_pkts))
+                    if seed in PmkSeed.iplugins.keys():
+                        klass = PmkSeed.iplugins[seed]
+                        klass.pack_ok(pkt)
+                        self._packed_pkts += 1
+                        #logging.debug("PACKED pkts: "+str(self._packed_pkts))
+                        continue
+                # if pkt[0]["state"] == "MERGE":
+                #     seed = pkt[0]["last_func"]
+                #
+                #     if seed in PmkSeed.iplugins.keys():
+                #         klass = PmkSeed.iplugins[seed]
+                #         klass.merge(pkt)
+                #         #klass.pack_ok(pkt)
+                #         #self._packed_pkts += 1
+                #         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
+                #         continue
+                if pkt[0]["state"] == "ARP_OK":
+                    logging.debug("Received ARP_OK: "+json.dumps(pkt))
+                    self.context.put_pkt_in_shelve2(pkt)
                     continue
-            # if pkt[0]["state"] == "MERGE":
-            #     seed = pkt[0]["last_func"]
-            #
-            #     if seed in PmkSeed.iplugins.keys():
-            #         klass = PmkSeed.iplugins[seed]
-            #         klass.merge(pkt)
-            #         #klass.pack_ok(pkt)
-            #         #self._packed_pkts += 1
-            #         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
-            #         continue
-            if pkt[0]["state"] == "ARP_OK":
-                logging.debug("Received ARP_OK: "+json.dumps(pkt))
-                self.context.put_pkt_in_shelve2(pkt)
-                continue
 
             l = len(pkt)
             func = pkt[l-1]["func"]
@@ -63,8 +69,12 @@ class InternalDispatch(SThread):
                 func = func.split(":")[1]
 
 
-            if func in PmkSeed.iplugins.keys():
-                klass = PmkSeed.iplugins[func]
+            #if func in PmkSeed.iplugins.keys():
+            #    klass = PmkSeed.iplugins[func]
+            #    rt = klass._stage_run(pkt, data)
+
+            if func in keys():
+                klass = iplugins[func]
                 rt = klass._stage_run(pkt, data)
 
 
