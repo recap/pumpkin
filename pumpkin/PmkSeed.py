@@ -68,6 +68,7 @@ class Seed(object):
         self.logger.info("Initialised seed: "+self.get_name())
 
         self.context = context
+        self.name = self.__class__.__name__
         self.poi = poi
         self.conf = None
         self.tftp_sessions = {}
@@ -431,6 +432,23 @@ class Seed(object):
         else:
             logging.debug("Duplicate packet received: "+pkt_id)
             pass
+    def _stage_run_express(self,pkt, *args):
+        pkt_id = self.get_pkt_id(pkt)
+        pstate =  pkt[0]["state"]
+
+        tstag = "IN:"+self.name+":"+pkt[0]["c_tag"]
+        pkt[0]["state"] = "PROCESSING"
+
+        nargs = []
+        if(args[0]):
+            for msg in args[0].split('|,|'):
+                nargs.append(msg)
+
+        self.inc_state_counter(tstag)
+        self.run(pkt,*nargs)
+
+
+        pass
 
     def split(self, pkt, *args):
         return False

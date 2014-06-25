@@ -73,9 +73,14 @@ class InternalDispatch(SThread):
             #    klass = PmkSeed.iplugins[func]
             #    rt = klass._stage_run(pkt, data)
 
+
+
             if func in keys():
                 klass = iplugins[func]
-                rt = klass._stage_run(pkt, data)
+                if speedy:
+                    rt = klass._stage_run_express(pkt, data)
+                else:
+                    rt = klass._stage_run(pkt, data)
 
 
 
