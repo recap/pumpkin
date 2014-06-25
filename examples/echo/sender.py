@@ -51,9 +51,9 @@ class sender(PmkSeed.Seed):
         self.dispatch(pkt, "1234567890", "RAW")
 
 
-        #npkt = self.duplicate_pkt_new_box(pkt)
+        #npkt = self.duplicate_pkt_new_container(pkt)
         # for x in range(1,3):
-        #     npkt1 = self.duplicate_pkt_new_box(pkt)
+        #     npkt1 = self.duplicate_pkt_new_container(pkt)
         #
         #     #print "SENDER: " +str(x)
         #
@@ -61,10 +61,10 @@ class sender(PmkSeed.Seed):
         #     #self.dispatch(npkt1, "##############################TEST####### "+str(x), "RAW")
 
 
-        #npkt2 = self.duplicate_pkt_new_box(pkt)
-        # npkt3 = self.duplicate_pkt_new_box(pkt)
-        # npkt4 = self.duplicate_pkt_new_box(pkt)
-        # npkt5 = self.duplicate_pkt_new_box(pkt)
+        #npkt2 = self.duplicate_pkt_new_container(pkt)
+        # npkt3 = self.duplicate_pkt_new_container(pkt)
+        # npkt4 = self.duplicate_pkt_new_container(pkt)
+        # npkt5 = self.duplicate_pkt_new_container(pkt)
 
         #self.dispatch(pkt,"file://"+full_wfn, "RAW")
         #self.dispatch(npkt, "test", "RAW")

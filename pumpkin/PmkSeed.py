@@ -628,7 +628,7 @@ class Seed(object):
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
     def fork_dispatch(self, pkt, msg, state):
-        npkt = self.duplicate_pkt_new_box(pkt)
+        npkt = self.duplicate_pkt_new_container(pkt)
         self.dispatch(npkt, msg, state)
         pass
 
@@ -664,12 +664,15 @@ class Seed(object):
 
         return id
 
-    def duplicate_pkt_new_box(self,pkt):
-        lpkt = copy.deepcopy(pkt)
+    def duplicate_pkt_new_container(self,pkt, shallow=True):
+        lpkt = None
+        if shallow:
+            lpkt = copy.copy(pkt)
+        else:
+            lpkt = copy.deepcopy(pkt)
+
         cont = self.get_new_container()
         header = lpkt[0]
-        #box = int(header["box"])
-        #box = box + 1
         header["container"] = cont
         return lpkt
 
@@ -758,11 +761,14 @@ class Seed(object):
 
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
-        pkt = copy.deepcopy(dpkt)
+        pkt = dpkt
+        lpkt = dpkt
         caller = "run"
 
         if not self.context.is_speedy():
-        #logging.debug("Caller for dispatch function: "+inspect.stack()[1][3])
+            pkt = copy.deepcopy(dpkt)
+            caller = inspect.stack()[1][3]
+            #logging.debug("Caller for dispatch function: "+inspect.stack()[1][3])
             if str(msg).startswith("file://") and not self.is_final(pkt):
                 dst = self.context.getFileDir()
                 _,path,file,src,_ = self.fileparts(msg)
@@ -774,39 +780,37 @@ class Seed(object):
                 #msg = "tftp://"+self.context.get_local_ip()+"/"+file
                 msg = self.context.getFileServerEndPoint()+"/"+file
 
-        if not self.context.is_speedy():
-            #very slow stack inspect
-            caller = inspect.stack()[1][3]
 
-        if self.is_fragment(pkt) and caller == "run":
-            if not type:
-                 otype = self.conf["return"][0]["type"]
+
+            if self.is_fragment(pkt) and caller == "run":
+                if not type:
+                     otype = self.conf["return"][0]["type"]
+                else:
+                     otype = type
+                stag = otype + ":"  + tag
+                #Add output of current function
+                lpkt = pkt
+                last_entry = lpkt[len(lpkt)-1]
+                pkt_e = {}
+                pkt_e["stag"] = stag
+                pkt_e["func"] = self.__class__.__name__+"."+caller
+                pkt_e["exstate"] = "0001"
+                pkt_e["data"] = msg
+                pkt_e["ep"] = last_entry["ep"]
+                lpkt.insert(len(lpkt)-1,pkt_e)
+
+                self.merge_pkt(pkt)
+                return
+
+            if fragment:
+                lpkt = copy.deepcopy(pkt)
+                header = lpkt[0]
+                fragment = int(header["fragment"])
+                fragment = fragment + 1
+                header["fragment"] = str(fragment)
+                pkt[0]["fragment"] = str(fragment)
             else:
-                 otype = type
-            stag = otype + ":"  + tag
-            #Add output of current function
-            lpkt = pkt
-            last_entry = lpkt[len(lpkt)-1]
-            pkt_e = {}
-            pkt_e["stag"] = stag
-            pkt_e["func"] = self.__class__.__name__+"."+caller
-            pkt_e["exstate"] = "0001"
-            pkt_e["data"] = msg
-            pkt_e["ep"] = last_entry["ep"]
-            lpkt.insert(len(lpkt)-1,pkt_e)
-
-            self.merge_pkt(pkt)
-            return
-
-        if fragment:
-            lpkt = copy.deepcopy(pkt)
-            header = lpkt[0]
-            fragment = int(header["fragment"])
-            fragment = fragment + 1
-            header["fragment"] = str(fragment)
-            pkt[0]["fragment"] = str(fragment)
-        else:
-            lpkt = copy.copy(pkt)
+                lpkt = copy.copy(pkt)
 
         lpkt_id = self.get_pkt_id(lpkt)
         if not type:
