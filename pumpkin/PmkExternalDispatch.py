@@ -102,7 +102,8 @@ class ExternalDispatch(SThread):
     def send_express(self, otag, pkt):
         ntag = None
 
-        if pkt[1]:
+
+        if pkt[1] and not self.context.is_speedy():
             g = json_graph.loads(pkt[1])
 
             if otag in g:
@@ -139,7 +140,10 @@ class ExternalDispatch(SThread):
         if routes:
             for r in routes:
 
-                dcpkt = copy.copy(pkt)
+                if len(routes) > 1:
+                    dcpkt = copy.copy(pkt)
+                else:
+                    dcpkt = pkt
 
                 rtag = r["otype"]+":"+r["ostate"]
                 if (ntag and ntag == rtag) or not ntag:
