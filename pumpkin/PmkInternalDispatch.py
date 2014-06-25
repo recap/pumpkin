@@ -293,13 +293,14 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
-
+        queue_put = self.context.getRx().put
         while True:
             try:
                 msg = soc.recv()
-                self.context.getRx().put(msg)
+                #self.context.getRx().put(msg)
+                queue_put(msg)
                 #self.proccess_pkt(msg)
-                del msg
+                #del msg
 
                 # if "REVERSE" in msg:
                 #     logging.debug(msg)
