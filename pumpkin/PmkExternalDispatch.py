@@ -2,7 +2,7 @@ __author__ = 'reggie'
 
 
 
-import json
+import ujson as json
 import time
 import Queue
 import zmq

@@ -1,6 +1,6 @@
 __author__ = 'reggie'
 
-import json
+import ujson as json
 import Queue
 import zmq
 import time

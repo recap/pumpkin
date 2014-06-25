@@ -10,7 +10,8 @@ import time
 import thread
 import collections
 import networkx as nx
-import json
+import ujson as json
+import json as sjson
 import logging
 import inspect
 import zmq
@@ -334,7 +335,7 @@ class Seed(object):
         self._lock_telemetrics.release()
 
     def get_state_counters(self):
-        return json.dumps(self._state_counter, separators=(',',':') )
+        return sjson.dumps(self._state_counter, separators=(',',':') )
 
     def get_all_counters(self):
         total_in = 0
