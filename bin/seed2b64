@@ -1,0 +1,6 @@
+#!/bin/bash
+
+b=$(basename $1) 
+
+cat $1 | base64 | tr -d '\n' > $2/$b.b64 2>&1
+ 
