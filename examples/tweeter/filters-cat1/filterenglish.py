@@ -78,13 +78,13 @@ class filterenglish(PmkSeed.Seed):
                 epoch = ts - self.tm
                 total = self.eng_cnt + self.neng_cnt
                 per = (self.eng_cnt * 100) / total
-                print "milestone: eng ["+str(self.eng_cnt)+", "+str(per)+"%] non-eng ["+str(self.neng_cnt)+"] total ["+str(total)+"] el_time ["+str(epoch)+"]"
+                #print "milestone: eng ["+str(self.eng_cnt)+", "+str(per)+"%] non-eng ["+str(self.neng_cnt)+"] total ["+str(total)+"] el_time ["+str(epoch)+"]"
 
             tw = m.group(2)
             if self.is_english(tw):
-                #self.dispatch(pkt, tweet, "ENGLISH")
-                self.eng_cnt += 1
+                self.dispatch(pkt, tweet, "ENGLISH")
+                #self.eng_cnt += 1
             else:
-                #self.dispatch(pkt, tweet, "NONENGLISH")
-                self.neng_cnt += 1
+                self.dispatch(pkt, tweet, "NONENGLISH")
+                #self.neng_cnt += 1
         pass

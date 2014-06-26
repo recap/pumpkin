@@ -48,7 +48,9 @@ class filterhaikus(PmkSeed.Seed):
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
-        nltk.data.path.append("./examples/tweeter/nltk_data")
+        wd = self.context.getWorkingDir()
+        nltk.data.path.append(wd + "nltk_data")
+
         self.d =  cmudict.dict()
         pass
 

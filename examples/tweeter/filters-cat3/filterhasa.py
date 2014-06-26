@@ -46,6 +46,7 @@ class filterhasa(PmkSeed.Seed):
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
+
         pass
 
 
