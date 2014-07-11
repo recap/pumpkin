@@ -1,6 +1,6 @@
 ###START-CONF
 ##{
-##"object_name": "tweetinject",
+##"object_name": "fastainject",
 ##"object_poi": "qpwo-2345",
 ##"auto-load": true,
 ##"remoting" : false,
@@ -9,10 +9,10 @@
 ##              ],
 ##"return": [
 ##              {
-##                      "name": "tweet",
-##                      "description": "raw tweet",
+##                      "name": "fasta",
+##                      "description": "raw fasta",
 ##                      "required": true,
-##                      "type": "TweetString",
+##                      "type": "FastaString",
 ##                      "format": "",
 ##                      "state" : "RAW"
 ##                  }
@@ -26,52 +26,49 @@ from os import listdir
 from os.path import isfile, join
 import pika
 from os.path import expanduser
+from Bio import SeqIO
+from Bio import pairwise2
+from Bio.SubsMat import MatrixInfo as matlist
+
+
 from pumpkin import *
 
-class tweetinject(PmkSeed.Seed):
+class fastainject(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        # self.connection = None
-        # self.channel = None
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
-        #self.connection, self.channel = self.__open_rabbitmq_channel()
 
-    # def __open_rabbitmq_channel(self):
-    #     host, port, username, password, vhost = self.context.get_rabbitmq_cred()
-    #     credentials = pika.PlainCredentials(username, password)
-    #     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
-    #     channel = connection.channel()
-    #     return (connection, channel)
 
 
     def run(self, pkt):
-        dir = expanduser("~")+"/tweets/"
+        matrix = matlist.blosum62
+        gap_open = -10
+        gap_extend = -0.5
+        dir = expanduser("~")+"/fasta/"
         onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
         for fl in onlyfiles:
             fullpath = dir+fl
-            if( fl[-3:] == "txt"):
+            if( fl[-5:] == "fasta"):
                 print "File: "+str(fl)
-                with open(fullpath) as f:
-                    for line in f:
-                        if line.startswith('T'):
-                            tweet = line
-                        if line.startswith("U"):
-                            tweet = tweet + line
-                        if line.startswith("W"):
-                            if line == "No Post Title":
-                                line =""
-                            else:
-                                tweet = tweet + line
-                                npkt = self.duplicate_pkt_new_container(pkt)
-                                self.dispatch(npkt, tweet, "RAW")
-                                del line
-                                del tweet
+                pp = SeqIO.parse(open(fullpath, "rU"), "fasta")
+                first_record = pp.next()
+                pp.close()
+                for second_record in SeqIO.parse(fullpath, "fasta"):
+                    #print "First: "+first_record.seq
+                    #print "Second: "+second_record.seq
+                    #SeqIO.parse(open(fullpath, "rU"), "fasta")
+                    data = str(first_record.seq)+"|,|"+str(second_record.seq)
+                    npkt = self.duplicate_pkt_new_container(pkt)
+                    self.dispatch(npkt, data, "RAW")
 
-    # def publish(self, data, queue):
-    #     self.channel.basic_publish(exchange='',
-    #                           routing_key=queue,
-    #                           body=str(data))
+
+                    #alns = pairwise2.align.globalds(first_record.seq, second_record.seq, matrix, gap_open, gap_extend)
+                    #top_aln = alns[0]
+                    #aln_human, aln_mouse, score, begin, end = top_aln
+
+                    #print aln_human+'\n'+aln_mouse
+
 

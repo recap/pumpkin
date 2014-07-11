@@ -12,6 +12,7 @@ import errno
 import ConfigParser
 import cProfile, pstats
 import pika
+import multiprocessing
 
 
 
@@ -353,9 +354,12 @@ class Pumpkin(Daemon):
             seedmonitor.start()
             context.addThread(seedmonitor)
 
-            idispatch = InternalDispatch(context)
-            idispatch.start()
-            context.addThread(idispatch)
+            for i in range(1,context.get_cores()+1):
+                logging.info("Starting internal dispatch thread "+str(i))
+                idispatch = InternalDispatch(context)
+                idispatch.start()
+                context.addThread(idispatch)
+
 
             #context.startDisplay()
 
@@ -389,7 +393,11 @@ def main():
 
 
 
+
     ######################################################3
+
+    cores = multiprocessing.cpu_count()
+
 
 
     parser = argparse.ArgumentParser(description='Harness for Datafluo jobs')
@@ -434,6 +442,8 @@ def main():
                        help='broadcast UDP port.')
     parser.add_argument('--ghost', action='store_true',
                        help='run on a node with another pumpkin.')
+    parser.add_argument('--cores', action='store', dest="cores", default=cores,
+                        help='start multiple threads default for this machine is: '+str(cores))
 
     parser.add_argument('--group', action='store', dest="group", default="default",
                        help='node group')

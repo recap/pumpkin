@@ -85,6 +85,8 @@ class Seed(object):
         self._avg_ingress = 0
         self._avg_outgress = 0
         self._state_counter = {}
+        self._complexity = {}
+        self._complexity_record = True
 
         self._in_and_list = []
         self._in_all_list = []
@@ -432,23 +434,51 @@ class Seed(object):
         else:
             logging.debug("Duplicate packet received: "+pkt_id)
             pass
+
+
     def _stage_run_express(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
         pstate =  pkt[0]["state"]
+        dlen = 0
+        stime = None
+        htime = None
+        hin = time.time
+        complexity = self._complexity
 
         tstag = "IN:"+self.name+":"+pkt[0]["c_tag"]
         pkt[0]["state"] = "PROCESSING"
 
         nargs = []
         if(args[0]):
-            for msg in args[0].split('|,|'):
+            dlen = len(args[0])
+            for msg in str(args[0]).split('|,|'):
                 nargs.append(msg)
 
         self.inc_state_counter(tstag)
-        self.run(pkt,*nargs)
 
+        if self._complexity_record:
+            stime = hin()
+            self.run(pkt,nargs)
+            htime = hin()
+
+            etime = htime - stime
+
+            if dlen in complexity.keys():
+                t = complexity[dlen]
+                avg = (etime + t) / 2
+                complexity[dlen] = avg
+            else:
+                complexity[dlen] = etime
 
         pass
+    def stop_recording(self):
+        self._complexity_record = False
+
+    def start_recording(self):
+        self._complexity_record = True
+
+    def get_complexity_list(self):
+        return self._complexity
 
     def split(self, pkt, *args):
         return False

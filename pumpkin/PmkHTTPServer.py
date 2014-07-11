@@ -3,6 +3,8 @@ __author__ = 'reggie'
 
 import re
 import json
+from numpy import arange,array,ones,linalg
+from pylab import plot,show, savefig
 from socket import *
 
 
@@ -247,6 +249,98 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 s.wfile.write("OK")
             else:
                 s.wfile.write("ERROR")
+
+        if "complexity" in s.path:
+
+
+            parts = s.path.split("?")
+            func_name = parts[1]
+
+            rfile = False
+            if len(parts) > 2:
+                if str(parts[2]).lower() == "file":
+                    rfile = True
+
+            if rfile:
+                s.send_response(200)
+                s.send_header("Content-type", "image/png")
+                s.end_headers()
+            else:
+                s.send_response(200)
+                s.send_header("Content-type", "text/plain")
+                s.end_headers()
+
+
+
+            #rep = context.getProcGraph().stopSeed(func_name)
+
+            if ":" in func_name:
+                func_name = func_name.split(":")[1]
+
+            if func_name in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[func_name]
+                klass.stop_recording()
+
+                complexity = klass.get_complexity_list()
+                fdlen = None
+                ldlen = None
+                rep = ""
+                lreg_arry = []
+                xi = []
+                for dlen in complexity.keys():
+                    if (fdlen == None):
+                        fdlen = dlen
+                    ldlen = dlen
+                    xi.append(dlen)
+                    rep += str(dlen)+" "+str(complexity[dlen])
+                    lreg_arry.append(complexity[dlen])
+                    rep += "\n"
+
+                klass.start_recording()
+
+                try:
+                    A = array([ xi, ones(xi.__len__())])
+                    y = lreg_arry
+                    x_len = xi.__len__()
+                    y_len = y.__len__()
+
+                    w = linalg.lstsq(A.T,y)[0]
+
+                    rep += "Regression params\n"
+                    rep += str(w[0])+" "+str(w[1])
+                    rep += "\n"
+
+                    if not rfile:
+                        s.wfile.write(rep)
+                    else:
+                        line = []
+                        for x in xi:
+                            r = w[0]*x+w[1]
+                            line.append(r)
+                        line_len = line.__len__()
+
+                        plot(xi,line,'r-',xi,y,'o')
+                        savefig("/tmp/reg.png")
+                        f=open("/tmp/reg.png")
+                        #show()
+                        s.wfile.write(f.read())
+                        f.close()
+
+
+                except Exception, e:
+                    s.wfile.write(e.message)
+                    pass
+
+
+
+
+
+
+
+            #if rep:
+            #    s.wfile.write("OK")
+            #else:
+            #    s.wfile.write("ERROR")
 
         if "start" in s.path:
             s.send_response(200)

@@ -446,6 +446,10 @@ class MainContext(object):
         def getTx(self):
             return self.tx
 
+        def get_cores(self):
+            c = int(self.__attrs.cores)
+            return c
+
         def get_rx_size(self):
             s = self.rx.qsize()
             return s

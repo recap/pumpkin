@@ -1,0 +1,26 @@
+[
+    {
+        "box": "0",
+        "fragment" :"0",
+        "e": "E",
+        "ship": "c466f181",
+        "container": "98ea09ac",
+        "last_func" : "None",
+        "stop_func" : "None",
+        "state" : "New",
+        "ttl" : "600",
+        "t_otype" : "None",
+        "t_state" : "None",
+        "c_tag" : "None",
+        "last_contact" : "None"
+
+    },
+    {
+    },
+    {
+        "stag": "default:String:BRAW",
+        "data": "number3",
+        "exstate": "0000",
+        "func": "busyworker"
+    }
+]
