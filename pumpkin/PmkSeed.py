@@ -451,8 +451,10 @@ class Seed(object):
         nargs = []
         if(args[0]):
             dlen = len(args[0])
-            for msg in str(args[0]).split('|,|'):
-                nargs.append(msg)
+            msg = args[0]
+            nargs.append(msg)
+            #for msg in args[0].split('|,|'):
+            #    nargs.append(msg)
 
         self.inc_state_counter(tstag)
 

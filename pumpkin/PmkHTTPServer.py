@@ -183,9 +183,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                klass = PmkSeed.iplugins[x]
                rep = rep + "\n" + klass.get_state_counters()
                tin, tout = klass.get_all_counters()
+               rep += ","
                total_in += tin
                total_out += tout
-            rep += ',\n'
+
+            rep += '\n'
             rep = rep + '{"total_in":'+str(total_in)+',"total_out":'+str(total_out)+'}'
             rep += ","
 
