@@ -175,7 +175,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 rep = rep[0:len(rep)-1]
                 rep = rep + "},"
             else:
-                rep += "{}"
+                rep += "{},"
 
             total_in = 0
             total_out = 0
