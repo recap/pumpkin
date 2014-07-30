@@ -228,9 +228,9 @@ class ProcessGraph(object):
         return G
 
     def showGraph(self):
-        import matplotlib.pyplot as plt
-        nx.draw(self.graph)
-        plt.show()
+        #import matplotlib.pyplot as plt
+        #nx.draw(self.graph)
+        #plt.show()
         pass
 
 

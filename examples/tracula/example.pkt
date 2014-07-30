@@ -1,0 +1,28 @@
+[
+  {
+    "box": "a0ded896",
+    "e": 0,
+    "last_contact": "None",
+    "last_timestamp": 0,
+    "fragment": "0",
+    "t_state": "None",
+    "c_tag": "None",
+    "last_func": "None",
+    "t_otype": "None",
+    "state": "NEW",
+    "stop_func": "None",
+    "ttl": "0",
+    "container": "a0560550",
+    "ship": "patient_joe"
+  },
+  {},
+  {
+    "stag": "default:Composite:ALL_RAW",
+    "data": "pumpkinbox/freesurfer-sample-input.zip,pumpkinbox/predti-sample-input.zip",
+    "format": "MRIFILE,DTIFile",
+    "exstate": "0000",
+    "func": "default:injector",
+    "ep": "local"
+  }
+]
+

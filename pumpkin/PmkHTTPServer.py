@@ -4,7 +4,7 @@ __author__ = 'reggie'
 import re
 import json
 from numpy import arange,array,ones,linalg
-from pylab import plot,show, savefig
+#from pylab import plot,show, savefig
 from socket import *
 
 
@@ -321,12 +321,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             line.append(r)
                         line_len = line.__len__()
 
-                        plot(xi,line,'r-',xi,y,'o')
-                        savefig("/tmp/reg.png")
-                        f=open("/tmp/reg.png")
+                        #plot(xi,line,'r-',xi,y,'o')
+                        #savefig("/tmp/reg.png")
+                        #f=open("/tmp/reg.png")
                         #show()
-                        s.wfile.write(f.read())
-                        f.close()
+                        #s.wfile.write(f.read())
+                        #f.close()
 
 
                 except Exception, e:
