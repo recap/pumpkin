@@ -201,6 +201,14 @@ class Seed(object):
         shutil.move(src,dst)
         return file_name
 
+    def copy_file_to_wd(self, file):
+        filep = file.split("/")
+        file_name = filep[len(filep)-1]
+        dst = self.context.getWorkingDir()+"/"+file_name
+        src = file
+        shutil.copy(src,dst)
+        return file_name
+
     def get_relative_path(self, file):
         return "."+str(file)
 
@@ -408,17 +416,18 @@ class Seed(object):
                     for x in range (1,len(args)-1):
                         nargs.append(args[x])
 
+
                 if pstate == "MERGE":
-                    self.merge(pkt,*nargs)
+                    self.merge(pkt,nargs)
                     return
                 else:
                     if self.is_fragment(pkt):
                         self.inc_state_counter(tstag)
-                        self.run(pkt,*nargs)
+                        self.run(pkt,nargs)
                     else:
-                        if not self.split(pkt, *nargs):
+                        if not self.split(pkt, nargs):
                             self.inc_state_counter(tstag)
-                            self.run(pkt,*nargs)
+                            self.run(pkt,nargs)
                     return
 
 

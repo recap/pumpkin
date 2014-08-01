@@ -40,13 +40,16 @@ class injector(PmkSeed.Seed):
         pass
 
 
-    def run(self, pkt, msg):
+    def run(self, pkt, data):
 
-        data = msg.split(",")
+        #data = msg.split("|,|")
 
 
         mri_file = self.home+"/"+data[0]
         dti_file = self.home+"/"+data[1]
+        subjectID = self.home+"/"+data[2]
+        outputDir = self.home+"/"+data[3]
+        lic = self.home+"/"+data[4]
 
         found = True
 
@@ -62,8 +65,29 @@ class injector(PmkSeed.Seed):
             found = False
             self.logger.warn("Input file "+dti_file+" not found yet...retry later")
 
-        self.dispatch(pkt, mri_file, "MRI_RAW")
-        self.dispatch(pkt, dti_file, "DTI_RAW")
+        if os.path.isfile(subjectID):
+            self.logger.info("Found subjectID file")
+        else:
+            found = False
+            self.logger.warn("Input file "+subjectID+" not found yet...retry later")
+
+        if os.path.isfile(outputDir):
+            self.logger.info("Found outputDir file")
+        else:
+            found = False
+            self.logger.warn("Input file "+outputDir+" not found yet...retry later")
+
+        if os.path.isfile(lic):
+            self.logger.info("Found license file")
+        else:
+            found = False
+            self.logger.warn("Input file "+lic+" not found yet...retry later")
+
+        mri_input = mri_file+"|,|"+subjectID+"|,|"+outputDir+"|,|"+lic
+
+
+        self.dispatch(pkt, mri_input, "MRI_RAW")
+        #self.dispatch(pkt, dti_file, "DTI_RAW")
 
         # for x in range(1,3):
         #     npkt = self.duplicate_pkt_new_box(pkt)

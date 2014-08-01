@@ -68,6 +68,7 @@ tx/
 temp/
 old/
 merge_master.sh
+pumpkin.cfg
 
 #pyder
 pyder.sh
