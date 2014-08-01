@@ -468,7 +468,7 @@ class Seed(object):
 
         if self._complexity_record:
             stime = hin()
-            self.run(pkt,nargs)
+            self.run(pkt,*nargs)
             htime = hin()
 
             etime = htime - stime
