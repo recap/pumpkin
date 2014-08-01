@@ -416,7 +416,6 @@ class Seed(object):
                     for x in range (1,len(args)-1):
                         nargs.append(args[x])
 
-
                 if pstate == "MERGE":
                     self.merge(pkt,nargs)
                     return
