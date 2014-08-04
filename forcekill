@@ -1,3 +1,11 @@
 #! /bin/bash
 
-kill -9 `ps aux | grep DRH | grep -v grep | awk '{print $2}'`
+PID=`ps aux | grep DRH | grep -v grep | awk '{print $2}'`
+K=${#PID}
+if [ $K -ne 0 ];
+then
+	#echo "killing $PID";
+	kill -9 $PID
+else
+	echo "no pumpkin process"
+fi
