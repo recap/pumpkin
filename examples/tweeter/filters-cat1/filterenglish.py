@@ -33,6 +33,8 @@ __author__ = 'reggie'
 import re
 import nltk
 import time
+import sys
+
 from pumpkin import PmkSeed
 
 
@@ -68,23 +70,27 @@ class filterenglish(PmkSeed.Seed):
         return len(words & self.ENGLISH_STOPWORDS) > len(words & self.NON_ENGLISH_STOPWORDS)
 
     def run(self, pkt, data):
-        tweet = data
-        m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
-        if m:
-            self.count += 1
-            if self.count >= 100000:
-                self.count = 0
-                ts = time.time()
-                epoch = ts - self.tm
-                total = self.eng_cnt + self.neng_cnt
-                per = (self.eng_cnt * 100) / total
-                #print "milestone: eng ["+str(self.eng_cnt)+", "+str(per)+"%] non-eng ["+str(self.neng_cnt)+"] total ["+str(total)+"] el_time ["+str(epoch)+"]"
+        try:
+            tweet = data
+            m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
+            if m:
+                #self.count += 1
+                #if self.count >= 100000:
+                #    self.count = 0
+                #    ts = time.time()
+                #    epoch = ts - self.tm
+                #    total = self.eng_cnt + self.neng_cnt
+                #    per = (self.eng_cnt * 100) / total
+                #    #print "milestone: eng ["+str(self.eng_cnt)+", "+str(per)+"%] non-eng ["+str(self.neng_cnt)+"] total ["+str(total)+"] el_time ["+str(epoch)+"]"
 
-            tw = m.group(2)
-            if self.is_english(tw):
-                self.dispatch(pkt, tweet, "ENGLISH")
-                #self.eng_cnt += 1
-            else:
-                self.dispatch(pkt, tweet, "NONENGLISH")
-                #self.neng_cnt += 1
+                tw = m.group(2)
+                if self.is_english(tw):
+                    self.dispatch(pkt, tweet, "ENGLISH")
+                    #self.eng_cnt += 1
+                else:
+                    self.dispatch(pkt, tweet, "NONENGLISH")
+                    #self.neng_cnt += 1
+        except:
+            self.logger.error("Unexpected error:" + str(sys.exc_info()[0]))
+
         pass
