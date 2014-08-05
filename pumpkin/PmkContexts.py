@@ -472,8 +472,9 @@ class MainContext(object):
             return size
 
         def start_rxtx_buffer(self):
-            self.rx = rx(self.get_buffer_size)
-            self.tx = tx(self.get_buffer_size)
+            logging.info("Setting buffer queue limit to: "+str(self.get_buffer_size()))
+            self.rx = rx(self.get_buffer_size())
+            self.tx = tx(self.get_buffer_size())
             pass
 
 
