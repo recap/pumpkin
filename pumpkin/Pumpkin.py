@@ -459,6 +459,8 @@ def main():
 
     parser.add_argument('--gonzales', action='store_true',
                        help='disable certain slow features for faster streaming.')
+    parser.add_argument('--buffer_size', action='store', dest="bsize", default=100000,
+                       help='queue size for rx/tx buffers in number of messages')
 
 
 
@@ -486,6 +488,7 @@ def main():
         logging.info("Starting Pumpkin daemon")
         context = P.getContext()
         context.set_attributes(args)
+        context.start_rxtx_buffer()
         P.start()
         root = logging.getLogger()
 
@@ -515,7 +518,7 @@ def main():
 
             pass
         context.set_attributes(args)
-
+        context.start_rxtx_buffer()
         UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
 
         if not args.profile:

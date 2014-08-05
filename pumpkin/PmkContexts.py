@@ -47,8 +47,8 @@ class MainContext(object):
             self.__supernodes = []
             self.__threads = []
 
-            self.rx = rx(100000)
-            self.tx = tx(100000)
+            self.rx = None #rx(100000)
+            self.tx = None #tx(100000)
 
             self.cmd = cmd()
             self.registry = {}
@@ -461,12 +461,20 @@ class MainContext(object):
         def get_cmd_queue(self):
             return self.cmd
 
-
         def close(self):
             self.pkt_shelve.close()
             for f in self.openfiles:
                 os.remove(f)
             shutil.rmtree(self.getWorkingDir())
+
+        def get_buffer_size(self):
+            size = self.__attrs.bsize
+            return size
+
+        def start_rxtx_buffer(self):
+            self.rx = rx(self.get_buffer_size)
+            self.tx = tx(self.get_buffer_size)
+            pass
 
 
 
