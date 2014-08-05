@@ -348,7 +348,7 @@ class Seed(object):
     def get_state_counters(self):
         return sjson.dumps(self._state_counter, separators=(',',':') )
 
-    def catget_all_counters(self):
+    def get_all_counters(self):
         total_in = 0
         total_out = 0
         for cnt in self._state_counter.keys():
