@@ -12,7 +12,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "ISA|HASA|HAIKU|NONENGLISH"
+##                      "state" : "ISA|HASA|HAIKU|NONENGLISH|ENGLISH"
 ##                  }
 ##              ],
 ##"return": [
