@@ -128,6 +128,7 @@ class ExternalDispatch(SThread):
             return
 
         routes = None
+        tries = 0
         while 1:
             routes = self.graph.getRoutes(otag)
             if routes:
@@ -135,6 +136,13 @@ class ExternalDispatch(SThread):
                  break
             else:
                 time.sleep(5)
+                if self.context.is_speedy():
+                    tries = tries + 1
+                    if tries > 4:
+                        tries = 0
+                        break
+
+
 
 
         if routes:
