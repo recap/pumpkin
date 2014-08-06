@@ -2,7 +2,8 @@ __author__ = 'reggie'
 
 
 
-import ujson as json
+import ujson as fjson
+import json
 import time
 import Queue
 import zmq
@@ -66,13 +67,13 @@ class ExternalDispatch(SThread):
 
         if ep in self.redispatchers.keys():
             disp = self.redispatchers[ep]
-            disp.dispatch(json.dumps(pkt))
+            disp.dispatch(fjson.dumps(pkt))
         else:
             disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
             if not disp == None:
                 self.redispatchers[ep] = disp
                 disp.connect(ep)
-                disp.dispatch(json.dumps(pkt))
+                disp.dispatch(fjson.dumps(pkt))
 
             else:
                 logging.error("No dispatchers found for: "+ep)
@@ -84,14 +85,14 @@ class ExternalDispatch(SThread):
 
         if ep in self.redispatchers.keys():
             disp = self.redispatchers[ep]
-            disp.dispatch(json.dumps(pkt))
+            disp.dispatch(fjson.dumps(pkt))
         else:
             #disp = self.gdisp
             disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
             if not disp == None:
                 self.redispatchers[ep] = disp
                 disp.connect(ep)
-                disp.dispatch(json.dumps(pkt))
+                disp.dispatch(fjson.dumps(pkt))
                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
             else:
@@ -118,20 +119,20 @@ class ExternalDispatch(SThread):
             ep = str(otag)
             if ep in self.dispatchers.keys():
                 disp = self.dispatchers[ep]
-                disp.dispatch(json.dumps(pkt))
+                disp.dispatch(fjson.dumps(pkt))
             else:
                 disp = RabbitMQDispatch(self.context)
                 self.dispatchers[ep] = disp
                 disp.connect(ep)
-                disp.dispatch(unicode(json.dumps(pkt)))
-                s = json.dumps(pkt)
+                disp.dispatch(unicode(fjson.dumps(pkt)))
+                s = fjson.dumps(pkt)
             return
 
         routes = None
         while 1:
             routes = self.graph.getRoutes(otag)
             if routes:
-                 logging.debug("Found routes: "+json.dumps(routes))
+                 logging.debug("Found routes: "+fjson.dumps(routes))
                  break
             else:
                 # dump non routable packets as this will lead to deadlock from tx queue filling up
@@ -171,7 +172,7 @@ class ExternalDispatch(SThread):
 
                         if ep in self.dispatchers.keys():
                             disp = self.dispatchers[ep]
-                            disp.dispatch(json.dumps(dcpkt))
+                            disp.dispatch(fjson.dumps(dcpkt))
                             #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                         else:
@@ -192,7 +193,7 @@ class ExternalDispatch(SThread):
                             if not disp == None:
                                 self.dispatchers[ep] = disp
                                 disp.connect(ep)
-                                disp.dispatch(json.dumps(dcpkt))
+                                disp.dispatch(fjson.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
@@ -247,7 +248,7 @@ class ExternalDispatch(SThread):
 
             while 1:
                 routes = graph.getRoutes(otag)
-                logging.debug("Found routes: "+json.dumps(routes))
+                logging.debug("Found routes: "+fjson.dumps(routes))
                 if routes:
                     break
                 else:
@@ -276,11 +277,11 @@ class ExternalDispatch(SThread):
                         next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                         dcpkt.append(next_hop)
                         #pkt.remove( pkt[len(pkt)-1] )
-                        #logging.debug(json.dumps(pkt))
+                        #logging.debug(fjson.dumps(pkt))
                         try:
                             if ep in self.dispatchers.keys():
                                 disp = self.dispatchers[ep]
-                                disp.dispatch(json.dumps(dcpkt))
+                                disp.dispatch(fjson.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
@@ -293,7 +294,7 @@ class ExternalDispatch(SThread):
                                 if not disp == None:
                                     self.dispatchers[ep] = disp
                                     disp.connect(ep)
-                                    disp.dispatch(json.dumps(dcpkt))
+                                    disp.dispatch(fjson.dumps(dcpkt))
                                     #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                                 else:
@@ -312,10 +313,10 @@ class ExternalDispatch(SThread):
                 #    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
                 #    dcpkt.append(next_hop)
                 #    #pkt.remove( pkt[len(pkt)-1] )
-                #    #logging.debug(json.dumps(pkt))
+                #    #logging.debug(fjson.dumps(pkt))
                 #    if ep in self.dispatchers.keys():
                 #        disp = self.dispatchers[ep]
-                #        disp.dispatch(json.dumps(dcpkt))
+                #        disp.dispatch(fjson.dumps(dcpkt))
                 #    else:
                 #        disp = None
                 #        if entry["mode"] == "zmq.PULL":
@@ -325,7 +326,7 @@ class ExternalDispatch(SThread):
                 #        if not disp == None:
                 #            self.dispatchers[ep] = disp
                 #            disp.connect(ep)
-                #            disp.dispatch(json.dumps(dcpkt))
+                #            disp.dispatch(fjson.dumps(dcpkt))
                 #        else:
                 #            logging.error("No dispatchers found for: "+ep)
 
