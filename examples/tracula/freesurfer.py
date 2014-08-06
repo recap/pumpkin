@@ -43,10 +43,10 @@ class freesurfer(PmkSeed.Seed):
         #data = msg.split("|,|")
 
         self.logger.info("FREESURFER: "+str(data))
-        mri_file = self.copy_file_to_wd(self.home+"/"+data[0])
-        subjectID = self.copy_file_to_wd(self.home+"/"+data[1])
-        outputDir = self.copy_file_to_wd(self.home+"/"+data[2])
-        lic = self.copy_file_to_wd(self.home+"/"+data[3])
+        mri_file = self.copy_file_to_wd(data[0])
+        subjectID = self.copy_file_to_wd(data[1])
+        outputDir = self.copy_file_to_wd(data[2])
+        lic = self.copy_file_to_wd(data[3])
 
         self.logger.info("Calling call_freesurfer.sh with: "+str(data))
         #call([self.script_path, subjectID, outputDir, mri_file, "output.zip", "5.3.0"])
