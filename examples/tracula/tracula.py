@@ -25,59 +25,106 @@ __author__ = 'reggie'
 
 
 
-
+from subprocess import call
 from pumpkin import *
 
 class tracula(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.str_pkts = []
-        self.packt_co = 0;
-        self.exp_pkts = 0
-        self.last_received = False
-        self.merged_data = ""
+        self.home = os.path.expanduser("~")
+        self.wd = self.context.getWorkingDir()
+        self.script = "tracula.sh"
+        self.dav_dir = self.home+"/traculadav/"
+
+
+        # self.state_tr = {}
+        # self.state_tr["MRI_BRAINSEGMENT"] = False
+        # self.state_tr["DTI_PREPROC"] = False
+        # self.state_tr["DTI_FIBER"] = False
+        #
+        # self.ifiles = {}
+        # self.ifiles["MRI_BRAINSEGMENT"] = None
+        # self.ifiles["DTI_PREPROC"] = None
+        # self.ifiles["DTI_FIBER"] = None
+
+        self.patients = {}
+
+
         pass
 
 
 
-    # def split(self, pkt, data):
-    #
-    #     frag_no = 1
-    #     for a in data:
-    #         npkt = self.fragment_pkt(pkt, frag_no)
-    #         frag_no += 1
-    #         #tag = "RAW:"+str(frag_no)
-    #         self.dispatch(npkt, a, "RAW", type="DataString")
-    #         #print a
-    #     lpkt = self.last_fragment_pkt(pkt, frag_no+1)
-    #     self.dispatch(lpkt, str(frag_no-1), "RAW", type="DataString")
-    #
-    #     return True
+    def state_barrier(self, id):
+        s = True
+        if id in self.patients.keys():
+            state_tr = self.patients[id][0]
+            for k in state_tr.keys():
+                if state_tr[k] == False:
+                    s = False
+                    break
+        else:
+            s= False
+
+        return s
+
+    def new_patient(self, id):
+        state_tr = {}
+        state_tr["MRI_BRAINSEGMENT"] = False
+        state_tr["DTI_PREPROC"] = False
+        state_tr["DTI_FIBER"] = False
+
+        ifiles = {}
+        ifiles["MRI_BRAINSEGMENT"] = None
+        ifiles["DTI_PREPROC"] = None
+        ifiles["DTI_FIBER"] = None
+
+        if id not in self.patients.keys():
+            self.patients[id] = []
+            self.patients[id].append(copy.copy(state_tr))
+            self.patients[id].append(copy.copy(ifiles))
+
+
+        return (self.patients[id][0], self.patients[id][1])
+
+
+
 
     def run(self, pkt, data):
 
-        print "tracula: "+data
-        #self.ack_pkt(pkt)
-        self.dispatch(pkt, data, "REGIONTRACK")
-        pass
+        ship_id = self.get_ship_id(pkt)
+        stag = self.get_last_stag(pkt)
 
-    # def merge(self, pkt, data):
-    #     if self.is_last_fragment(pkt):
-    #         self.last_received = True
-    #         self.exp_pkts = int(data)
-    #     else:
-    #         self.packt_co += 1
-    #         self.str_pkts.append(pkt)
-    #
-    #     if self.packt_co == self.exp_pkts:
-    #         for spkt in self.str_pkts:
-    #             pkt_data = self.get_pkt_data(spkt)
-    #             self.merged_data += pkt_data
-    #
-    #         print "traculaERGE DATA: "+self.merged_data
-    #         npkt = self.clean_header(pkt)
-    #         self.dispatch(npkt, self.merged_data, "PROCESSED")
-    #
-    #     pass
+        state_tr, ifiles = self.new_patient(ship_id)
+
+        state_tr[stag] = True
+        ifiles[stag] = self.copy_file_to_wd(data[0])
+
+        if self.state_barrier(ship_id):
+            print "Go Ahead"
+
+            script_path = self.wd+self.copy_file_to_wd(self.dav_dir+self.script, 0755)
+            conf_file = self.wd+self.copy_file_to_wd(self.dav_dir+"tracula.conf", 0644)
+
+            output_file = "output-"+self.get_name()+"-"+ship_id+".tar.gz"
+
+            call([script_path, "-config_file", conf_file,\
+                  "-freesurfer_data", ifiles["MRI_BRAINSEGMENT"],\
+                  "-predti_data", ifiles["DTI_PREPROC"],\
+                  "-bedpostx_data", ifiles["DTI_FIBER"],\
+                  "-outfile", output_file,\
+                  "-fsversion","5.3.0",\
+                  "-fsl_version", "5.0.5"], cwd=self.context.getWorkingDir())
+
+
+            dav_wd = self.dav_dir+ship_id
+            self._ensure_dir(dav_wd)
+            shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
+
+            message = dav_wd+"/"+output_file
+
+            print "RESULT: "+message
+
+            #self.dispatch(pkt, message, "DTI_FIBER")
+        pass
 

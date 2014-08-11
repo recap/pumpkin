@@ -25,18 +25,26 @@ __author__ = 'reggie'
 
 
 
-
+from subprocess import call
 from pumpkin import *
+
+'''
+example script call:-
+bedpostx.sh predti-output.zip
+
+$1 = input file
+'''
+
 
 class bedpostX(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.str_pkts = []
-        self.packt_co = 0;
-        self.exp_pkts = 0
-        self.last_received = False
-        self.merged_data = ""
+
+        self.home = os.path.expanduser("~")
+        self.wd = self.context.getWorkingDir()
+        self.script = "bedpostx.sh"
+        self.dav_dir = self.home+"/traculadav/"
         pass
 
 
@@ -57,9 +65,21 @@ class bedpostX(PmkSeed.Seed):
 
     def run(self, pkt, data):
 
-        print "bedpostX: "+data
-        #self.ack_pkt(pkt)
-        self.dispatch(pkt, data, "FIBER")
+        ship_id = self.get_ship_id(pkt)
+        script_path = self.wd+self.copy_file_to_wd(self.dav_dir+self.script, 0755)
+        predti_file = self.copy_file_to_wd(data[0])
+        output_file = "result.tgz"
+
+        call([script_path, predti_file], cwd=self.context.getWorkingDir())
+
+
+        dav_wd = self.dav_dir+ship_id
+        self._ensure_dir(dav_wd)
+        shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
+
+        message = dav_wd+"/"+output_file
+
+        self.dispatch(pkt, message, "DTI_FIBER")
         pass
 
     # def merge(self, pkt, data):

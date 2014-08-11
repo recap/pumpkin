@@ -84,10 +84,10 @@ class injector(PmkSeed.Seed):
             self.logger.warn("Input file "+lic+" not found yet...retry later")
 
         mri_input = mri_file+"|,|"+subjectID+"|,|"+outputDir+"|,|"+lic
-
+        dti_input = dti_file
 
         self.dispatch(pkt, mri_input, "MRI_RAW")
-        #self.dispatch(pkt, dti_file, "DTI_RAW")
+        self.dispatch(pkt, dti_input, "DTI_RAW")
 
         # for x in range(1,3):
         #     npkt = self.duplicate_pkt_new_box(pkt)
