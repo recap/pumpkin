@@ -278,7 +278,7 @@ class Pumpkin(Daemon):
 
             logging.debug("Adding RabbitMQ monitor: "+context.getUuid())
             rabbitmq.add_monitor_queue(context.getUuid())
-            rabbitmq.add_monitor_queue("test")
+            #rabbitmq.add_monitor_queue("test")
 
 
 
