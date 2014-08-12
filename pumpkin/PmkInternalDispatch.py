@@ -105,7 +105,7 @@ class Injector(SThread):
 
 class RabbitMQMonitor():
     class MonitorThread(SThread):
-        def __init__(self, parent, context, connection, queue):
+        def __init__(self, parent, context, connection, queue, exchange=''):
             SThread.__init__ (self)
             self.context = context
 
@@ -122,7 +122,11 @@ class RabbitMQMonitor():
             self.queue = queue
             self.cnt = 0
             self.channel.basic_qos(prefetch_count=1)
-            self.channel.queue_declare(queue=str(queue), durable=True)
+            self.channel.exchange_declare(exchange=str(exchange), type='fanout')
+            self.channel.queue_declare(queue=str(queue))
+            self.channel.queue_bind(exchange=str(exchange),
+                   queue=str(queue))
+            #self.channel.queue_declare(queue=str(queue), durable=True)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
@@ -188,7 +192,8 @@ class RabbitMQMonitor():
 
     def add_monitor_queue(self, queue, func):
         self.tag_map[queue] = func
-        qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, queue)
+        fqueue = queue+":"+self.context.getUuid()+":"+func
+        qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, fqueue, exchange=queue)
         qthread.start()
 
         #TODO:fix default queue
