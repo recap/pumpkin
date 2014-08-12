@@ -106,6 +106,9 @@ class MainContext(object):
         def get_broadcast_rate(self):
             return int(self.__attrs.brate)
 
+        def with_broadcast(self):
+            return self.__attrs.broadcast
+
         def load_seed(self, file):
 
             _,tail = os.path.split(file)
