@@ -117,18 +117,18 @@ class ExternalDispatch(SThread):
 
 
 
-        if self.context.fallback_rabbitmq():
-            ep = str(otag)
-            if ep in self.dispatchers.keys():
-                disp = self.dispatchers[ep]
-                disp.dispatch(json.dumps(pkt))
-            else:
-                disp = RabbitMQDispatch(self.context)
-                self.dispatchers[ep] = disp
-                disp.connect(ep)
-                disp.dispatch(unicode(json.dumps(pkt)))
-                s = json.dumps(pkt)
-            return
+        # if self.context.fallback_rabbitmq():
+        #     ep = str(otag)
+        #     if ep in self.dispatchers.keys():
+        #         disp = self.dispatchers[ep]
+        #         disp.dispatch(json.dumps(pkt))
+        #     else:
+        #         disp = RabbitMQDispatch(self.context)
+        #         self.dispatchers[ep] = disp
+        #         disp.connect(ep)
+        #         disp.dispatch(unicode(json.dumps(pkt)))
+        #         s = json.dumps(pkt)
+        #     return
 
         routes = None
         while 1:
@@ -557,15 +557,14 @@ class RabbitMQDispatch(Dispatch):
         return connection
 
     def connect(self, connect_to):
-        self.otag = connect_to
+        self.queue = connect_to.split("://")[1]
         self.connection = self.__open_rabbitmq_connection()
         self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange=str(self.otag), type='fanout')
-        #self.channel.queue_declare(queue=str(self.otag), durable=True)
+        #self.channel.exchange_declare(exchange=str(self.queue), type='fanout')
+        self.channel.queue_declare(queue=str(self.queue), durable=False)
 
     def dispatch(self, pkt):
-        #self.channel.basic_publish(exchange='',routing_key=self.otag,body=pkt)
-        self.channel.basic_publish(exchange=self.otag,routing_key='',body=pkt)
+        self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=pkt)
         pass
 
     def close(self):

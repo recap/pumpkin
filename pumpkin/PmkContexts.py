@@ -310,7 +310,7 @@ class MainContext(object):
         def setEndpoints(self):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
-                self.__attrs.eps = "inproc://*;tcp://*:*"
+                #self.__attrs.eps = "inproc://*;tcp://*:*"
                 self.__attrs.eps = "amqp://*"
                 #self.__attrs.eps = "tcp://*:*"
             epl = self.__attrs.eps.split(";")
@@ -327,12 +327,12 @@ class MainContext(object):
                     logging.debug("Added endpoint: "+s)
 
                 if prot == "amqp:":
-                    #if prts[1] == "*":
-                    #    s = "inproc://"+self.getUuid()
-                    #else:
-                    #    s = ep
-                    s = ep
-                    self.endpoints.append( (s, "raw.Q", "raw.Q", 1) )
+                    if prts[1] == "*":
+                        s = "amqp://"+self.getUuid()
+                    else:
+                        s = ep
+
+                    self.endpoints.append( (s, "amqp.PUSH", "amqp.PUSH", 15) )
                     logging.debug("Added endpoint: "+s)
 
                 elif prot == "ipc:":

@@ -594,12 +594,12 @@ class Seed(object):
         pass
 
     def post_load(self):
-        if self.context.fallback_rabbitmq():
-            rabbitmq = self.context.get_rabbitmq()
-            if rabbitmq:
-                for q in self.get_in_tag_list():
-                    logging.debug("Adding RabbitMQ monitor: "+str(q))
-                    rabbitmq.add_monitor_queue(q, self.__class__.__name__)
+        #if self.context.fallback_rabbitmq():
+        #    rabbitmq = self.context.get_rabbitmq()
+        #    if rabbitmq:
+        #        for q in self.get_in_tag_list():
+        #            logging.debug("Adding RabbitMQ monitor: "+str(q))
+        #            rabbitmq.add_monitor_queue(q, self.__class__.__name__)
         pass
 
     def hasInputs(self):

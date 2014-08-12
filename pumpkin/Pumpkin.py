@@ -267,6 +267,21 @@ class Pumpkin(Daemon):
             rabbitmq = RabbitMQMonitor(context, connection)
             context.set_rabbitmq(rabbitmq)
 
+            q = context.get_group()+":info"
+            bunny = RabbitMQBroadcaster(context, exchange=q)
+            bunny.start()
+            context.addThread(bunny)
+
+            bunnylistener = RabbitMQBroadcastSubscriber(context, exchange=q)
+            bunnylistener.start()
+            context.addThread(bunnylistener)
+
+            logging.debug("Adding RabbitMQ monitor: "+context.getUuid())
+            rabbitmq.add_monitor_queue(context.getUuid())
+            rabbitmq.add_monitor_queue("test")
+
+
+
         if context.hasRx():
             rxdir = context.hasRx()
             pfm = PacketFileMonitor(context, rxdir)
