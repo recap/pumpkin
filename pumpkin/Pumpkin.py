@@ -498,7 +498,8 @@ def main():
         P.restart()
     if args.daemon == None:
         context = P.getContext()
-        config = ConfigParser.RawConfigParser(allow_no_value=True)
+        #config = ConfigParser.RawConfigParser(allow_no_value=True)
+        config = ConfigParser.RawConfigParser()
         if os.path.exists(args.config):
             config.read(args.config)
             PmkShared.SUPERNODES = config.get("supernodes", "hosts").split(",")
