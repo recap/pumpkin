@@ -42,7 +42,8 @@ class freesurfer(PmkSeed.Seed):
         self.home = os.path.expanduser("~")
         self.wd = self.context.getWorkingDir()
         self.script = "FS_CVMFS.sh"
-        self.dav_dir = self.home+"/traculadav/"
+        self.dav_rel = "/traculadav/"
+        self.dav_dir = self.home+self.dav_rel
 
         #self.script_path = self.wd + "/"+self.script
 
@@ -68,10 +69,11 @@ class freesurfer(PmkSeed.Seed):
         call([script_path, subjectID, outputDir, mri_file, output_file, "5.3.0"], cwd=self.context.getWorkingDir())
 
         dav_wd = self.dav_dir+ship_id
+        dav_re = self.dav_rel+ship_id
         self._ensure_dir(dav_wd)
         shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
 
-        message = dav_wd+"/"+output_file
+        message = dav_re+"/"+output_file
         self.dispatch(pkt, message, "MRI_BRAINSEGMENT")
 
 

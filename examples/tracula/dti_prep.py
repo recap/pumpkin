@@ -50,7 +50,8 @@ class dti_prep(PmkSeed.Seed):
         self.home = os.path.expanduser("~")
         self.wd = self.context.getWorkingDir()
         self.script = "convertDTI.cvmfs.sh"
-        self.dav_dir = self.home+"/traculadav/"
+        self.dav_rel = "/traculadav/"
+        self.dav_dir = self.home+self.dav_rel
         pass
 
 
@@ -60,17 +61,18 @@ class dti_prep(PmkSeed.Seed):
 
         ship_id = self.get_ship_id(pkt)
         script_path = self.wd+self.copy_file_to_wd(self.dav_dir+self.script, 0755)
-        dti_file = self.copy_file_to_wd(data[0])
+        dti_file = self.copy_file_to_wd(self.home+data[0])
         output_file = "output-"+self.get_name()+"-"+ship_id+".zip"
 
         call([script_path, dti_file,"xxx",output_file, "7.11", "1.0.1"], cwd=self.context.getWorkingDir())
 
 
         dav_wd = self.dav_dir+ship_id
+        dav_re = self.dav_rel+ship_id
         self._ensure_dir(dav_wd)
         shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
 
-        message = dav_wd+"/"+output_file
+        message = dav_re+"/"+output_file
         self.dispatch(pkt, message, "DTI_PREPROC")
 
 

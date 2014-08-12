@@ -83,8 +83,10 @@ class injector(PmkSeed.Seed):
             found = False
             self.logger.warn("Input file "+lic+" not found yet...retry later")
 
-        mri_input = mri_file+"|,|"+subjectID+"|,|"+outputDir+"|,|"+lic
-        dti_input = dti_file
+        #mri_input = mri_file+"|,|"+subjectID+"|,|"+outputDir+"|,|"+lic
+        mri_input = data[0]+"|,|"+data[2]+"|,|"+data[3]+"|,|"+lic
+        #dti_input = dti_file
+        dti_input = data[1]
 
         self.dispatch(pkt, mri_input, "MRI_RAW")
         self.dispatch(pkt, dti_input, "DTI_RAW")
