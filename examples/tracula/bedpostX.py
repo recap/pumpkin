@@ -41,7 +41,7 @@ class bedpostX(PmkSeed.Seed):
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
 
-        self.home = os.path.expanduser("~")
+        self.home = os.path.expanduser("~")+"/"
         self.wd = self.context.getWorkingDir()
         self.script = "bedpostx.sh"
         self.dav_rel = "/traculadav/"

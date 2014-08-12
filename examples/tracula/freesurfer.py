@@ -39,7 +39,7 @@ FS_CVMFS.sh subjectID outputDir freesurfer-sample-input.zip output.zip 5.3.0
 class freesurfer(PmkSeed.Seed):
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context, poi)
-        self.home = os.path.expanduser("~")
+        self.home = os.path.expanduser("~")+"/"
         self.wd = self.context.getWorkingDir()
         self.script = "FS_CVMFS.sh"
         self.dav_rel = "/traculadav/"

@@ -47,7 +47,7 @@ class dti_prep(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.home = os.path.expanduser("~")
+        self.home = os.path.expanduser("~")+"/"
         self.wd = self.context.getWorkingDir()
         self.script = "convertDTI.cvmfs.sh"
         self.dav_rel = "/traculadav/"
