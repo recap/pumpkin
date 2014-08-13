@@ -310,9 +310,13 @@ class MainContext(object):
         def setEndpoints(self):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
-                #self.__attrs.eps = "inproc://*;tcp://*:*"
-                self.__attrs.eps = "amqp://*"
+                self.__attrs.eps = "inproc://*;tcp://*:*"
+                #self.__attrs.eps = "amqp://*"
                 #self.__attrs.eps = "tcp://*:*"
+
+            if self.fallback_rabbitmq():
+                self.__attrs.eps += ";amqp://*"
+
             epl = self.__attrs.eps.split(";")
             for ep in epl:
                 prts = ep.split("//")
