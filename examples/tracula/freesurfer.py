@@ -59,10 +59,10 @@ class freesurfer(PmkSeed.Seed):
         script_path = self.wd+self.copy_file_to_wd(self.dav_dir+self.script, 0755)
         #os.chmod(script_path, 0755)
 
-        mri_file = self.copy_file_to_wd(data[0])
-        subjectID = self.copy_file_to_wd(data[1])
-        outputDir = self.copy_file_to_wd(data[2])
-        lic = self.copy_file_to_wd(data[3])
+        mri_file = self.copy_file_to_wd(self.home+data[0])
+        subjectID = self.copy_file_to_wd(self.home+data[1])
+        outputDir = self.copy_file_to_wd(self.home+data[2])
+        lic = self.copy_file_to_wd(self.home+data[3])
         output_file = "output-"+self.get_name()+"-"+ship_id+".zip"
 
         self.logger.info("Calling FS_CVMFS.sh with: " + str(data))

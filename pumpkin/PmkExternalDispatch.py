@@ -561,7 +561,7 @@ class RabbitMQDispatch(Dispatch):
         self.connection = self.__open_rabbitmq_connection()
         self.channel = self.connection.channel()
         #self.channel.exchange_declare(exchange=str(self.queue), type='fanout')
-        self.channel.queue_declare(queue=str(self.queue), durable=False)
+        #self.channel.queue_declare(queue=str(self.queue), durable=False)
 
     def dispatch(self, pkt):
         self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=pkt)

@@ -32,10 +32,11 @@ class tracula(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.home = os.path.expanduser("~")
+        self.home = os.path.expanduser("~")+"/"
         self.wd = self.context.getWorkingDir()
         self.script = "tracula.sh"
-        self.dav_dir = self.home+"/traculadav/"
+        self.dav_rel = "/traculadav/"
+        self.dav_dir = self.home+self.dav_rel
 
 
         # self.state_tr = {}
@@ -118,10 +119,11 @@ class tracula(PmkSeed.Seed):
 
 
             dav_wd = self.dav_dir+ship_id
+            dav_re = self.dav_rel+ship_id
             self._ensure_dir(dav_wd)
             shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
 
-            message = dav_wd+"/"+output_file
+            message = dav_re+"/"+output_file
 
             print "RESULT: "+message
 
