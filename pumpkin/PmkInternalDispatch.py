@@ -105,7 +105,7 @@ class Injector(SThread):
 
 class RabbitMQMonitor():
     class MonitorThread(SThread):
-        def __init__(self, parent, context, connection, queue):
+        def __init__(self, parent, context, connection, queue, exchange=''):
             SThread.__init__ (self)
             self.context = context
 
@@ -120,15 +120,23 @@ class RabbitMQMonitor():
             self.tag_map = self.parent.tag_map
             self.channel = self.connection.channel()
             self.queue = queue
+            self.exchange = exchange
             self.cnt = 0
             self.channel.basic_qos(prefetch_count=1)
-            self.channel.queue_declare(queue=str(queue), durable=True)
+            #self.channel.exchange_declare(exchange=str(exchange), type='fanout')
+            #self.channel.queue_declare(queue=str(queue))
+            #self.channel.queue_bind(exchange=str(exchange),
+            #       queue=str(queue))
+            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
 
 
+
+
         def loop(self):
+            rx = self.context.getRx()
             while self.connection.is_open:
 
                 try:
@@ -139,22 +147,22 @@ class RabbitMQMonitor():
                             time.sleep(1)
                         else:
                             self.cnt += 1
-                            logging.debug("RabbitMQ received: "+ str(self.cnt))
+                            logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
 
-
-                            pkt = json.loads(body)
-
-                            l = len(pkt)
-                            func = None
-                            if method.routing_key in self.tag_map:
-                                func = self.tag_map[method.routing_key]
-                                if ":" in func:
-                                    func = func.split(":")[1]
-                                data = pkt[l-1]["data"]
-
-                            if func in PmkSeed.iplugins.keys():
-                                klass = PmkSeed.iplugins[func]
-                                rt = klass._stage_run(pkt, data)
+                            rx.put(body)
+                            # pkt = json.loads(body)
+                            #
+                            # l = len(pkt)
+                            # func = None
+                            # if method.routing_key in self.tag_map:
+                            #     func = self.tag_map[method.routing_key]
+                            #     if ":" in func:
+                            #         func = func.split(":")[1]
+                            #     data = pkt[l-1]["data"]
+                            #
+                            # if func in PmkSeed.iplugins.keys():
+                            #     klass = PmkSeed.iplugins[func]
+                            #     rt = klass._stage_run(pkt, data)
                     else:
                         time.sleep(1)
                 except pika.exceptions.ConnectionClosed as e:
@@ -186,9 +194,11 @@ class RabbitMQMonitor():
         self.context = context
         self.tag_map = {}
 
-    def add_monitor_queue(self, queue, func):
+    def add_monitor_queue(self, queue, func=None):
         self.tag_map[queue] = func
-        qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, queue)
+        #fqueue = queue+":"+self.context.getUuid()+":"+func
+        fqueue = queue
+        qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, fqueue, exchange='')
         qthread.start()
 
         #TODO:fix default queue

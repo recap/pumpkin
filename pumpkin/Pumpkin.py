@@ -212,15 +212,16 @@ class Pumpkin(Daemon):
             zmqbc.start()
             context.addThread(zmqbc)
 
-        #Listen for UDP broadcasts on LAN
-        udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
-        udplisten.start()
-        context.addThread(udplisten)
+        if context.with_broadcast():
+            #Listen for UDP broadcasts on LAN
+            udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
+            udplisten.start()
+            context.addThread(udplisten)
 
 
-        udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
-        udpbc.start()
-        context.addThread(udpbc)
+            udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
+            udpbc.start()
+            context.addThread(udpbc)
 
         #Local stuff to exploit multi-cores still needs testing
 
@@ -265,6 +266,21 @@ class Pumpkin(Daemon):
             connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
             rabbitmq = RabbitMQMonitor(context, connection)
             context.set_rabbitmq(rabbitmq)
+
+            q = context.get_group()+":info"
+            bunny = RabbitMQBroadcaster(context, exchange=q)
+            bunny.start()
+            context.addThread(bunny)
+
+            bunnylistener = RabbitMQBroadcastSubscriber(context, exchange=q)
+            bunnylistener.start()
+            context.addThread(bunnylistener)
+
+            logging.debug("Adding RabbitMQ monitor: "+context.getUuid())
+            rabbitmq.add_monitor_queue(context.getUuid())
+            #rabbitmq.add_monitor_queue("test")
+
+
 
         if context.hasRx():
             rxdir = context.hasRx()
@@ -498,7 +514,8 @@ def main():
         P.restart()
     if args.daemon == None:
         context = P.getContext()
-        config = ConfigParser.RawConfigParser(allow_no_value=True)
+        #config = ConfigParser.RawConfigParser(allow_no_value=True)
+        config = ConfigParser.RawConfigParser()
         if os.path.exists(args.config):
             config.read(args.config)
             PmkShared.SUPERNODES = config.get("supernodes", "hosts").split(",")

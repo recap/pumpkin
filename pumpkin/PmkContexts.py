@@ -106,6 +106,9 @@ class MainContext(object):
         def get_broadcast_rate(self):
             return int(self.__attrs.brate)
 
+        def with_broadcast(self):
+            return self.__attrs.broadcast
+
         def load_seed(self, file):
 
             _,tail = os.path.split(file)
@@ -308,7 +311,12 @@ class MainContext(object):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
                 self.__attrs.eps = "inproc://*;tcp://*:*"
+                #self.__attrs.eps = "amqp://*"
                 #self.__attrs.eps = "tcp://*:*"
+
+            if self.fallback_rabbitmq():
+                self.__attrs.eps += ";amqp://*"
+
             epl = self.__attrs.eps.split(";")
             for ep in epl:
                 prts = ep.split("//")
@@ -320,6 +328,15 @@ class MainContext(object):
                         s = ep
                     self.endpoints.append( (s, "zmq.INPROC", "zmq.PULL", 1) )
                     #self.endpoints.append( (s, "raw.Q", "raw.Q", 1) )
+                    logging.debug("Added endpoint: "+s)
+
+                if prot == "amqp:":
+                    if prts[1] == "*":
+                        s = "amqp://"+self.getUuid()
+                    else:
+                        s = ep
+
+                    self.endpoints.append( (s, "amqp.PUSH", "amqp.PUSH", 15) )
                     logging.debug("Added endpoint: "+s)
 
                 elif prot == "ipc:":

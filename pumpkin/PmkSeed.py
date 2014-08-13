@@ -201,12 +201,13 @@ class Seed(object):
         shutil.move(src,dst)
         return file_name
 
-    def copy_file_to_wd(self, file):
+    def copy_file_to_wd(self, file, mode=0644):
         filep = file.split("/")
         file_name = filep[len(filep)-1]
         dst = self.context.getWorkingDir()+"/"+file_name
         src = file
         shutil.copy(src,dst)
+        os.chmod(dst,mode)
         return file_name
 
     def get_relative_path(self, file):
@@ -593,12 +594,12 @@ class Seed(object):
         pass
 
     def post_load(self):
-        if self.context.fallback_rabbitmq():
-            rabbitmq = self.context.get_rabbitmq()
-            if rabbitmq:
-                for q in self.get_in_tag_list():
-                    logging.debug("Adding RabbitMQ monitor: "+str(q))
-                    rabbitmq.add_monitor_queue(q, self.__class__.__name__)
+        #if self.context.fallback_rabbitmq():
+        #    rabbitmq = self.context.get_rabbitmq()
+        #    if rabbitmq:
+        #        for q in self.get_in_tag_list():
+        #            logging.debug("Adding RabbitMQ monitor: "+str(q))
+        #            rabbitmq.add_monitor_queue(q, self.__class__.__name__)
         pass
 
     def hasInputs(self):
@@ -734,6 +735,8 @@ class Seed(object):
         header = lpkt[0]
         header["container"] = cont
         return lpkt
+
+
 
     def get_pkt_fragment_no(self, pkt):
         lpkt = copy.deepcopy(pkt)

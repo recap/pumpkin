@@ -11,6 +11,7 @@ import fcntl
 import zmq
 import Queue
 import subprocess as sp
+import pika
 #import netifaces
 
 #from Queue import *
@@ -97,6 +98,91 @@ def get_zmq_supernodes(node_list):
         s = "tcp://"+sn+":"+str(ZMQ_PUB_PORT)
         ret.append(s)
     return ret
+
+class RabbitMQBroadcaster(SThread):
+    def __init__(self, context, exchange='global'):
+        SThread.__init__(self)
+        self.context = context
+
+        self.exchange = exchange
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+        self.channel = self.connection.channel()
+        self.channel.exchange_declare(exchange=self.exchange, type='fanout')
+        #self.queue = self.channel.queue_declare(exclusive=True)
+
+    def run(self):
+        while True:
+
+
+            if not self.context.getProcGraph().isRegistryModified():
+                time.sleep(self.context.get_broadcast_rate())
+                data = self.context.getProcGraph().dumpExternalRegistry()
+
+                self.channel.basic_publish(exchange=self.exchange,routing_key='',body=data)
+
+                if self.stopped():
+                    logging.debug("Exiting thread: "+self.__class__.__name__)
+                    break
+                else:
+                    continue
+
+            if self.context.getProcGraph().isRegistryModified():
+                data = self.context.getProcGraph().dumpExternalRegistry()
+                self.context.getProcGraph().ackRegistryUpdate()
+
+                self.channel.basic_publish(exchange=self.exchange,routing_key='',body=data)
+
+                if self.stopped():
+                    logging.debug("Exiting thread: "+self.__class__.__name__)
+                    break
+                else:
+                    continue
+
+
+class RabbitMQBroadcastSubscriber(SThread):
+    def __init__(self, context, exchange='global'):
+        SThread.__init__(self)
+        self.context = context
+
+        self.exchange = exchange
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+        self.channel = self.connection.channel()
+        result = self.channel.queue_declare(exclusive=True)
+        self.queue = result.method.queue
+        self.channel.queue_bind(exchange=self.exchange,
+                   queue=self.queue)
+
+    def run(self):
+
+        while True:
+
+            method, properties, data = self.channel.basic_get(queue=self.queue, no_ack=True)
+            if method:
+                if (method.NAME == 'Basic.GetEmpty'):
+                    time.sleep(1)
+                else:
+                    logging.debug("Incomming data from ["+self.queue+"]: "+data)
+                    d = json.loads(data)
+                    for k in d.keys():
+                        if not (k == "cmd"):
+                            self.context.getProcGraph().updateRegistry(d[k])
+                        else:
+                            logging.debug('Command detected: '+str(d[k]))
+                            if(d[k]["type"] == "arp"):
+                                pkt_id = d[k]["id"]
+                                pkt = self.context.get_pkt_from_shelve(pkt_id)
+                                for p in pkt:
+                                    ep = d[k]["reply-to"]
+                                    p[0]["state"] = "ARP_OK"
+                                    exdisp = self.context.getExternalDispatch()
+                                    logging.debug("Sending ARP response: "+json.dumps(p))
+                                    exdisp.send_to_ep(p, ep)
+            else:
+                time.sleep(1)
 
 
 class ZMQBroadcaster(SThread):
