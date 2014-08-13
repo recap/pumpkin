@@ -127,7 +127,7 @@ class RabbitMQMonitor():
             #self.channel.queue_declare(queue=str(queue))
             #self.channel.queue_bind(exchange=str(exchange),
             #       queue=str(queue))
-            self.channel.queue_declare(queue=str(queue), durable=False)
+            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
