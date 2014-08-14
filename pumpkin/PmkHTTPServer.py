@@ -222,7 +222,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             tx_size = context.get_tx_size()
 
             rep += '\n'
-            rep += '{"rx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'"}'
+            rep += '{"rx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
 
             rep += "]"
 
