@@ -16,6 +16,23 @@ class rx(Queue):
         Queue.__init__(self, maxsize)
         pass
 
+    def dig(self, pkt):
+        if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
+            iplugins = PmkSeed.iplugins
+            keys = PmkSeed.iplugins.keys
+            l = len(pkt)
+            func = pkt[l-1]["func"]
+            #data = pkt[l-2]["data"]
+
+            if ":" in func:
+                func = func.split(":")[1]
+
+            if func in keys():
+                klass = iplugins[func]
+                klass.look_ahead(pkt)
+
+            pass
+
 class InternalDispatch(SThread):
     _packed_pkts = 0
     def __init__(self, context):
@@ -23,17 +40,20 @@ class InternalDispatch(SThread):
         self.context = context
         pass
 
+
+
     def run(self):
         rx = self.context.getRx()
-        loads = json.loads
+        #loads = json.loads
         keys = PmkSeed.iplugins.keys
         iplugins = PmkSeed.iplugins
         speedy = self.context.is_speedy()
         while 1:
-            pkts = rx.get(True)
-            logging.debug("Packet received: \n"+pkts)
+            #already in json format
+            pkt = rx.get(True)
+            #logging.debug("Packet received: \n"+pkts)
             #pkt = json.loads(pkts)
-            pkt = loads(pkts)
+            #pkt = loads(pkts)
             if not speedy:
                 #Check for PACK
                 if pkt[0]["state"] == "PACK_OK":
@@ -148,8 +168,9 @@ class RabbitMQMonitor():
                         else:
                             self.cnt += 1
                             logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
-
-                            rx.put(body)
+                            pkt = json.loads(body)
+                            rx.dig(pkt)
+                            rx.put(pkt)
                             # pkt = json.loads(body)
                             #
                             # l = len(pkt)
@@ -304,11 +325,14 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
         queue_put = self.context.getRx().put
+        dig = self.context.getRx().dig
         while True:
             try:
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
-                queue_put(msg)
+                pkt = json.loads(msg)
+                dig(pkt)
+                queue_put(pkt)
                 #self.proccess_pkt(msg)
                 #del msg
 

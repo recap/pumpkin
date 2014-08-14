@@ -161,41 +161,68 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
             tm = time.time()
             ip = str(context.get_local_ip())
+            guid = str(context.getUuid())
             if not ip:
                 ip = "NONE"
             rep = "["
-            rep += '{"timestamp" : '+str(tm)+',"ip" : "'+ip+'"},\n'
-            if (len(PmkSeed.iplugins) > 0):
-                rep = rep + "{"
-                for x in PmkSeed.iplugins.keys():
-                   klass = PmkSeed.iplugins[x]
-                   ent = "\""+klass.get_name() +"\" : \""+ str(klass.is_enabled())+"\""
-                   rep = rep + ent + ","
+            rep += '{"host_id": "'+guid+'", "timestamp" : '+str(tm)+',"ip" : "'+ip+'"},\n'
 
-                rep = rep[0:len(rep)-1]
-                rep = rep + "},"
-            else:
-                rep += "{},"
-
+            jrep = {}
             total_in = 0
             total_out = 0
+            total_pexec = 0
+            total_npkts = 0
             for x in PmkSeed.iplugins.keys():
-               klass = PmkSeed.iplugins[x]
-               rep = rep + "\n" + klass.get_state_counters()
-               tin, tout = klass.get_all_counters()
-               rep += ","
-               total_in += tin
-               total_out += tout
+                klass = PmkSeed.iplugins[x]
+                forecast = klass.get_forecast()
+                jrep[klass.get_name()]={}
+                jrep[klass.get_name()]["enabled"] = klass.is_enabled()
+                jrep[klass.get_name()]["stags"] = klass.get_state_counters()
+                jrep[klass.get_name()]["npkts"] = forecast[0]
+                jrep[klass.get_name()]["msize"] = forecast[1]
+                jrep[klass.get_name()]["pexec"] = forecast[2]
+                tin, tout = klass.get_all_counters()
+                total_in += tin
+                total_out += tout
+                total_pexec += forecast[2]
+                total_npkts += forecast[0]
+
+            jreps = json.dumps(jrep, separators=(',',':') )
+
+            rep += jreps
+            rep += ","
+
+            # if (len(PmkSeed.iplugins) > 0):
+            #     rep = rep + "{"
+            #     for x in PmkSeed.iplugins.keys():
+            #        klass = PmkSeed.iplugins[x]
+            #        ent = "\""+klass.get_name() +"\" : \""+ str(klass.is_enabled())+"\""
+            #        rep = rep + ent + ","
+            #
+            #     rep = rep[0:len(rep)-1]
+            #     rep = rep + "},"
+            # else:
+            #     rep += "{},"
+            #
+            # total_in = 0
+            # total_out = 0
+            # for x in PmkSeed.iplugins.keys():
+            #    klass = PmkSeed.iplugins[x]
+            #    rep = rep + "\n" + klass.get_state_counters()
+            #    tin, tout = klass.get_all_counters()
+            #    rep += ","
+            #    total_in += tin
+            #    total_out += tout
 
             rep += '\n'
             rep = rep + '{"total_in":'+str(total_in)+',"total_out":'+str(total_out)+'}'
             rep += ","
 
-            rx_size = context.get_rx_size()
+            #rx_size = context.get_rx_size()
             tx_size = context.get_tx_size()
 
             rep += '\n'
-            rep += '{"rx_size" : "'+str(rx_size)+'", "tx_size" : "'+str(tx_size)+'"}'
+            rep += '{"rx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'"}'
 
             rep += "]"
 
@@ -252,6 +279,26 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 s.wfile.write("ERROR")
 
+        if "forecast" in s.path:
+            parts = s.path.split("?")
+            func_name = parts[1]
+
+
+            s.send_response(200)
+            s.send_header("Content-type", "text/plain")
+            s.end_headers()
+
+            if ":" in func_name:
+                func_name = func_name.split(":")[1]
+
+            if func_name in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[func_name]
+                #klass.stop_recording()
+                forecast = klass.get_forecast()
+
+                rep = '{"npkts" : "'+str(forecast[0])+'", "msize" : "'+str(forecast[1])+'", "pexec" : "'+str(forecast[2])+'"}'
+                s.wfile.write(rep)
+
         if "complexity" in s.path:
 
 
@@ -294,8 +341,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         fdlen = dlen
                     ldlen = dlen
                     xi.append(dlen)
-                    rep += str(dlen)+" "+str(complexity[dlen])
-                    lreg_arry.append(complexity[dlen])
+                    rep += str(dlen)+" "+str(complexity[dlen][0])
+                    lreg_arry.append(complexity[dlen][0])
                     rep += "\n"
 
                 klass.start_recording()

@@ -15,6 +15,7 @@ import json as sjson
 import logging
 import inspect
 import zmq
+from numpy import arange,array,ones,linalg
 
 import PmkShared
 
@@ -87,6 +88,10 @@ class Seed(object):
         self._state_counter = {}
         self._complexity = {}
         self._complexity_record = True
+        self._forecast = {}
+        self._forecast["npkts"] = 0
+        self._forecast["msize"] = 0
+        self._forecast["pexec"] = 0
 
         self._in_and_list = []
         self._in_all_list = []
@@ -347,7 +352,8 @@ class Seed(object):
         self._lock_telemetrics.release()
 
     def get_state_counters(self):
-        return sjson.dumps(self._state_counter, separators=(',',':') )
+        return self._state_counter
+        #return sjson.dumps(self._state_counter, separators=(',',':') )
 
     def get_all_counters(self):
         total_in = 0
@@ -444,6 +450,82 @@ class Seed(object):
             logging.debug("Duplicate packet received: "+pkt_id)
             pass
 
+    def regression(self):
+        complexity = self.get_complexity_list()
+        if len(complexity) >= 1:
+            fdlen = None
+            ldlen = None
+            rep = ""
+            lreg_arry = []
+            xi = []
+            self.stop_recording()
+
+            for dlen in complexity.keys():
+                if (fdlen == None):
+                    fdlen = dlen
+                ldlen = dlen
+                xi.append(dlen)
+                lreg_arry.append(complexity[dlen][0])
+
+            self.start_recording()
+
+            A = array([ xi, ones(xi.__len__())])
+            y = lreg_arry
+            x_len = xi.__len__()
+            y_len = y.__len__()
+
+            w = linalg.lstsq(A.T,y)[0]
+        else:
+            w = (0, 0)
+        return w
+
+    def look_ahead(self, pkt):
+        w = self.regression()
+        if w[0] == 0:
+            return
+        forecast = self._forecast
+        qpkts = forecast["npkts"]
+        msize = forecast["msize"]
+        pexec = forecast["pexec"]
+
+        l = len(pkt)
+        data = pkt[l-2]["data"]
+        data_len = len(data)
+
+        pred_time = data_len*w[0] + w[1]
+
+        pexec += pred_time
+        msize = (float(msize)*qpkts + float(data_len)) / (qpkts+1)
+        qpkts += 1
+
+        forecast["npkts"] = qpkts
+        forecast["msize"] = msize
+        forecast["pexec"] = pexec
+
+        pkt[0]["aux_bits"] = 0x10
+        pkt[0]["pexec"] = pred_time
+        pkt[0]["dsize"] = data_len
+
+        pass
+
+    def get_forecast(self):
+        forecast = self._forecast
+        qpkts = forecast["npkts"]
+        msize = forecast["msize"]
+        pexec = forecast["pexec"]
+        return (qpkts, msize, pexec)
+
+    def adj_forecast(self, pkt):
+        if "aux_bits" in pkt[0].keys():
+            if pkt[0]["aux_bits"] == 0x10:
+                ptime = pkt[0]["pexec"]
+                dsize = pkt[0]["dsize"]
+
+                forecast = self._forecast
+                forecast["pexec"] -= ptime
+                #forecast["msize"] = (forecast["msize"] - dsize) / 2
+                forecast["npkts"] -= 1
+
 
     def _stage_run_express(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
@@ -475,11 +557,15 @@ class Seed(object):
             etime = htime - stime
 
             if dlen in complexity.keys():
-                t = complexity[dlen]
-                avg = (etime + t) / 2
-                complexity[dlen] = avg
+                t = complexity[dlen][0]
+                n = complexity[dlen][1]
+                avg = (etime + t*n) / (n+1)
+                complexity[dlen][0] = avg
+                complexity[dlen][1] = n+1
             else:
-                complexity[dlen] = etime
+                complexity[dlen] = [etime,1]
+
+        self.adj_forecast(pkt)
 
         pass
     def stop_recording(self):
