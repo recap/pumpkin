@@ -5,6 +5,7 @@ import Queue
 import zmq
 import time
 import pika
+import sys
 
 import PmkSeed
 
@@ -110,22 +111,23 @@ class InternalDispatch(SThread):
                             logging.debug("Received ARP_OK: "+json.dumps(ipkt))
                             self.context.put_pkt_in_shelve2(ipkt)
                             continue
+                    try:
+                        l = len(ipkt)
+                        func = ipkt[l-1]["func"]
+                        data = ipkt[l-2]["data"]
 
-                    l = len(ipkt)
-                    func = ipkt[l-1]["func"]
-                    data = ipkt[l-2]["data"]
-
-                    if ":" in func:
-                        func = func.split(":")[1]
+                        if ":" in func:
+                            func = func.split(":")[1]
 
 
-                    if func in keys():
-                        klass = iplugins[func]
-                        if speedy:
-                            rt = klass._stage_run_express(ipkt, data)
-                        else:
-                            rt = klass._stage_run(ipkt, data)
-
+                        if func in keys():
+                            klass = iplugins[func]
+                            if speedy:
+                                rt = klass._stage_run_express(ipkt, data)
+                            else:
+                                rt = klass._stage_run(ipkt, data)
+                    except:
+                        logging.error("Unexpected error invoking function:", sys.exc_info()[0])
 
 
 
@@ -275,7 +277,7 @@ class RabbitMQMonitor():
                             self.cnt += 1
                             logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
                             pkt = json.loads(body)
-                            rx.dig(pkt)
+                            #rx.dig(pkt)
                             rx.put(pkt)
                             # pkt = json.loads(body)
                             #
