@@ -303,13 +303,14 @@ class Seed(object):
 
     def ack_pkt(self, pkt):
         if self.context.with_acks():
-            dpkt = copy.deepcopy(pkt)
+            #dpkt = copy.deepcopy(pkt)
+            dpkt = pkt
             dpkt[0]["state"] = "PACK_OK"
             pkt_id = self.get_pkt_id(dpkt)
-            self._lock_in_fpkts.acquire()
-            self.context.pktReady(dpkt)
-            if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
-            self._lock_in_fpkts.release()
+            # self._lock_in_fpkts.acquire()
+            # self.context.pktReady(dpkt)
+            # if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
+            # self._lock_in_fpkts.release()
 
             if "multiple" in dpkt[0].keys():
                 n = dpkt[0]["number"]
@@ -358,6 +359,7 @@ class Seed(object):
 
 
     def pack_ok(self, pkt):
+        return
         pkt_id = self.get_pkt_id(pkt)
         if pkt[0]["last_func"] == self.__class__.__name__:
             self._lock_fpkts.acquire()
@@ -369,7 +371,8 @@ class Seed(object):
         pass
 
     def is_duplicate(self, pkt):
-
+        #TODO
+        return False
         if(self.context.is_speedy()):
             return False
 
@@ -429,17 +432,17 @@ class Seed(object):
             tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
             pkt[0]["state"] = "PROCESSING"
 
-
-            if self.context.with_shelve():
-                self._lock_in_fpkts.acquire()
-                shelve = self.context.get_pkt_shelve()
-                shelve[str(pkt_id)] = pkt
-                self._lock_in_fpkts.release()
-
-            if self.context.with_acks():
-                self._lock_in_fpkts.acquire()
-                self.in_flight_pkts[pkt_id] = pkt
-                self._lock_in_fpkts.release()
+            #TODO: persistance
+            # if self.context.with_shelve():
+            #     self._lock_in_fpkts.acquire()
+            #     shelve = self.context.get_pkt_shelve()
+            #     shelve[str(pkt_id)] = pkt
+            #     self._lock_in_fpkts.release()
+            #
+            # if self.context.with_acks():
+            #     self._lock_in_fpkts.acquire()
+            #     self.in_flight_pkts[pkt_id] = pkt
+            #     self._lock_in_fpkts.release()
 
             try:
                 self.__inc_pkt_counter()
