@@ -27,6 +27,9 @@ class tx(Queue):
         Queue.__init__(self, maxsize)
         pass
 
+
+
+
 class ExternalDispatch(SThread):
 
     def __init__(self, context):
@@ -37,9 +40,14 @@ class ExternalDispatch(SThread):
         self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
         #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
 
+
+
+
         self.graph = self.context.getProcGraph()
         self.tx = self.context.getTx()
         self.ep_sched = EndpointPicker(self.context)
+
+        self._coll_queue = {}
 
         if self.context.fallback_rabbitmq():
             #host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -51,6 +59,8 @@ class ExternalDispatch(SThread):
             #self.channel.queue_declare(queue=self.queue)
 
         pass
+
+
 
     def __open_rabbitmq_connection(self):
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -171,6 +181,34 @@ class ExternalDispatch(SThread):
                         next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                         dcpkt.append(next_hop)
 
+                        key = pep["ep"]+"::"+r["name"]
+                        eff = self.context.get_eff(key)
+                        if eff < 0.5:
+                            cq = self._coll_queue
+                            logging.debug("Efficiency for signiture "+str(key)+" too low "+str(eff))
+                            if key not in cq.keys():
+                                logging.debug("Delaying packet with signiture: "+str(key))
+                                cq[key] = []
+                                cq[key].append(pkt)
+                            else:
+                                logging.debug("Delaying packet with signiture: "+str(key))
+                                cq[key].append(pkt)
+
+                            if len(cq[key]) > 5:
+                                multi_pkt = []
+                                multi_pkt.append({})
+
+                                multi_pkt[0]["multiple"] = True
+                                multi_pkt[0]["number"] = len(cq[key])
+                                multi_pkt[0]["pkts"] = cq[key]
+                                multi_pkt[0]["timestamp"] = "{:.12f}".format(time.time())
+                                multi_pkt[0]["state"] = "NEW"
+                                multi_pkt.append(next_hop)
+                                dcpkt = multi_pkt
+                                cq[key] = []
+                            else:
+                                continue
+                        dcpkt[0]["last_timestamp"] = "{:.12f}".format(time.time())
 
                         if ep in self.dispatchers.keys():
                             disp = self.dispatchers[ep]

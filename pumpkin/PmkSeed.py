@@ -93,6 +93,7 @@ class Seed(object):
         self._forecast["msize"] = 0
         self._forecast["pexec"] = 0
 
+        self._t_buffer = {}
         self._in_and_list = []
         self._in_all_list = []
         self._out_all_list = []
@@ -103,6 +104,7 @@ class Seed(object):
         if self.context.with_acks():
             self.pkt_checker_t()
         pass
+
 
 
     def __routine_checks_t(self):
@@ -308,8 +310,49 @@ class Seed(object):
             self.context.pktReady(dpkt)
             if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
             self._lock_in_fpkts.release()
+
+            if "multiple" in dpkt[0].keys():
+                n = dpkt[0]["number"]
+                s = dpkt[0]["seq"]
+                key = dpkt[0]["last_contact"]+"::"+dpkt[0]["last_func"]
+                l = 0
+                if key in self._t_buffer.keys():
+                    l = len(self._t_buffer[key])
+                else:
+                    self._t_buffer[key] = []
+                    self._t_buffer[key].append(dpkt[0])
+
+                if l < n-1:
+                    self._t_buffer[key].append(dpkt[0])
+                else:
+                    multi_pkt = []
+                    multi_pkt.append({})
+                    multi_pkt[0]["number"] = n
+                    multi_pkt[0]["multiple"] = True
+                    multi_pkt[0]["last_contact"] = dpkt[0]["last_contact"]
+                    multi_pkt[0]["timestamp"] = dpkt[0]["timestamp"]
+                    multi_pkt[0]["state"] = "PACK_OK"
+
+                    tm1 = time.time()
+                    tm2 = float(dpkt[0]["mexec"])
+                    tdelta = tm1 - tm2
+                    multi_pkt[0]["mexec"] = "{:.12f}".format(tdelta)
+
+                    multi_pkt[0]["pkts"] = []
+                    multi_pkt[0]["pkts"].append(self._t_buffer[key])
+                    #self._t_buffer[key] = []
+
+                    exdisp = self.context.getExternalDispatch()
+                    exdisp.send_to_last(multi_pkt)
+
+                return
+
             if not pkt[0]["last_func"] == None:
                  exdisp = self.context.getExternalDispatch()
+                 tm1 = time.time()
+                 tm2 = float(dpkt[0]["pexec"])
+                 tdelta = tm1 - tm2
+                 dpkt[0]["pexec"] = "{:.12f}".format(tdelta)
                  exdisp.send_to_last(dpkt)
             pass
 
@@ -326,6 +369,7 @@ class Seed(object):
         pass
 
     def is_duplicate(self, pkt):
+
         if(self.context.is_speedy()):
             return False
 
@@ -385,6 +429,7 @@ class Seed(object):
             tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
             pkt[0]["state"] = "PROCESSING"
 
+
             if self.context.with_shelve():
                 self._lock_in_fpkts.acquire()
                 shelve = self.context.get_pkt_shelve()
@@ -423,6 +468,7 @@ class Seed(object):
                     for x in range (1,len(args)-1):
                         nargs.append(args[x])
 
+                pkt[0]["pexec"] = "{:.12f}".format(time.time())
                 if pstate == "MERGE":
                     self.merge(pkt,nargs)
                     return
@@ -985,7 +1031,10 @@ class Seed(object):
 
 
         if self.context.with_acks():
+            tm = time.time()
             lpkt[0]["state"] = "WAITING_PACK"
+            lpkt[0]["last_timestamp"] = "{:.12f}".format(tm)
+            print "TIMESTAMP 1: "+lpkt[0]["last_timestamp"]
         else:
             lpkt[0]["state"] = "TRANSIT"
         lpkt[0]["c_tag"] = stag

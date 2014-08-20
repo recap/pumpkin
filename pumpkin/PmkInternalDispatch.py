@@ -42,6 +42,7 @@ class InternalDispatch(SThread):
 
 
 
+
     def run(self):
         rx = self.context.getRx()
         #loads = json.loads
@@ -51,21 +52,123 @@ class InternalDispatch(SThread):
         while 1:
             #already in json format
             pkt = rx.get(True)
-            #logging.debug("Packet received: \n"+pkts)
-            #pkt = json.loads(pkts)
-            #pkt = loads(pkts)
+
+            #check if multiple packets
+            if "multiple" in pkt[0].keys():
+                logging.debug("Multiple packets")
+                print json.dumps(pkt)
+                if pkt[0]["state"] == "PACK_OK":
+                    tm1 = time.time()
+                    tm2 = float(pkt[0]["timestamp"])
+                    tdelta = tm1 - tm2
+                    mexec = float(pkt[0]["mexec"])
+
+                    eff = mexec/tdelta
+                    overhead = tdelta - mexec
+
+                    st_tdelta = "{:.12f}".format(tdelta)
+                    st_mexec = "{:.12f}".format(mexec)
+                    st_overhead = "{:.12f}".format(overhead)
+                    st_eff = "{:.12f}".format(eff)
+
+                    print "PKT RPTT: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff
+
+                    for ipkt in pkt[0]["pkts"]:
+                        seed = ipkt[0]["last_func"]
+
+                        if seed in PmkSeed.iplugins.keys():
+                            klass = PmkSeed.iplugins[seed]
+                            klass.pack_ok(ipkt)
+                            self._packed_pkts += 1
+                    continue
+
+
+
+                c = 0
+                mpkt_t = time.time()
+                for ipkt in pkt[0]["pkts"]:
+                    c += 1
+                    ipkt[0]["multiple"] = True
+                    ipkt[0]["number"] = pkt[0]["number"]
+                    ipkt[0]["seq"] = c
+                    ipkt[0]["mexec"] = mpkt_t
+                    ipkt[0]["timestamp"] = pkt[0]["timestamp"]
+                    ##################invoke ipkt##########################
+                    if not speedy:
+                        #Check for PACK
+                        if ipkt[0]["state"] == "PACK_OK":
+                            #logging.debug("PACK packet: "+pkts)
+                            seed = ipkt[0]["last_func"]
+
+                            if seed in PmkSeed.iplugins.keys():
+                                klass = PmkSeed.iplugins[seed]
+                                klass.pack_ok(ipkt)
+                                self._packed_pkts += 1
+                                continue
+
+                        if ipkt[0]["state"] == "ARP_OK":
+                            logging.debug("Received ARP_OK: "+json.dumps(ipkt))
+                            self.context.put_pkt_in_shelve2(ipkt)
+                            continue
+
+                    l = len(ipkt)
+                    func = ipkt[l-1]["func"]
+                    data = ipkt[l-2]["data"]
+
+                    if ":" in func:
+                        func = func.split(":")[1]
+
+
+                    if func in keys():
+                        klass = iplugins[func]
+                        if speedy:
+                            rt = klass._stage_run_express(ipkt, data)
+                        else:
+                            rt = klass._stage_run(ipkt, data)
+
+
+
+
+                    #########################end invoke ipkt###########################
+
+                continue
+
+            ##################invoke pkt##########################
             if not speedy:
                 #Check for PACK
                 if pkt[0]["state"] == "PACK_OK":
                     #logging.debug("PACK packet: "+pkts)
                     seed = pkt[0]["last_func"]
 
+
                     if seed in PmkSeed.iplugins.keys():
                         klass = PmkSeed.iplugins[seed]
                         klass.pack_ok(pkt)
                         self._packed_pkts += 1
                         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
+
+                        tm = time.time()
+                        tdelta = tm - float(pkt[0]["last_timestamp"])
+                        print "TM 0: "+str(tm)+" TM 1: "+pkt[0]["last_timestamp"]
+                        pexec = float(pkt[0]["pexec"])
+                        overhead = tdelta - pexec
+                        eff = pexec / tdelta
+                        ieff = tdelta / pexec
+                        st_tdelta = "{:.12f}".format(tdelta)
+                        st_pexec = "{:.12f}".format(pexec)
+                        st_overhead = "{:.12f}".format(overhead)
+                        st_eff = "{:.12f}".format(eff)
+                        st_ieff = "{:.12f}".format(ieff)
+                        print "PKT RPTT: "+st_tdelta+" EXEC TIME: "+st_pexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+","+st_ieff
+
+                        l = len(pkt)
+                        last = pkt[l-1]
+                        key = last["ep"]+"::"+last["func"]
+
+                        self.context.update_eff(key, eff)
+
                         continue
+
                 # if pkt[0]["state"] == "MERGE":
                 #     seed = pkt[0]["last_func"]
                 #
@@ -101,6 +204,9 @@ class InternalDispatch(SThread):
                     rt = klass._stage_run_express(pkt, data)
                 else:
                     rt = klass._stage_run(pkt, data)
+
+
+            #########################end invoke pkt###########################
 
 
 
@@ -331,7 +437,8 @@ class ZMQPacketMonitor(SThread):
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
                 pkt = json.loads(msg)
-                dig(pkt)
+                if "multiple" not in pkt[0].keys():
+                    dig(pkt)
                 queue_put(pkt)
                 #self.proccess_pkt(msg)
                 #del msg

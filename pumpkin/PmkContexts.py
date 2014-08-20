@@ -70,7 +70,18 @@ class MainContext(object):
 
             self.pkt_shelve_2 = None
 
+            self._eff = {}
+
             pass
+
+        def update_eff(self, key, eff):
+            self._eff[key] = eff
+
+        def get_eff(self, key):
+            if key in self._eff:
+                return self._eff[key]
+            else:
+                return 1
 
         def fallback_rabbitmq(self):
             if self.__attrs.rabbitmq_fallback:
