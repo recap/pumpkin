@@ -57,7 +57,7 @@ class InternalDispatch(SThread):
             #check if multiple packets
             if "multiple" in pkt[0].keys():
                 logging.debug("Multiple packets")
-                print json.dumps(pkt)
+                #print json.dumps(pkt)
                 if pkt[0]["state"] == "PACK_OK":
                     tm1 = time.time()
                     tm2 = float(pkt[0]["timestamp"])
@@ -151,7 +151,7 @@ class InternalDispatch(SThread):
 
                         tm = time.time()
                         tdelta = tm - float(pkt[0]["last_timestamp"])
-                        print "TM 0: "+str(tm)+" TM 1: "+pkt[0]["last_timestamp"]
+                        #print "TM 0: "+str(tm)+" TM 1: "+pkt[0]["last_timestamp"]
                         pexec = float(pkt[0]["pexec"])
                         overhead = tdelta - pexec
                         eff = pexec / tdelta

@@ -228,7 +228,10 @@ class ExternalDispatch(SThread):
 
                         key = pep["ep"]+"::"+r["name"]
                         eff = self.context.get_eff(key)
+                        #print "EFF: "+str(eff)
                         if eff < 0.5:
+                         #   print "EFF LESS"
+                         #   time.sleep(0.02)
                             cq = self._coll_queue
                             logging.debug("Efficiency for signiture "+str(key)+" too low "+str(eff))
                             if key not in cq.keys():
@@ -239,7 +242,7 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            if len(cq[key]) > 50:
+                            if len(cq[key]) > 1000:
                                 multi_pkt = []
                                 multi_pkt.append({})
 
@@ -253,6 +256,10 @@ class ExternalDispatch(SThread):
                                 cq[key] = []
                             else:
                                 continue
+                        else:
+                            time.sleep(0.3)
+
+
                         dcpkt[0]["last_timestamp"] = "{:.12f}".format(time.time())
 
                         if ep in self.dispatchers.keys():
