@@ -71,7 +71,7 @@ class InternalDispatch(SThread):
                     st_overhead = "{:.12f}".format(overhead)
                     st_eff = "{:.12f}".format(eff)
 
-                    print "PKT RPTT: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff
+                    print "PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff
 
                     for ipkt in pkt[0]["pkts"]:
                         seed = ipkt[0]["last_func"]

@@ -340,7 +340,7 @@ class Seed(object):
 
                     multi_pkt[0]["pkts"] = []
                     multi_pkt[0]["pkts"].append(self._t_buffer[key])
-                    #self._t_buffer[key] = []
+                    self._t_buffer[key] = []
 
                     exdisp = self.context.getExternalDispatch()
                     exdisp.send_to_last(multi_pkt)
@@ -1034,7 +1034,6 @@ class Seed(object):
             tm = time.time()
             lpkt[0]["state"] = "WAITING_PACK"
             lpkt[0]["last_timestamp"] = "{:.12f}".format(tm)
-            print "TIMESTAMP 1: "+lpkt[0]["last_timestamp"]
         else:
             lpkt[0]["state"] = "TRANSIT"
         lpkt[0]["c_tag"] = stag

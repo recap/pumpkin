@@ -93,22 +93,67 @@ class ExternalDispatch(SThread):
         ep = pkt[0]["last_contact"]
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
 
+        self.select_n_send(pkt,ep)
+
+        # if ep in self.redispatchers.keys():
+        #     disp = self.redispatchers[ep]
+        #     disp.dispatch(json.dumps(pkt))
+        # else:
+        #     #disp = self.gdisp
+        #     disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+        #     if not disp == None:
+        #         self.redispatchers[ep] = disp
+        #         disp.connect(ep)
+        #         disp.dispatch(json.dumps(pkt))
+        #         #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+        #
+        #     else:
+        #         logging.error("No dispatchers found for: "+ep)
+
+        pass
+
+    def select_n_send(self,pkt, ep=None, mode=None):
+        if ep == None:
+            ep = pkt[0]["last_contact"]
+
+
+
+
+        disp = None
         if ep in self.redispatchers.keys():
             disp = self.redispatchers[ep]
             disp.dispatch(json.dumps(pkt))
         else:
-            #disp = self.gdisp
-            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-            if not disp == None:
-                self.redispatchers[ep] = disp
-                disp.connect(ep)
-                disp.dispatch(json.dumps(pkt))
-                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+            if mode == None:
+                if "inproc" in ep:
+                    mode = "zmq.PULL"
+                if "tcp" in ep:
+                    mode = "zmq.PULL"
+                if "inqueue" in ep:
+                    mode = "raw.Q"
+                if "amqp" in ep:
+                    mode = "amqp.PUSH"
 
+            if mode == "zmq.PULL":
+                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                pass
+
+            if mode == "amqp.PUSH":
+                disp = RabbitMQDispatch(self.context)
+                pass
+
+            if mode == "raw.Q":
+                disp = InternalRxQueue(self.context)
+                pass
+
+            if not disp == None:
+                self.dispatchers[ep] = disp
+                disp.connect(ep)
+                disp.dispatch(pkt)
+                #disp.dispatch(json.dumps(dcpkt))
+                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
             else:
                 logging.error("No dispatchers found for: "+ep)
-
-        pass
 
     def send_express(self, otag, pkt):
         ntag = None
@@ -194,7 +239,7 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            if len(cq[key]) > 5:
+                            if len(cq[key]) > 50:
                                 multi_pkt = []
                                 multi_pkt.append({})
 
@@ -212,7 +257,8 @@ class ExternalDispatch(SThread):
 
                         if ep in self.dispatchers.keys():
                             disp = self.dispatchers[ep]
-                            disp.dispatch(json.dumps(dcpkt))
+                            #disp.dispatch(json.dumps(dcpkt))
+                            disp.dispatch(dcpkt)
                             #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                         else:
@@ -233,7 +279,8 @@ class ExternalDispatch(SThread):
                             if not disp == None:
                                 self.dispatchers[ep] = disp
                                 disp.connect(ep)
-                                disp.dispatch(json.dumps(dcpkt))
+                                disp.dispatch(dcpkt)
+                                #disp.dispatch(json.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
@@ -463,7 +510,7 @@ class ZMQPacketPublish(Dispatch):
         self.soc.bind(connect_to)
 
     def dispatch(self, pkt):
-            self.soc.send(pkt)
+            self.soc.send(json.dumps(pkt))
 
     def close(self):
         self.soc.close()
@@ -519,7 +566,7 @@ class ZMQPacketDispatch(Dispatch):
         #except zmq.ZMQError as e:
         #    raise
 
-        self.soc.send(pkt)
+        self.soc.send(json.dumps(pkt))
 
     def close(self):
         self.soc.close()
@@ -552,7 +599,7 @@ class ZMQPacketVentilate(Dispatch):
         try:
             time.sleep(3)
             logging.debug("Sending")
-            self.sender.send(pkt)
+            self.sender.send(json.dumps(pkt))
         except zmq.ZMQError as e:
             logging.error(str(e))
 
@@ -602,7 +649,7 @@ class RabbitMQDispatch(Dispatch):
         #self.channel.queue_declare(queue=str(self.queue), durable=False)
 
     def dispatch(self, pkt):
-        self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=pkt)
+        self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=json.dumps(pkt))
         pass
 
     def close(self):
