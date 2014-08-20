@@ -242,7 +242,7 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            if len(cq[key]) > 1000:
+                            if len(cq[key]) > 3000:
                                 multi_pkt = []
                                 multi_pkt.append({})
 
@@ -254,6 +254,7 @@ class ExternalDispatch(SThread):
                                 multi_pkt.append(next_hop)
                                 dcpkt = multi_pkt
                                 cq[key] = []
+                                print "Sending a Bundle."
                             else:
                                 continue
                         else:
