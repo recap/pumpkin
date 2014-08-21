@@ -263,8 +263,8 @@ class Pumpkin(Daemon):
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
 
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
-            rabbitmq = RabbitMQMonitor(context, connection)
+            #connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+            rabbitmq = RabbitMQMonitor(context, None)
             context.set_rabbitmq(rabbitmq)
 
             q = context.get_group()+":info"

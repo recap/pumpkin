@@ -744,6 +744,7 @@ class Seed(object):
         return False
 
     def pkt_checker_t(self):
+        return
         if self.context.with_acks():
             self.logger.debug("Starting pkt checker thread")
             interval = 30

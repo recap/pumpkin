@@ -119,7 +119,7 @@ class RabbitMQBroadcaster(SThread):
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
-
+                logging.debug("Pub from RabbitMQ")
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=data)
 
                 if self.stopped():
@@ -131,7 +131,7 @@ class RabbitMQBroadcaster(SThread):
             if self.context.getProcGraph().isRegistryModified():
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 self.context.getProcGraph().ackRegistryUpdate()
-
+                logging.debug("Pub from RabbitMQ")
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=data)
 
                 if self.stopped():
@@ -157,7 +157,7 @@ class RabbitMQBroadcastSubscriber(SThread):
                    queue=self.queue)
 
     def run(self):
-
+        logging.debug("Consuming from RabbitMQ")
         while True:
 
             method, properties, data = self.channel.basic_get(queue=self.queue, no_ack=True)

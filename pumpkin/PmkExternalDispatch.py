@@ -12,6 +12,7 @@ import re
 import socket
 import networkx as nx
 import pika
+import zlib
 
 
 
@@ -229,7 +230,7 @@ class ExternalDispatch(SThread):
                         key = pep["ep"]+"::"+r["name"]
                         eff = self.context.get_eff(key)
                         #print "EFF: "+str(eff)
-                        if eff < 0.5:
+                        if eff > 0.5:
                             #print "EFF LESS"
                          #   time.sleep(0.02)
                             cq = self._coll_queue
@@ -242,7 +243,7 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            if len(cq[key]) > 30:
+                            if len(cq[key]) > 5:
                                 multi_pkt = []
                                 multi_pkt.append({})
 
@@ -254,11 +255,11 @@ class ExternalDispatch(SThread):
                                 multi_pkt.append(next_hop)
                                 dcpkt = copy.deepcopy(multi_pkt)
                                 cq[key] = []
-                                print "Sending a Bundle."
+
                             else:
                                 continue
-                        else:
-                            time.sleep(0.3)
+                        # else:
+                        #     time.sleep(0.3)
 
 
                         dcpkt[0]["last_timestamp"] = "{:.12f}".format(time.time())
@@ -645,12 +646,13 @@ class RabbitMQDispatch(Dispatch):
     def __open_rabbitmq_connection(self):
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
         credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost, heartbeat_interval=20))
         #channel = self.connection.channel()
         return connection
 
     def connect(self, connect_to):
-        self.queue = connect_to.split("://")[1]
+        if connect_to:
+            self.queue = connect_to.split("://")[1]
         self.connection = self.__open_rabbitmq_connection()
         self.channel = self.connection.channel()
         #self.channel.exchange_declare(exchange=str(self.queue), type='fanout')
@@ -658,17 +660,23 @@ class RabbitMQDispatch(Dispatch):
 
     def dispatch(self, pkt):
         send = False
+
+        message = zlib.compress(json.dumps(pkt))
+
         while not send:
             try:
                 if not self.connection.is_closed:
-                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=json.dumps(pkt))
+                    logging.debug("Pub from RabbitMQ")
+                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
+
                     send = True
                 else:
                     print "OPEN CONNECTION"
-                    time.sleep(1)
-                    self.connection = self.__open_rabbitmq_connection()
-                    self.channel = self.connection.channel()
-                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=json.dumps(pkt))
+                    #time.sleep(1)
+                    self.connect(None)
+                    logging.debug("Pub from RabbitMQ")
+                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
+
                     send = True
             except:
                 time.sleep(1)

@@ -6,6 +6,7 @@ import zmq
 import time
 import pika
 import sys
+import zlib
 
 import PmkSeed
 
@@ -239,11 +240,12 @@ class RabbitMQMonitor():
 
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
-            connection = None
-            if connection == None:
-                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
-            else:
-                self.connection = connection
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+
+            # if connection == None:
+            #     self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+            # else:
+            #     self.connection = connection
 
             self.parent = parent
             self.tag_map = self.parent.tag_map
@@ -269,7 +271,6 @@ class RabbitMQMonitor():
             while self.connection.is_open:
 
                 try:
-                    #FIX: bug trap empty queue
                     method, properties, body = self.channel.basic_get(queue=self.queue, no_ack=True)
                     if method:
                         if (method.NAME == 'Basic.GetEmpty'):
@@ -277,22 +278,10 @@ class RabbitMQMonitor():
                         else:
                             self.cnt += 1
                             logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
-                            pkt = json.loads(body)
+                            pkt = json.loads(zlib.decompress(body))
                             rx.dig(pkt)
                             rx.put(pkt)
-                            # pkt = json.loads(body)
-                            #
-                            # l = len(pkt)
-                            # func = None
-                            # if method.routing_key in self.tag_map:
-                            #     func = self.tag_map[method.routing_key]
-                            #     if ":" in func:
-                            #         func = func.split(":")[1]
-                            #     data = pkt[l-1]["data"]
-                            #
-                            # if func in PmkSeed.iplugins.keys():
-                            #     klass = PmkSeed.iplugins[func]
-                            #     rt = klass._stage_run(pkt, data)
+
                     else:
                         time.sleep(1)
                 except pika.exceptions.ConnectionClosed as e:
@@ -316,11 +305,12 @@ class RabbitMQMonitor():
 
         def run(self):
             #self.channel.start_consuming()
+            logging.debug("Consuming from RabbitMQ")
             self.loop()
 
     def __init__(self, context, connection):
-        self.connection = connection
-        self.channel = connection.channel()
+        #self.connection = connection
+        #self.channel = connection.channel()
         self.context = context
         self.tag_map = {}
 
@@ -331,35 +321,6 @@ class RabbitMQMonitor():
         qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, fqueue, exchange='')
         qthread.start()
 
-        #TODO:fix default queue
-        # aqueue = queue.split(":")
-        # if len(aqueue) > 2:
-        #     queue2 = "T:"+aqueue[1]+":"+aqueue[2]
-        #     self.tag_map[queue2] = func
-        #
-        #     # qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, queue)
-        #     # qthread.start()
-        #
-        #     try:
-        #         self.channel = self.connection.channel()
-        #         self.channel.queue_declare(queue=str(queue2), passive=True,durable=True)
-        #         logging.info("Using default rabbitmq queue: "+queue2)
-        #         qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, queue2)
-        #         qthread.start()
-        #     except Exception as e:
-        #         qthread = RabbitMQMonitor.MonitorThread(self, self.context, None, queue)
-        #         qthread.start()
-
-
-
-        #self.channel.queue_declare(queue=queue)
-        #self.channel.basic_consume(self.callback,
-        #              queue=queue,
-        #              no_ack=True)
-        #self.channel.basic_qos(prefetch_count=10)
-
-        #threading.Thread(target=self.channel.start_consuming)
-        #self.channel.start_consuming()
 
 
 
