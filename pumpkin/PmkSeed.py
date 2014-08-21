@@ -343,6 +343,13 @@ class Seed(object):
                     multi_pkt[0]["pkts"].append(self._t_buffer[key])
                     self._t_buffer[key] = []
 
+
+                    l = len(pkt)
+                    last = dpkt[l-1]
+
+                    multi_pkt.append(last)
+                    #print json.dumps(multi_pkt)
+
                     exdisp = self.context.getExternalDispatch()
                     exdisp.send_to_last(multi_pkt)
 

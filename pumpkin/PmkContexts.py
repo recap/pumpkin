@@ -81,7 +81,7 @@ class MainContext(object):
             if key in self._eff:
                 return self._eff[key]
             else:
-                return 1
+                return -1
 
         def fallback_rabbitmq(self):
             if self.__attrs.rabbitmq_fallback:

@@ -229,8 +229,10 @@ class ExternalDispatch(SThread):
 
                         key = pep["ep"]+"::"+r["name"]
                         eff = self.context.get_eff(key)
+                        if eff == -1:
+                            time.sleep(0.3)
                         #print "EFF: "+str(eff)
-                        if eff > 0.5:
+                        if eff < 0.5:
                             #print "EFF LESS"
                          #   time.sleep(0.02)
                             cq = self._coll_queue
@@ -243,7 +245,7 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            if len(cq[key]) > 5:
+                            if len(cq[key]) > 100:
                                 multi_pkt = []
                                 multi_pkt.append({})
 

@@ -75,6 +75,14 @@ class InternalDispatch(SThread):
 
                     print "PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff
 
+                    print json.dumps(pkt)
+
+                    l = len(pkt)
+                    last = pkt[l-1]
+                    key = last["ep"]+"::"+last["func"]
+
+                    self.context.update_eff(key, eff)
+
                     for ipkt in pkt[0]["pkts"]:
                         seed = ipkt[0]["last_func"]
 
