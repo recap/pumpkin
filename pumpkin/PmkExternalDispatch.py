@@ -649,7 +649,7 @@ class RabbitMQDispatch(Dispatch):
     def __open_rabbitmq_connection(self):
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
         credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost, heartbeat_interval=20))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(frame_max=None,backpressure_detection=False,host=host, credentials=credentials, virtual_host=vhost, heartbeat_interval=20))
         #channel = self.connection.channel()
         return connection
 
