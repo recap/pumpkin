@@ -60,6 +60,7 @@ class InternalDispatch(SThread):
                 logging.debug("Multiple packets")
                 #print json.dumps(pkt)
                 if pkt[0]["state"] == "PACK_OK":
+                    n = int(pkt[0]["number"])
                     tm1 = time.time()
                     tm2 = float(pkt[0]["timestamp"])
                     tdelta = tm1 - tm2
@@ -73,23 +74,24 @@ class InternalDispatch(SThread):
                     st_overhead = "{:.12f}".format(overhead)
                     st_eff = "{:.12f}".format(eff)
 
-                    print "PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff
+                    print "PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
 
-                    print json.dumps(pkt)
+                    #print json.dumps(pkt)
 
                     l = len(pkt)
                     last = pkt[l-1]
                     key = last["ep"]+"::"+last["func"]
 
-                    self.context.update_eff(key, eff)
+                    self.context.update_eff(key, (eff, n))
 
                     for ipkt in pkt[0]["pkts"]:
-                        seed = ipkt[0]["last_func"]
+                        if len(ipkt) > 0:
+                            seed = ipkt[0]["last_func"]
 
-                        if seed in PmkSeed.iplugins.keys():
-                            klass = PmkSeed.iplugins[seed]
-                            klass.pack_ok(ipkt)
-                            self._packed_pkts += 1
+                            if seed in PmkSeed.iplugins.keys():
+                                klass = PmkSeed.iplugins[seed]
+                                klass.pack_ok(ipkt)
+                                self._packed_pkts += 1
                     continue
 
 
@@ -176,7 +178,7 @@ class InternalDispatch(SThread):
                         last = pkt[l-1]
                         key = last["ep"]+"::"+last["func"]
 
-                        self.context.update_eff(key, eff)
+                        self.context.update_eff(key, (eff, 1))
 
                         continue
 
