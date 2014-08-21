@@ -475,7 +475,7 @@ def main():
 
     parser.add_argument('--gonzales', action='store_true',
                        help='disable certain slow features for faster streaming.')
-    parser.add_argument('--buffer_size', action='store', dest="bsize", default=100000,
+    parser.add_argument('--buffer_size', action='store', dest="bsize", default=1,
                        help='queue size for rx/tx buffers in number of messages')
 
 

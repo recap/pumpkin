@@ -245,6 +245,10 @@ class ExternalDispatch(SThread):
                                 cq[key].append(pkt)
 
                             bunch = int(n / eff)
+                            print "BUNCHING: eff, n, bunch "+str(eff)+","+str(n)+","+str(bunch)
+
+                            if bunch > 5000:
+                                bunch = 5000
 
                             if len(cq[key]) > bunch:
                                 multi_pkt = []
