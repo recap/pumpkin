@@ -75,13 +75,20 @@ class MainContext(object):
             pass
 
         def update_eff(self, key, eff):
-            self._eff[key] = eff
+            e1, n1, e2, n2 = self.get_eff(key)
+            if e1 != 2:
+                nvals = (eff[0], eff[1], e1, n1)
+                self._eff[key] = nvals
+            else:
+                nvals = (eff[0], eff[1], eff[0], eff[1])
+                self._eff[key] = nvals
+
 
         def get_eff(self, key):
             if key in self._eff:
                 return self._eff[key]
             else:
-                return (2, 0)
+                return (2, 0, 0, 0)
 
         def fallback_rabbitmq(self):
             if self.__attrs.rabbitmq_fallback:

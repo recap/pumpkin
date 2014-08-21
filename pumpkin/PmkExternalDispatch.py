@@ -49,6 +49,7 @@ class ExternalDispatch(SThread):
         self.ep_sched = EndpointPicker(self.context)
 
         self._coll_queue = {}
+        self._set_bunch = False
 
         if self.context.fallback_rabbitmq():
             #host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -228,7 +229,8 @@ class ExternalDispatch(SThread):
                         dcpkt.append(next_hop)
 
                         key = pep["ep"]+"::"+r["name"]
-                        eff, n = self.context.get_eff(key)
+                        eff, n, peff, pn = self.context.get_eff(key)
+
 
                         if eff == 2:
                             time.sleep(1)
@@ -244,11 +246,28 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            bunch = int(n / eff)
-                            print "BUNCHING: eff, n, bunch "+str(eff)+","+str(n)+","+str(bunch)
+                            bunch = 1
+                            gradient = 0
+                            deff = 0
+                            dn = 0
+                            if not self._set_bunch:
+                                if n == 1 or (eff == peff):
+                                    bunch = int(n / eff)
+                                    self._set_bunch = True
+                                else:
+                                    deff = eff - peff
+                                    dn = n - pn
+                                    gradient = deff / dn
+                                    bunch = bunch + (dn*gradient)
+                                    self._set_bunch = True
 
-                            if bunch > 5000:
-                                bunch = 5000
+
+
+                            #print "BUNCHING: eff, n, bunch "+str(eff)+","+str(n)+","+str(bunch)
+
+
+                            if bunch > 15000:
+                                bunch = 15000
 
                             if len(cq[key]) > bunch:
                                 multi_pkt = []
@@ -262,6 +281,8 @@ class ExternalDispatch(SThread):
                                 multi_pkt.append(next_hop)
                                 dcpkt = copy.deepcopy(multi_pkt)
                                 cq[key] = []
+                                print "BUNCH, GRADIENT, DEFF, DN: "+str(bunch)+","+str(gradient)+","+str(deff)+","+str(dn)
+                                self._set_bunch = False
 
                             else:
                                 continue
