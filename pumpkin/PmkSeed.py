@@ -744,7 +744,7 @@ class Seed(object):
         return False
 
     def pkt_checker_t(self):
-        return
+
         if self.context.with_acks():
             self.logger.debug("Starting pkt checker thread")
             interval = 30
@@ -1057,15 +1057,15 @@ class Seed(object):
             return
 
         if dispatch:
-            if self.context.with_acks():
-                self.add_flight_pkt(lpkt)
-
-            if self.context.with_shelve():
-                pkt_id = self.get_pkt_id(lpkt)
-                self._lock_in_fpkts.acquire()
-                shelve = self.context.get_pkt_shelve()
-                shelve[str(pkt_id)] = pkt
-                self._lock_in_fpkts.release()
+            # if self.context.with_acks():
+            #     self.add_flight_pkt(lpkt)
+            #
+            # if self.context.with_shelve():
+            #     pkt_id = self.get_pkt_id(lpkt)
+            #     self._lock_in_fpkts.acquire()
+            #     shelve = self.context.get_pkt_shelve()
+            #     shelve[str(pkt_id)] = pkt
+            #     self._lock_in_fpkts.release()
 
             #Eats up memory due to queueing
             #self.context.getTx().put((self.get_group(), tag,otype,lpkt))
