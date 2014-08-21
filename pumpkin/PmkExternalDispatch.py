@@ -230,7 +230,7 @@ class ExternalDispatch(SThread):
                         eff = self.context.get_eff(key)
                         #print "EFF: "+str(eff)
                         if eff < 0.5:
-                         #   print "EFF LESS"
+                            #print "EFF LESS"
                          #   time.sleep(0.02)
                             cq = self._coll_queue
                             logging.debug("Efficiency for signiture "+str(key)+" too low "+str(eff))
@@ -242,7 +242,7 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            if len(cq[key]) > 3000:
+                            if len(cq[key]) > 30:
                                 multi_pkt = []
                                 multi_pkt.append({})
 
@@ -252,7 +252,7 @@ class ExternalDispatch(SThread):
                                 multi_pkt[0]["timestamp"] = "{:.12f}".format(time.time())
                                 multi_pkt[0]["state"] = "NEW"
                                 multi_pkt.append(next_hop)
-                                dcpkt = multi_pkt
+                                dcpkt = copy.deepcopy(multi_pkt)
                                 cq[key] = []
                                 print "Sending a Bundle."
                             else:
@@ -657,8 +657,22 @@ class RabbitMQDispatch(Dispatch):
         #self.channel.queue_declare(queue=str(self.queue), durable=False)
 
     def dispatch(self, pkt):
-        self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=json.dumps(pkt))
-        pass
+        send = False
+        while not send:
+            try:
+                if not self.connection.is_closed:
+                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=json.dumps(pkt))
+                    send = True
+                else:
+                    print "OPEN CONNECTION"
+                    time.sleep(1)
+                    self.connection = self.__open_rabbitmq_connection()
+                    self.channel = self.connection.channel()
+                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=json.dumps(pkt))
+                    send = True
+            except:
+                time.sleep(1)
+
 
     def close(self):
         self.connetion.close()

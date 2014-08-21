@@ -239,6 +239,7 @@ class RabbitMQMonitor():
 
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
+            connection = None
             if connection == None:
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
             else:
@@ -255,7 +256,7 @@ class RabbitMQMonitor():
             #self.channel.queue_declare(queue=str(queue))
             #self.channel.queue_bind(exchange=str(exchange),
             #       queue=str(queue))
-            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True)
+            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=False)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
