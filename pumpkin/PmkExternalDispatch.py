@@ -251,6 +251,9 @@ class ExternalDispatch(SThread):
                                 if eff >= peff:
                                     self._bunch = self._bunch * 2 + 1
                                     self._set_bunch = True
+				else:
+				    self._bunch = int(self._bunch / 2) + 1
+				    self._set_bunch = True
                             # #bunch = 1
                             # gradient = 0
                             # deff = 0
@@ -276,7 +279,7 @@ class ExternalDispatch(SThread):
 
                             #if self._bunch > 15000:
                             #    self._bunch = 15000
-                            self._bunch = 512
+                            #self._bunch = 512
                             if len(cq[key]) > self._bunch:
                                 multi_pkt = []
                                 multi_pkt.append({})
@@ -289,7 +292,7 @@ class ExternalDispatch(SThread):
                                 multi_pkt.append(next_hop)
                                 dcpkt = copy.deepcopy(multi_pkt)
                                 cq[key] = []
-                                print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
+                                #print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
                                 self._set_bunch = False
 
                             else:
