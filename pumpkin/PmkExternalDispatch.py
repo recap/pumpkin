@@ -251,11 +251,16 @@ class ExternalDispatch(SThread):
                             if not self._set_bunch:
                                 if self._pval[0] != eff:
                                     if eff >= peff:
-                                        self._bunch = self._bunch * 2 + 1
+                                        if self._bunch < 2000:
+                                            self._bunch = self._bunch * 2 + 1
+                                        else:
+                                            self._bunch += 200
+
                                         self._pval = (eff, n, peff, pn)
                                         self._set_bunch = True
                                     else:
-                                        self._bunch = int(self._bunch / 2) + 1
+                                        if self._bunch > 500:
+                                            self._bunch = int(self._bunch / 2) + 1
                                         self._pval = (eff, n, peff, pn)
                                         self._set_bunch = True
 
