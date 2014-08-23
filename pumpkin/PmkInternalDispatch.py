@@ -412,9 +412,10 @@ class ZMQPacketMonitor(SThread):
             try:
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
-                pkt = json.loads(msg)
-                if "multiple" not in pkt[0].keys():
-                    dig(pkt)
+                pkt = json.loads(zlib.decompress(msg))
+                #pkt = json.loads(msg)
+                #if "multiple" not in pkt[0].keys():
+                dig(pkt)
                 queue_put(pkt)
                 #self.proccess_pkt(msg)
                 #del msg

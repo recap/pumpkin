@@ -329,8 +329,8 @@ class MainContext(object):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
                 #self.__attrs.eps = "inproc://*;tcp://*:*"
-                #self.__attrs.eps = "inqueue://*"
-                self.__attrs.eps = "amqp://*"
+                self.__attrs.eps = "inqueue://*"
+                #self.__attrs.eps = "amqp://*"
                 #self.__attrs.eps = "tcp://*:*"
 
             #if self.fallback_rabbitmq():
