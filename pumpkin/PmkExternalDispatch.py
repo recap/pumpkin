@@ -50,6 +50,7 @@ class ExternalDispatch(SThread):
 
         self._coll_queue = {}
         self._set_bunch = False
+        self._bunch = 1
 
         if self.context.fallback_rabbitmq():
             #host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -234,7 +235,7 @@ class ExternalDispatch(SThread):
 
                         if eff == 2:
                             time.sleep(1)
-                        if eff < 0.8:
+                        if eff < 0.99:
 
                             cq = self._coll_queue
                             logging.debug("Efficiency for signiture "+str(key)+" too low "+str(eff))
@@ -246,30 +247,37 @@ class ExternalDispatch(SThread):
                                 logging.debug("Delaying packet with signiture: "+str(key))
                                 cq[key].append(pkt)
 
-                            bunch = 1
-                            gradient = 0
-                            deff = 0
-                            dn = 0
                             if not self._set_bunch:
-                                if n == 1 or (eff == peff):
-                                    bunch = int(n / eff)
+                                if eff >= peff:
+                                    self._bunch = self._bunch * 2 + 1
                                     self._set_bunch = True
-                                else:
-                                    deff = eff - peff
-                                    dn = n - pn
-                                    gradient = deff / dn
-                                    bunch = bunch + (dn*gradient)
-                                    self._set_bunch = True
+                            # #bunch = 1
+                            # gradient = 0
+                            # deff = 0
+                            # dn = 0
+                            # if not self._set_bunch:
+                            #     if n == 1 or (eff == peff):
+                            #         self._bunch = int(n / eff)
+                            #         self._set_bunch = True
+                            #     else:
+                            #         deff = eff - peff
+                            #         dn = n - pn
+                            #         if dn > 0:
+                            #             gradient = deff / dn
+                            #         else:
+                            #             gradient = 0
+                            #         self._bunch = self._bunch + (dn*gradient)
+                            #         self._set_bunch = True
 
 
 
                             #print "BUNCHING: eff, n, bunch "+str(eff)+","+str(n)+","+str(bunch)
 
 
-                            if bunch > 15000:
-                                bunch = 15000
-
-                            if len(cq[key]) > bunch:
+                            #if self._bunch > 15000:
+                            #    self._bunch = 15000
+                            self._bunch = 512
+                            if len(cq[key]) > self._bunch:
                                 multi_pkt = []
                                 multi_pkt.append({})
 
@@ -281,7 +289,7 @@ class ExternalDispatch(SThread):
                                 multi_pkt.append(next_hop)
                                 dcpkt = copy.deepcopy(multi_pkt)
                                 cq[key] = []
-                                print "BUNCH, GRADIENT, DEFF, DN: "+str(bunch)+","+str(gradient)+","+str(deff)+","+str(dn)
+                                print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
                                 self._set_bunch = False
 
                             else:
