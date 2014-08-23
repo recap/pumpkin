@@ -51,6 +51,7 @@ class ExternalDispatch(SThread):
         self._coll_queue = {}
         self._set_bunch = False
         self._bunch = 1
+        self._pval =(0,0,0,0)
 
         if self.context.fallback_rabbitmq():
             #host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -248,13 +249,16 @@ class ExternalDispatch(SThread):
                                 cq[key].append(pkt)
 
                             if not self._set_bunch:
-                                if eff >= peff:
-                                    self._bunch = self._bunch * 2 + 1
-                                    self._set_bunch = True
-                                else:
-                                    self._bunch = int(self._bunch / 2) + 1
-                                    self._set_bunch = True
-                                    self._set_bunch = True
+                                if self._pval[0] != eff:
+                                    if eff >= peff:
+                                        self._bunch = self._bunch * 2 + 1
+                                        self._pval = (eff, n, peff, pn)
+                                        self._set_bunch = True
+                                    else:
+                                        self._bunch = int(self._bunch / 2) + 1
+                                        self._pval = (eff, n, peff, pn)
+                                        self._set_bunch = True
+
                             # #bunch = 1
                             # gradient = 0
                             # deff = 0
