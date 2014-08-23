@@ -1,7 +1,5 @@
 __author__ = 'reggie'
 
-
-
 import ujson as json
 
 import time
@@ -14,10 +12,7 @@ import networkx as nx
 import pika
 import zlib
 
-
-
 from networkx.readwrite import json_graph
-
 
 from Queue import *
 from PmkShared import *
@@ -29,10 +24,7 @@ class tx(Queue):
         pass
 
 
-
-
 class ExternalDispatch(SThread):
-
     def __init__(self, context):
         SThread.__init__(self)
         self.context = context
@@ -64,11 +56,11 @@ class ExternalDispatch(SThread):
         pass
 
 
-
     def __open_rabbitmq_connection(self):
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
         credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
         #channel = self.connection.channel()
         return connection
 
@@ -89,14 +81,15 @@ class ExternalDispatch(SThread):
                 disp.dispatch(json.dumps(pkt))
 
             else:
-                logging.error("No dispatchers found for: "+ep)
+                logging.error("No dispatchers found for: " + ep)
 
         pass
+
     def send_to_last(self, pkt):
         ep = pkt[0]["last_contact"]
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
 
-        self.select_n_send(pkt,ep)
+        self.select_n_send(pkt, ep)
 
         # if ep in self.redispatchers.keys():
         #     disp = self.redispatchers[ep]
@@ -115,12 +108,9 @@ class ExternalDispatch(SThread):
 
         pass
 
-    def select_n_send(self,pkt, ep=None, mode=None):
+    def select_n_send(self, pkt, ep=None, mode=None):
         if ep == None:
             ep = pkt[0]["last_contact"]
-
-
-
 
         disp = None
         if ep in self.redispatchers.keys():
@@ -156,11 +146,10 @@ class ExternalDispatch(SThread):
                 #disp.dispatch(json.dumps(dcpkt))
                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
             else:
-                logging.error("No dispatchers found for: "+ep)
+                logging.error("No dispatchers found for: " + ep)
 
     def send_express(self, otag, pkt):
         ntag = None
-
 
         if pkt[1] and not self.context.is_speedy():
             #TODO: some nodes complain that loads does not exist
@@ -192,15 +181,13 @@ class ExternalDispatch(SThread):
         while 1:
             routes = self.graph.getRoutes(otag)
             if routes:
-                 logging.debug("Found routes: "+json.dumps(routes))
-                 break
+                logging.debug("Found routes: " + json.dumps(routes))
+                break
             else:
                 # dump non routable packets as this will lead to deadlock from tx queue filling up
                 if self.context.is_speedy():
                     break
                 time.sleep(5)
-
-
 
         if routes:
             for r in routes:
@@ -210,7 +197,7 @@ class ExternalDispatch(SThread):
                 else:
                     dcpkt = pkt
 
-                rtag = r["otype"]+":"+r["ostate"]
+                rtag = r["otype"] + ":" + r["ostate"]
                 if (ntag and ntag == rtag) or not ntag:
 
                     #pep = self.context.getProcGraph().getPriorityEndpoint(r)
@@ -226,87 +213,200 @@ class ExternalDispatch(SThread):
                     if pep:
                         entry = pep
                         ep = pep["ep"]
-                        next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
+                        next_hop = {"func": r["name"], "stag": otag, "exstate": 0000, "ep": pep["ep"]}
                         dcpkt.append(next_hop)
 
-                        key = pep["ep"]+"::"+r["name"]
+                        key = pep["ep"] + "::" + r["name"]
                         eff, n, peff, pn = self.context.get_eff(key)
-
 
                         if eff == 2:
                             time.sleep(1)
                         if eff < 0.99:
 
                             cq = self._coll_queue
-                            logging.debug("Efficiency for signiture "+str(key)+" too low "+str(eff))
+                            logging.debug("Efficiency for signiture " + str(key) + " too low " + str(eff))
                             if key not in cq.keys():
-                                logging.debug("Delaying packet with signiture: "+str(key))
+                                logging.debug("Delaying packet with signiture: " + str(key))
                                 cq[key] = []
                                 cq[key].append(pkt)
                             else:
-                                logging.debug("Delaying packet with signiture: "+str(key))
+                                logging.debug("Delaying packet with signiture: " + str(key))
                                 cq[key].append(pkt)
 
                             if not self._set_bunch:
                                 if eff >= peff:
                                     self._bunch = self._bunch * 2 + 1
                                     self._set_bunch = True
-				else:
-				    self._bunch = int(self._bunch / 2) + 1
-				    self._set_bunch = True
-                            # #bunch = 1
-                            # gradient = 0
-                            # deff = 0
-                            # dn = 0
-                            # if not self._set_bunch:
-                            #     if n == 1 or (eff == peff):
-                            #         self._bunch = int(n / eff)
-                            #         self._set_bunch = True
-                            #     else:
-                            #         deff = eff - peff
-                            #         dn = n - pn
-                            #         if dn > 0:
-                            #             gradient = deff / dn
-                            #         else:
-                            #             gradient = 0
-                            #         self._bunch = self._bunch + (dn*gradient)
-                            #         self._set_bunch = True
+                                else:
+                                    self._bunch = int(self._bunch / 2) + 1
+                                    self._set_bunch = True
+                    # #bunch = 1
+                    # gradient = 0
+                    # deff = 0
+                    # dn = 0
+                    # if not self._set_bunch:
+                    #     if n == 1 or (eff == peff):
+                    #         self._bunch = int(n / eff)
+                    #         self._set_bunch = True
+                    #     else:
+                    #         deff = eff - peff
+                    #         dn = n - pn
+                    #         if dn > 0:
+                    #             gradient = deff / dn
+                    #         else:
+                    #             gradient = 0
+                    #         self._bunch = self._bunch + (dn*gradient)
+                    #         self._set_bunch = True
 
 
 
-                            #print "BUNCHING: eff, n, bunch "+str(eff)+","+str(n)+","+str(bunch)
+                    #print "BUNCHING: eff, n, bunch "+str(eff)+","+str(n)+","+str(bunch)
 
 
-                            #if self._bunch > 15000:
-                            #    self._bunch = 15000
-                            #self._bunch = 512
-                            if len(cq[key]) > self._bunch:
-                                multi_pkt = []
-                                multi_pkt.append({})
+                    #if self._bunch > 15000:
+                    #    self._bunch = 15000
+                    #self._bunch = 512
+                    if len(cq[key]) > self._bunch:
+                        multi_pkt = []
+                        multi_pkt.append({})
 
-                                multi_pkt[0]["multiple"] = True
-                                multi_pkt[0]["number"] = len(cq[key])
-                                multi_pkt[0]["pkts"] = cq[key]
-                                multi_pkt[0]["timestamp"] = "{:.12f}".format(time.time())
-                                multi_pkt[0]["state"] = "NEW"
-                                multi_pkt.append(next_hop)
-                                dcpkt = copy.deepcopy(multi_pkt)
-                                cq[key] = []
-                                #print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
-                                self._set_bunch = False
+                        multi_pkt[0]["multiple"] = True
+                        multi_pkt[0]["number"] = len(cq[key])
+                        multi_pkt[0]["pkts"] = cq[key]
+                        multi_pkt[0]["timestamp"] = "{:.12f}".format(time.time())
+                        multi_pkt[0]["state"] = "NEW"
+                        multi_pkt.append(next_hop)
+                        dcpkt = copy.deepcopy(multi_pkt)
+                        cq[key] = []
+                        #print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
+                        self._set_bunch = False
 
-                            else:
-                                continue
-                        # else:
-                        #     time.sleep(0.3)
+                    else:
+                        continue
+                # else:
+                #     time.sleep(0.3)
 
 
-                        dcpkt[0]["last_timestamp"] = "{:.12f}".format(time.time())
+                dcpkt[0]["last_timestamp"] = "{:.12f}".format(time.time())
 
+                if ep in self.dispatchers.keys():
+                    disp = self.dispatchers[ep]
+                    #disp.dispatch(json.dumps(dcpkt))
+                    disp.dispatch(dcpkt)
+                    #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                else:
+                    disp = None
+                    if entry["mode"] == "zmq.PULL":
+                        disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                        #disp = ZMQPacketDispatch(self.context)
+                        #disp = self.gdisp
+
+                    if entry["mode"] == "amqp.PUSH":
+                        disp = RabbitMQDispatch(self.context)
+                        pass
+
+                    if entry["mode"] == "raw.Q":
+                        disp = InternalRxQueue(self.context)
+                        pass
+
+                    if not disp == None:
+                        self.dispatchers[ep] = disp
+                        disp.connect(ep)
+                        disp.dispatch(dcpkt)
+                        #disp.dispatch(json.dumps(dcpkt))
+                        #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                    else:
+                        logging.error("No dispatchers found for: " + ep)
+
+
+pass
+
+
+def __loop_body(self):
+    group, state, otype, pkt = self.tx.get(True)
+    otag = group + ":" + otype + ":" + state
+    self.send_express(otag, pkt)
+    pass
+
+
+def run(self):
+    #graph = self.context.getProcGraph()
+    #tx = self.context.getTx()
+    #ep_sched = EndpointPicker(self.context)
+
+    #soc = self.zmq_context.socket(zmq.PULL)
+    #soc.bind("inproc://internal-bus")
+
+    while True:
+        self.__loop_body()
+
+        if self.stopped():
+            logging.debug("Exiting thread " + self.__class__.__name__)
+            for ep in self.dispatchers.keys():
+                disp = disp = self.dispatchers[ep]
+                disp.close()
+            break
+        else:
+            continue
+
+
+def run_old(self):
+    graph = self.context.getProcGraph()
+    tx = self.context.getTx()
+    ep_sched = EndpointPicker(self.context)
+
+    while True:
+        group, state, otype, pkt = tx.get(True)
+        #logging.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
+        otag = group + ":" + otype + ":" + state
+        ntag = None
+        if pkt[1]:
+            g = json_graph.loads(pkt[1])
+
+            if otag in g:
+                d = g[otag]
+
+                if d:
+                    ntag = d.keys()[0]
+
+        while 1:
+            routes = graph.getRoutes(otag)
+            logging.debug("Found routes: " + json.dumps(routes))
+            if routes:
+                break
+            else:
+                #logging.debug("No route found for: "+otag)
+                time.sleep(5)
+
+        for r in routes:
+            #logging.debug("Route: "+str(r))
+            dcpkt = copy.copy(pkt)
+            rtag = r["otype"] + ":" + r["ostate"]
+            if (ntag and ntag == rtag) or not ntag:
+                #TODO make it more flexible not bound to zmq
+                #pep = self.context.getProcGraph().getPriorityEndpoint(r)
+                ##eep = self.context.getProcGraph().getExternalEndpoints(r)
+                pep = ep_sched.pick_route(r)
+                if not pep:
+                    logging.error("No Route...")
+                    continue
+                oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
+                dcpkt[0]["last_contact"] = oep[0]
+
+                if pep:
+                    entry = pep
+                    ep = pep["ep"]
+                    #logging.debug("Route found for function "+r["name"]+": "+pep["ep"])
+                    next_hop = {"func": r["name"], "stag": otag, "exstate": 0000, "ep": pep["ep"]}
+                    dcpkt.append(next_hop)
+                    #pkt.remove( pkt[len(pkt)-1] )
+                    #logging.debug(json.dumps(pkt))
+                    try:
                         if ep in self.dispatchers.keys():
                             disp = self.dispatchers[ep]
-                            #disp.dispatch(json.dumps(dcpkt))
-                            disp.dispatch(dcpkt)
+                            disp.dispatch(json.dumps(dcpkt))
                             #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                         else:
@@ -316,166 +416,54 @@ class ExternalDispatch(SThread):
                                 #disp = ZMQPacketDispatch(self.context)
                                 #disp = self.gdisp
 
-                            if entry["mode"] == "amqp.PUSH":
-                                disp = RabbitMQDispatch(self.context)
-                                pass
-
-                            if entry["mode"] == "raw.Q":
-                                disp = InternalRxQueue(self.context)
-                                pass
-
                             if not disp == None:
                                 self.dispatchers[ep] = disp
                                 disp.connect(ep)
-                                disp.dispatch(dcpkt)
-                                #disp.dispatch(json.dumps(dcpkt))
-                                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                            else:
-                                logging.error("No dispatchers found for: "+ep)
-        pass
-
-    def __loop_body(self):
-        group, state, otype, pkt = self.tx.get(True)
-        otag = group+":"+otype+":"+state
-        self.send_express(otag, pkt)
-        pass
-
-    def run(self):
-        #graph = self.context.getProcGraph()
-        #tx = self.context.getTx()
-        #ep_sched = EndpointPicker(self.context)
-
-        #soc = self.zmq_context.socket(zmq.PULL)
-        #soc.bind("inproc://internal-bus")
-
-        while True:
-            self.__loop_body()
-
-            if self.stopped():
-                logging.debug("Exiting thread "+self.__class__.__name__)
-                for ep in self.dispatchers.keys():
-                    disp = disp = self.dispatchers[ep]
-                    disp.close()
-                break
-            else:
-                continue
-
-    def run_old(self):
-        graph = self.context.getProcGraph()
-        tx = self.context.getTx()
-        ep_sched = EndpointPicker(self.context)
-
-        while True:
-            group, state, otype, pkt = tx.get(True)
-            #logging.debug("Tx message state: "+ state+" otype: "+otype+" data: "+str(pkt))
-            otag = group+":"+otype+":"+state
-            ntag = None
-            if pkt[1]:
-                g = json_graph.loads(pkt[1])
-
-                if otag in g:
-                    d = g[otag]
-
-                    if d:
-                        ntag = d.keys()[0]
-
-
-            while 1:
-                routes = graph.getRoutes(otag)
-                logging.debug("Found routes: "+json.dumps(routes))
-                if routes:
-                    break
-                else:
-                    #logging.debug("No route found for: "+otag)
-                    time.sleep(5)
-
-            for r in routes:
-                #logging.debug("Route: "+str(r))
-                dcpkt = copy.copy(pkt)
-                rtag = r["otype"]+":"+r["ostate"]
-                if (ntag and ntag == rtag) or not ntag:
-                    #TODO make it more flexible not bound to zmq
-                    #pep = self.context.getProcGraph().getPriorityEndpoint(r)
-                    ##eep = self.context.getProcGraph().getExternalEndpoints(r)
-                    pep = ep_sched.pick_route(r)
-                    if not pep:
-                        logging.error("No Route...")
-                        continue
-                    oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
-                    dcpkt[0]["last_contact"] = oep[0]
-
-                    if pep:
-                        entry = pep
-                        ep = pep["ep"]
-                        #logging.debug("Route found for function "+r["name"]+": "+pep["ep"])
-                        next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
-                        dcpkt.append(next_hop)
-                        #pkt.remove( pkt[len(pkt)-1] )
-                        #logging.debug(json.dumps(pkt))
-                        try:
-                            if ep in self.dispatchers.keys():
-                                disp = self.dispatchers[ep]
                                 disp.dispatch(json.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
-                                disp = None
-                                if entry["mode"] == "zmq.PULL":
-                                    disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                                    #disp = ZMQPacketDispatch(self.context)
-                                    #disp = self.gdisp
+                                logging.error("No dispatchers found for: " + ep)
+                    except Exception, e:
 
-                                if not disp == None:
-                                    self.dispatchers[ep] = disp
-                                    disp.connect(ep)
-                                    disp.dispatch(json.dumps(dcpkt))
-                                    #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                                else:
-                                    logging.error("No dispatchers found for: "+ep)
-                        except Exception,e:
-
-                            logging.error("Error sending packet, requeueing: "+e.message)
-                            #Requeue
-                            tx.put((group, state, otype, pkt))
+                        logging.error("Error sending packet, requeueing: " + e.message)
+                        #Requeue
+                        tx.put((group, state, otype, pkt))
 
 
-                #if r["endpoints"][0]:
-                #    entry = r["endpoints"][0]
-                #    ep = r["endpoints"][0]["ep"]
-                #    logging.debug(r["endpoints"][0]["ep"])
-                #    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
-                #    dcpkt.append(next_hop)
-                #    #pkt.remove( pkt[len(pkt)-1] )
-                #    #logging.debug(json.dumps(pkt))
-                #    if ep in self.dispatchers.keys():
-                #        disp = self.dispatchers[ep]
-                #        disp.dispatch(json.dumps(dcpkt))
-                #    else:
-                #        disp = None
-                #        if entry["mode"] == "zmq.PULL":
-                #            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                #            #disp = ZMQPacketDispatch(self.context)
-                #
-                #        if not disp == None:
-                #            self.dispatchers[ep] = disp
-                #            disp.connect(ep)
-                #            disp.dispatch(json.dumps(dcpkt))
-                #        else:
-                #            logging.error("No dispatchers found for: "+ep)
+                        #if r["endpoints"][0]:
+                        #    entry = r["endpoints"][0]
+                        #    ep = r["endpoints"][0]["ep"]
+                        #    logging.debug(r["endpoints"][0]["ep"])
+                        #    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : r["endpoints"][0]["ep"] }
+                        #    dcpkt.append(next_hop)
+                        #    #pkt.remove( pkt[len(pkt)-1] )
+                        #    #logging.debug(json.dumps(pkt))
+                        #    if ep in self.dispatchers.keys():
+                        #        disp = self.dispatchers[ep]
+                        #        disp.dispatch(json.dumps(dcpkt))
+                        #    else:
+                        #        disp = None
+                        #        if entry["mode"] == "zmq.PULL":
+                        #            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                        #            #disp = ZMQPacketDispatch(self.context)
+                        #
+                        #        if not disp == None:
+                        #            self.dispatchers[ep] = disp
+                        #            disp.connect(ep)
+                        #            disp.dispatch(json.dumps(dcpkt))
+                        #        else:
+                        #            logging.error("No dispatchers found for: "+ep)
 
+        if self.stopped():
+            logging.debug("Exiting thread " + self.__class__.__name__)
+            for ep in self.dispatchers.keys():
+                disp = disp = self.dispatchers[ep]
+                disp.close()
+            break
+        else:
+            continue
 
-
-
-            if self.stopped():
-                logging.debug("Exiting thread "+self.__class__.__name__)
-                for ep in self.dispatchers.keys():
-                    disp = disp = self.dispatchers[ep]
-                    disp.close()
-                break
-            else:
-                continue
 
 class EndpointPicker(object):
     def __init__(self, context):
@@ -494,12 +482,11 @@ class EndpointPicker(object):
             if no_entries == 0:
                 return False
 
-            logging.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
+            logging.debug("Route Picker: " + route_id + " entries: " + str(no_entries))
             if no_entries == 1:
                 return route["endpoints"][0]
             if route["remoting"] == False and no_entries > 0:
                 return route["endpoints"][0]
-
 
             if not route_id in self.route_index.keys():
                 self.route_index[route_id] = -1
@@ -516,32 +503,35 @@ class EndpointPicker(object):
             return False
             pass
 
-        #
-        # for ep in route['endpoints']:
-        #     if not self.is_local_ext_ep(ep):
-        #         pkt_counter = 0
-        #         if not ep["ep"] in self.route_index.keys():
-        #             self.route_index[ep["ep"]] = 1
-        #             return ep
-        #
-        #
-        #         cuid = ep["cuid"]
-        #         p = int(ep["priority"])
-        #
-        #
-        #         if p < prt:
-        #             bep = ep
-        #             prt = p
-        #
+            #
+            # for ep in route['endpoints']:
+            #     if not self.is_local_ext_ep(ep):
+            #         pkt_counter = 0
+            #         if not ep["ep"] in self.route_index.keys():
+            #             self.route_index[ep["ep"]] = 1
+            #             return ep
+            #
+            #
+            #         cuid = ep["cuid"]
+            #         p = int(ep["priority"])
+            #
+            #
+            #         if p < prt:
+            #             bep = ep
+            #             prt = p
+            #
 
 
 class Dispatch(object):
     def connect(self, connect_to):
         pass
+
     def dispatch(self, pkt):
         pass
+
     def close(self):
         pass
+
 
 class ZMQPacketPublish(Dispatch):
     def __init__(self, context, zmqcontext=None):
@@ -558,14 +548,13 @@ class ZMQPacketPublish(Dispatch):
         self.soc.bind(connect_to)
 
     def dispatch(self, pkt):
-            self.soc.send(json.dumps(pkt))
+        self.soc.send(json.dumps(pkt))
 
     def close(self):
         self.soc.close()
 
+
 class ZMQPacketDispatch(Dispatch):
-
-
     def __init__(self, context, zmqcontext=None):
         Dispatch.__init__(self)
         self.context = context
@@ -582,15 +571,15 @@ class ZMQPacketDispatch(Dispatch):
         parts = re.split('://|:', ep)
 
         if str(parts[0]).lower() == "tcp":
-            logging.debug("Checking ep..."+parts[1]+" "+parts[2])
+            logging.debug("Checking ep..." + parts[1] + " " + parts[2])
             sock = socket(AF_INET, SOCK_STREAM)
             result = sock.connect_ex((parts[1], int(parts[2])))
             if result == 0:
-                logging.debug("ep open: "+ep)
+                logging.debug("ep open: " + ep)
                 return True
             else:
-                logging.debug("ep closed: "+ep)
-                logging.warn("Detected closed ep: "+ep)
+                logging.debug("ep closed: " + ep)
+                logging.warn("Detected closed ep: " + ep)
                 return False
         return True
 
@@ -599,16 +588,16 @@ class ZMQPacketDispatch(Dispatch):
         self.ep = connect_to
         #self.soc.setsockopt(zmq.HWM, 1)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
-        logging.debug("ZMQ connecting to :"+str(connect_to))
+        logging.debug("ZMQ connecting to :" + str(connect_to))
         self.soc.connect(connect_to)
 
     def dispatch(self, pkt):
 
         #try:
-            #if not self.__check_ep(self.ep):
-            #    raise Exception("Endpoint closed")
-            #logging.debug("SENDING")
-            #self.soc.send(pkt, zmq.NOBLOCK)
+        #if not self.__check_ep(self.ep):
+        #    raise Exception("Endpoint closed")
+        #logging.debug("SENDING")
+        #self.soc.send(pkt, zmq.NOBLOCK)
 
 
         #except zmq.ZMQError as e:
@@ -619,8 +608,8 @@ class ZMQPacketDispatch(Dispatch):
     def close(self):
         self.soc.close()
 
-class ZMQPacketVentilate(Dispatch):
 
+class ZMQPacketVentilate(Dispatch):
     def __init__(self, context, zmqcontext=None):
         Dispatch.__init__(self)
         self.context = context
@@ -638,7 +627,7 @@ class ZMQPacketVentilate(Dispatch):
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
-        logging.debug("ZMQ connecting to :"+str(connect_to))
+        logging.debug("ZMQ connecting to :" + str(connect_to))
         self.soc.connect(connect_to)
         self.soc.send("REVERSE::ipc://127.0.0.1:7777")
 
@@ -653,6 +642,7 @@ class ZMQPacketVentilate(Dispatch):
 
     def close(self):
         self.soc.close()
+
 
 class InternalRxQueue(Dispatch):
     def __init__(self, context):
@@ -685,7 +675,9 @@ class RabbitMQDispatch(Dispatch):
     def __open_rabbitmq_connection(self):
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
         credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(frame_max=None,backpressure_detection=False,host=host, credentials=credentials, virtual_host=vhost, heartbeat_interval=20))
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(frame_max=None, backpressure_detection=False, host=host, credentials=credentials,
+                                      virtual_host=vhost, heartbeat_interval=20))
         #channel = self.connection.channel()
         return connection
 
@@ -706,7 +698,7 @@ class RabbitMQDispatch(Dispatch):
             try:
                 if not self.connection.is_closed:
                     logging.debug("Pub from RabbitMQ")
-                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
+                    self.channel.basic_publish(exchange='', routing_key=str(self.queue), body=message)
 
                     send = True
                 else:
@@ -714,7 +706,7 @@ class RabbitMQDispatch(Dispatch):
                     #time.sleep(1)
                     self.connect(None)
                     logging.debug("Pub from RabbitMQ")
-                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
+                    self.channel.basic_publish(exchange='', routing_key=str(self.queue), body=message)
 
                     send = True
             except:
@@ -723,7 +715,6 @@ class RabbitMQDispatch(Dispatch):
 
     def close(self):
         self.connetion.close()
-
 
 
 #class ExternalDispatch2(Thread):
