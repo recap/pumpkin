@@ -568,7 +568,8 @@ class ZMQPacketPublish(Dispatch):
         self.soc.bind(connect_to)
 
     def dispatch(self, pkt):
-            self.soc.send(json.dumps(pkt))
+            message = zlib.compress(json.dumps(pkt))
+            self.soc.send(message)
 
     def close(self):
         self.soc.close()
@@ -623,8 +624,8 @@ class ZMQPacketDispatch(Dispatch):
 
         #except zmq.ZMQError as e:
         #    raise
-
-        self.soc.send(json.dumps(pkt))
+        message = zlib.compress(json.dumps(pkt))
+        self.soc.send(message)
 
     def close(self):
         self.soc.close()
