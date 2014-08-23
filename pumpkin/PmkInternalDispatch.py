@@ -68,7 +68,7 @@ class InternalDispatch(SThread):
 
                     eff = mexec/tdelta
                     overhead = tdelta - mexec
-                    st_tm = "{:.12f}".format(tm)
+                    st_tm = "{:.12f}".format(tm1)
                     st_tdelta = "{:.12f}".format(tdelta)
                     st_mexec = "{:.12f}".format(mexec)
                     st_overhead = "{:.12f}".format(overhead)
