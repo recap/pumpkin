@@ -12,7 +12,7 @@ import re
 import socket
 import networkx as nx
 import pika
-
+import zlib
 
 
 from networkx.readwrite import json_graph
@@ -425,7 +425,8 @@ class ZMQPacketPublish(Dispatch):
         self.soc.bind(connect_to)
 
     def dispatch(self, pkt):
-            self.soc.send(pkt)
+            message = zlib.compress(json.dumps(pkt))
+            self.soc.send(message)
 
     def close(self):
         self.soc.close()
@@ -480,8 +481,8 @@ class ZMQPacketDispatch(Dispatch):
 
         #except zmq.ZMQError as e:
         #    raise
-
-        self.soc.send(pkt)
+        message = zlib.compress(json.dumps(pkt))
+        self.soc.send(message)
 
     def close(self):
         self.soc.close()
@@ -514,7 +515,8 @@ class ZMQPacketVentilate(Dispatch):
         try:
             time.sleep(3)
             logging.debug("Sending")
-            self.sender.send(pkt)
+            message = zlib.compress(json.dumps(pkt))
+            self.sender.send(message)
         except zmq.ZMQError as e:
             logging.error(str(e))
 
@@ -564,7 +566,19 @@ class RabbitMQDispatch(Dispatch):
         #self.channel.queue_declare(queue=str(self.queue), durable=False)
 
     def dispatch(self, pkt):
-        self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=pkt)
+        send = False
+        message = zlib.compress(json.dumps(pkt))
+        while not send:
+            try:
+                if not self.connection.is_closed:
+                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
+                    send = True
+                else:
+                    self.connect(None)
+                    self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
+                    send = True
+            except:
+                time.sleep(1)
         pass
 
     def close(self):

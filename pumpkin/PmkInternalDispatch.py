@@ -5,6 +5,7 @@ import Queue
 import zmq
 import time
 import pika
+import zlib
 
 import PmkSeed
 
@@ -168,7 +169,7 @@ class RabbitMQMonitor():
                         else:
                             self.cnt += 1
                             logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
-                            pkt = json.loads(body)
+                            pkt = json.loads(zlib.decompress(body))
                             rx.dig(pkt)
                             rx.put(pkt)
                             # pkt = json.loads(body)
@@ -330,7 +331,7 @@ class ZMQPacketMonitor(SThread):
             try:
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
-                pkt = json.loads(msg)
+                pkt = json.loads(zlib.decompress(msg))
                 dig(pkt)
                 queue_put(pkt)
                 #self.proccess_pkt(msg)
