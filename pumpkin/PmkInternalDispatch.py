@@ -162,14 +162,15 @@ class RabbitMQMonitor():
 
                 try:
                     #FIX: bug trap empty queue
-                    method, properties, body = self.channel.basic_get(queue=self.queue, no_ack=True)
+                    method, properties, bodyz = self.channel.basic_get(queue=self.queue, no_ack=True)
                     if method:
                         if (method.NAME == 'Basic.GetEmpty'):
                             time.sleep(1)
                         else:
                             self.cnt += 1
-                            logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
-                            pkt = json.loads(zlib.decompress(body))
+                            body = zlib.decompress(bodyz)
+                            logging.info("RabbitMQ received from "+self.queue+": "+ str(body))
+                            pkt = json.loads(body)
                             rx.dig(pkt)
                             rx.put(pkt)
                             # pkt = json.loads(body)

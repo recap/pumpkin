@@ -554,7 +554,7 @@ class RabbitMQDispatch(Dispatch):
         self.connection = None
         self.channel = None
         self.otag = None
-        logging.debug("Created RabbitMQDisptach")
+        logging.info("Created RabbitMQDisptach")
         pass
 
     def __open_rabbitmq_connection(self):
@@ -577,10 +577,12 @@ class RabbitMQDispatch(Dispatch):
         while not send:
             try:
                 if not self.connection.is_closed:
+                    logging.info("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
                 else:
                     self.connect(None)
+                    logging.info("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
             except:
