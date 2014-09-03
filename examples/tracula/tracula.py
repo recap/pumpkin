@@ -69,6 +69,13 @@ class tracula(PmkSeed.Seed):
 
         return s
 
+    def busy(self, id):
+        return True
+        if len(self.patients) >= 1 and id not in self.patients.keys():
+            return True
+        else:
+            return False
+
     def new_patient(self, id):
         state_tr = {}
         state_tr["MRI_BRAINSEGMENT"] = False
@@ -89,6 +96,15 @@ class tracula(PmkSeed.Seed):
         return (self.patients[id][0], self.patients[id][1])
 
 
+    def pre_run(self, pkt, *args):
+        ship_id = self.get_ship_id(pkt)
+        #stag = self.get_last_stag(pkt)
+        if self.busy(ship_id):
+            #do something
+            self.re_dispatch(pkt)
+            return False
+        else:
+            return True
 
 
     def run(self, pkt, data):

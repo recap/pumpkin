@@ -134,7 +134,7 @@ class Seed(object):
         ship_id = self.context.getExecContext()
         cont_id =  str(uuid.uuid4())[:8]
         pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : 0, "state": "NEW", \
-                    "c_tag" : "NONE:NONE", "ttl" : '0',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
+                    "c_tag" : "NONE:NONE", "ttl" : 'D',"t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
                     "last_contact" : "None", "las"
                                              "t_func" : "None", "last_timestamp" : 0})
         #Place holder for data automaton
@@ -382,75 +382,76 @@ class Seed(object):
 
     def _stage_run(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
-        pstate =  pkt[0]["state"]
-        if not self.is_duplicate(pkt):
-            tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
-            pkt[0]["state"] = "PROCESSING"
+        if self.pre_run(pkt, args):
+            pstate =  pkt[0]["state"]
+            if not self.is_duplicate(pkt):
+                tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
+                pkt[0]["state"] = "PROCESSING"
 
-            if self.context.with_shelve():
-                self._lock_in_fpkts.acquire()
-                shelve = self.context.get_pkt_shelve()
-                shelve[str(pkt_id)] = pkt
-                self._lock_in_fpkts.release()
+                if self.context.with_shelve():
+                    self._lock_in_fpkts.acquire()
+                    shelve = self.context.get_pkt_shelve()
+                    shelve[str(pkt_id)] = pkt
+                    self._lock_in_fpkts.release()
 
-            if self.context.with_acks():
-                self._lock_in_fpkts.acquire()
-                self.in_flight_pkts[pkt_id] = pkt
-                self._lock_in_fpkts.release()
+                if self.context.with_acks():
+                    self._lock_in_fpkts.acquire()
+                    self.in_flight_pkts[pkt_id] = pkt
+                    self._lock_in_fpkts.release()
 
-            try:
-                self.__inc_pkt_counter()
+                try:
+                    self.__inc_pkt_counter()
 
-                nargs = []
-                if(args[0]):
-                    #msg = str(args[0])
-                    for msg in args[0].split('|,|'):
+                    nargs = []
+                    if(args[0]):
+                        #msg = str(args[0])
+                        for msg in args[0].split('|,|'):
 
-                        if ( (not (self.context.is_speedy())) and (msg.startswith("tftp://"))):
-                            ip, port, rpath, file = self.__endpoint_parts(msg)
-                            if ip in self.tftp_sessions.keys():
-                                client = self.tftp_sessions[ip]
+                            if ( (not (self.context.is_speedy())) and (msg.startswith("tftp://"))):
+                                ip, port, rpath, file = self.__endpoint_parts(msg)
+                                if ip in self.tftp_sessions.keys():
+                                    client = self.tftp_sessions[ip]
+                                else:
+                                    client = tftpy.TftpClient(ip, int(port))
+                                    self.tftp_sessions[ip] = client
+
+                                wdf = self.context.getWorkingDir()+"/rx/"+file
+                                client.download(file, wdf)
+                                furl = "file://"+wdf
+                                nargs.append(furl)
+                                self.set_pkt_data(pkt,furl)
                             else:
-                                client = tftpy.TftpClient(ip, int(port))
-                                self.tftp_sessions[ip] = client
+                                nargs.append(msg)
 
-                            wdf = self.context.getWorkingDir()+"/rx/"+file
-                            client.download(file, wdf)
-                            furl = "file://"+wdf
-                            nargs.append(furl)
-                            self.set_pkt_data(pkt,furl)
-                        else:
-                            nargs.append(msg)
+                        for x in range (1,len(args)-1):
+                            nargs.append(args[x])
 
-                    for x in range (1,len(args)-1):
-                        nargs.append(args[x])
-
-                if pstate == "MERGE":
-                    self.merge(pkt,nargs)
-                    return
-                else:
-                    if self.is_fragment(pkt):
-                        self.inc_state_counter(tstag)
-                        self.run(pkt,nargs)
+                    if pstate == "MERGE":
+                        self.merge(pkt,nargs)
+                        return
                     else:
-                        if not self.split(pkt, nargs):
+                        if self.is_fragment(pkt):
                             self.inc_state_counter(tstag)
                             self.run(pkt,nargs)
-                    return
+                        else:
+                            if not self.split(pkt, nargs):
+                                self.inc_state_counter(tstag)
+                                self.run(pkt,nargs)
+                        return
 
 
-            except Exception as e:
-                logging.error(str(e))
-                self._lock_in_fpkts.acquire()
+                except Exception as e:
+                    logging.error(str(e))
+                    self._lock_in_fpkts.acquire()
 
-                if pkt_id in self.in_flight_pkts.keys():
-                    del self.in_flight_pkts[pkt_id]
+                    if pkt_id in self.in_flight_pkts.keys():
+                        del self.in_flight_pkts[pkt_id]
 
-                self._lock_in_fpkts.release()
+                    self._lock_in_fpkts.release()
+                    pass
+            else:
+                logging.debug("Duplicate packet received: "+pkt_id)
                 pass
-        else:
-            logging.debug("Duplicate packet received: "+pkt_id)
-            pass
 
     def regression(self):
         complexity = self.get_complexity_list()
@@ -704,16 +705,18 @@ class Seed(object):
             self._lock_fpkts.acquire()
             for k in self.flight_pkts.keys():
                 pkt = self.flight_pkts[k]
-                ttl = int(pkt[0]["ttl"])
-                ttl = ttl - interval
-                if ttl <= 0:
-                    ttl = reset
-                    logging.debug("Resending packet: "+str(pkt))
-                    state = pkt[0]["t_state"]
-                    otype = pkt[0]["t_otype"]
-                    self.context.getTx().put((self.get_group(), state, otype, pkt))
-                    pass
-                pkt[0]["ttl"] = str(ttl)
+                s_ttl = str(pkt[0]["ttl"])
+                if s_ttl != "D":
+                    ttl = int(pkt[0]["ttl"])
+                    ttl = ttl - interval
+                    if ttl <= 0:
+                        ttl = reset
+                        logging.debug("Resending packet: "+str(pkt))
+                        state = pkt[0]["t_state"]
+                        otype = pkt[0]["t_otype"]
+                        self.context.getTx().put((self.get_group(), state, otype, pkt))
+                        pass
+                    pkt[0]["ttl"] = str(ttl)
 
             self._lock_fpkts.release()
             threading.Timer(interval, self.pkt_checker_t).start()
@@ -991,7 +994,8 @@ class Seed(object):
         else:
             lpkt[0]["state"] = "TRANSIT"
         lpkt[0]["c_tag"] = stag
-        lpkt[0]["ttl"] = '60'
+
+        #lpkt[0]["ttl"] = '60'
         lpkt[0]["t_state"] = tag
         lpkt[0]["t_otype"] = otype
         lpkt[0]["last_func"] = self.__class__.__name__
@@ -1025,6 +1029,19 @@ class Seed(object):
 
         return lpkt
 
+    def re_dispatch(self,pkt):
+        pkt_l = len(pkt)
+        pkt[0]["state"] = "REDISPATCH"
+        last = pkt[pkt_l - 1]
+        stag = last["stag"]
+        stag_spl = stag.split(":")
+        #print json.dumps(pkt)
+        #pkt.pop()
+        #print json.dumps(pkt)
+        self.context.getTx().put((stag_spl[0], stag_spl[2],stag_spl[1], pkt), True)
+        return pkt
+
+
     def error(self,pkt, msg=None, type="ERROR", tag="ERROR"):
 
         lpkt = pkt
@@ -1053,7 +1070,7 @@ class Seed(object):
 
         lpkt[0]["state"] = "ERROR"
         lpkt[0]["c_tag"] = stag
-        lpkt[0]["ttl"] = '60'
+        #lpkt[0]["ttl"] = '60'
         lpkt[0]["t_state"] = tag
         lpkt[0]["t_otype"] = otype
         lpkt[0]["last_func"] = self.__class__.__name__
@@ -1099,7 +1116,7 @@ class Seed(object):
 
         lpkt[0]["state"] = "DONE"
         lpkt[0]["c_tag"] = stag
-        lpkt[0]["ttl"] = '60'
+        #lpkt[0]["ttl"] = '60'
         lpkt[0]["t_state"] = tag
         lpkt[0]["t_otype"] = otype
         lpkt[0]["last_func"] = self.__class__.__name__
@@ -1144,3 +1161,6 @@ class Seed(object):
     def on_unload(self):
         logging.warn("Class \""+self.__class__.__name__+"\" called on_unload but not implimented.")
         pass
+
+    def pre_run(self, pkt, *args):
+        return True
