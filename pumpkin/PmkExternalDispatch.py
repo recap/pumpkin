@@ -134,12 +134,14 @@ class ExternalDispatch(SThread):
         while 1:
             routes = self.graph.getRoutes(otag)
             if routes:
-                 logging.debug("Found routes: "+json.dumps(routes))
+                 logging.info("Found Routes: "+json.dumps(routes))
                  break
             else:
                 # dump non routable packets as this will lead to deadlock from tx queue filling up
+
                 if self.context.is_speedy():
                     break
+                logging.info("No Route: "+str(otag))
                 time.sleep(5)
 
 
