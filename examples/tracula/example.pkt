@@ -17,15 +17,11 @@
   },
   {},
   {
-    "stag": "XXX:Composite:ALL_RAW",
+    "stag": "AMC:Composite:ALL_RAW",
     "data": "traculadav/freesurfer-sample-input.zip|,|traculadav/predti-sample-input.zip|,|traculadav/subjectID|,|traculadav/outputDir|,|traculadav/fs_license",
     "format": "MRIFILE,DTIFile,TextFile,TextFile,TextFile",
     "exstate": "0000",
-    "func": "XXX:injector",
-    "ep": "local"
-  },
-  {
-    "func": "XXX:injector",
+    "func": "AMC:injector",
     "ep": "local"
   }
 ]

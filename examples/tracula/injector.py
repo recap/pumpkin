@@ -88,8 +88,8 @@ class injector(PmkSeed.Seed):
         #dti_input = dti_file
         dti_input = data[1]
 
-        self.dispatch(pkt, mri_input, "MRI_RAW")
-        self.dispatch(pkt, dti_input, "DTI_RAW")
+        self.fork_dispatch(pkt, mri_input, "MRI_RAW")
+        self.fork_dispatch(pkt, dti_input, "DTI_RAW")
 
         # for x in range(1,3):
         #     npkt = self.duplicate_pkt_new_box(pkt)

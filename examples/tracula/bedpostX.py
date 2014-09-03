@@ -81,7 +81,7 @@ class bedpostX(PmkSeed.Seed):
 
         message = dav_re+"/"+output_file
 
-        self.dispatch(pkt, message, "DTI_FIBER")
+        self.fork_dispatch(pkt, message, "DTI_FIBER")
         pass
 
     # def merge(self, pkt, data):

@@ -92,14 +92,14 @@ class tracula(PmkSeed.Seed):
 
 
     def run(self, pkt, data):
-
+        print "TRACULA: "+str(data)
         ship_id = self.get_ship_id(pkt)
         stag = self.get_last_stag(pkt)
 
         state_tr, ifiles = self.new_patient(ship_id)
 
         state_tr[stag] = True
-        ifiles[stag] = self.copy_file_to_wd(data[0])
+        ifiles[stag] = self.copy_file_to_wd(self.home+data[0])
 
         if self.state_barrier(ship_id):
             print "Go Ahead"

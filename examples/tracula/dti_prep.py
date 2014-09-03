@@ -73,7 +73,7 @@ class dti_prep(PmkSeed.Seed):
         shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
 
         message = dav_re+"/"+output_file
-        self.dispatch(pkt, message, "DTI_PREPROC")
+        self.fork_dispatch(pkt, message, "DTI_PREPROC")
 
 
 

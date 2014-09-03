@@ -326,8 +326,8 @@ class MainContext(object):
                         s = "inproc://"+self.getUuid()
                     else:
                         s = ep
-                    self.endpoints.append( (s, "zmq.INPROC", "zmq.PULL", 1) )
-                    #self.endpoints.append( (s, "raw.Q", "raw.Q", 1) )
+                    #self.endpoints.append( (s, "zmq.INPROC", "zmq.PULL", 1) )
+                    self.endpoints.append( (s, "raw.Q", "raw.Q", 1) )
                     logging.debug("Added endpoint: "+s)
 
                 if prot == "amqp:":

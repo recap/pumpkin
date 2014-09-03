@@ -174,7 +174,8 @@ class ExternalDispatch(SThread):
 
                         if ep in self.dispatchers.keys():
                             disp = self.dispatchers[ep]
-                            disp.dispatch(json.dumps(dcpkt))
+                            disp.dispatch(dcpkt)
+                            #disp.dispatch(json.dumps(dcpkt))
                             #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                         else:
@@ -195,7 +196,8 @@ class ExternalDispatch(SThread):
                             if not disp == None:
                                 self.dispatchers[ep] = disp
                                 disp.connect(ep)
-                                disp.dispatch(json.dumps(dcpkt))
+                                disp.dispatch(dcpkt)
+                                #disp.dispatch(json.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
@@ -283,7 +285,8 @@ class ExternalDispatch(SThread):
                         try:
                             if ep in self.dispatchers.keys():
                                 disp = self.dispatchers[ep]
-                                disp.dispatch(json.dumps(dcpkt))
+                                disp.dispatch(dcpkt)
+                                #disp.dispatch(json.dumps(dcpkt))
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
@@ -296,7 +299,8 @@ class ExternalDispatch(SThread):
                                 if not disp == None:
                                     self.dispatchers[ep] = disp
                                     disp.connect(ep)
-                                    disp.dispatch(json.dumps(dcpkt))
+                                    disp.dispatch(dcpkt)
+                                    #disp.dispatch(json.dumps(dcpkt))
                                     #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                                 else:

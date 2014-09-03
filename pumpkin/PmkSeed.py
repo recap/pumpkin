@@ -333,9 +333,11 @@ class Seed(object):
         self._lock_in_fpkts.acquire()
 
         if pkt_id in self.in_flight_pkts.keys():
+            print json.dumps(pkt)
             self._lock_in_fpkts.release()
             return True
         if self.context.isPktShelved(pkt):
+            print json.dumps(pkt)
             self._lock_in_fpkts.release()
             return True
         self._lock_in_fpkts.release()
@@ -810,7 +812,7 @@ class Seed(object):
 
         return id
 
-    def duplicate_pkt_new_container(self,pkt, shallow=True):
+    def duplicate_pkt_new_container(self,pkt, shallow=False):
         lpkt = None
         if shallow:
             lpkt = copy.copy(pkt)

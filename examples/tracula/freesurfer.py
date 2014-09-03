@@ -74,7 +74,7 @@ class freesurfer(PmkSeed.Seed):
         shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
 
         message = dav_re+"/"+output_file
-        self.dispatch(pkt, message, "MRI_BRAINSEGMENT")
+        self.fork_dispatch(pkt, message, "MRI_BRAINSEGMENT")
 
 
 
