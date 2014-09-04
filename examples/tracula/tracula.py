@@ -74,7 +74,7 @@ class tracula(PmkSeed.Seed):
     def keep(self, id, stag):
         prec = {}
         prec["MRI_BRAINSEGMENT"] = 1
-        prec["DTI_PREPROC"] = 2
+        prec["DTI_PREPROC1"] = 2
         prec["DTI_FIBER"] = 3
 
         # busy with another patient
@@ -99,12 +99,12 @@ class tracula(PmkSeed.Seed):
     def new_patient(self, id):
         state_tr = {}
         state_tr["MRI_BRAINSEGMENT"] = False
-        state_tr["DTI_PREPROC"] = False
+        state_tr["DTI_PREPROC1"] = False
         state_tr["DTI_FIBER"] = False
 
         ifiles = {}
         ifiles["MRI_BRAINSEGMENT"] = None
-        ifiles["DTI_PREPROC"] = None
+        ifiles["DTI_PREPROC1"] = None
         ifiles["DTI_FIBER"] = None
 
         if id not in self.patients.keys():
@@ -162,7 +162,7 @@ class tracula(PmkSeed.Seed):
 
             call([script_path, "-config_file", conf_file,\
                   "-freesurfer_data", ifiles["MRI_BRAINSEGMENT"],\
-                  "-predti_data", ifiles["DTI_PREPROC"],\
+                  "-predti_data", ifiles["DTI_PREPROC1"],\
                   "-bedpostx_data", ifiles["DTI_FIBER"],\
                   "-outfile", output_file,\
                   "-fsversion","5.3.0",\
