@@ -144,8 +144,8 @@ class ExternalDispatch(SThread):
 
                         if state == "REDISPATCH":
                             last = dcpkt[len(pkt) -1]
-                            ex_eps = last["ep"].split("|,|")
-                            pep = self.ep_sched.pick_route_exc(r, ex_eps)
+                            #ex_eps = last["ep"].split("|,|")
+                            pep = self.ep_sched.pick_route_exc(r, last["traces"].keys())
                         else:
                             pep = self.ep_sched.pick_route(r)
 
@@ -153,6 +153,7 @@ class ExternalDispatch(SThread):
                             logging.debug("No Route...")
                             found = False
                             continue
+
                         oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                         dcpkt[0]["last_contact"] = oep[0]
 
@@ -163,7 +164,8 @@ class ExternalDispatch(SThread):
 
                             if state == "REDISPATCH":
                                 last = dcpkt[len(pkt) -1]
-                                last["ep"] += "|,|"+ep
+                                last["ep"] = ep
+                                pass
                             else:
                                 next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                                 dcpkt.append(next_hop)
@@ -199,6 +201,9 @@ class ExternalDispatch(SThread):
 
                                 else:
                                     logging.error("No dispatchers found for: "+ep)
+
+                            if state == "REDISPATCH" and found == True:
+                                break
         pass
 
     def __loop_body(self):

@@ -1035,6 +1035,28 @@ class Seed(object):
         last = pkt[pkt_l - 1]
         stag = last["stag"]
         stag_spl = stag.split(":")
+        if "traces" not in last.keys():
+            traces = {}
+            entry = {}
+            last["traces"] = traces
+
+            traces[last["ep"]] = entry
+            entry["ep"] = last["ep"]
+            entry["load"] = self._forecast["npkts"]
+            entry["tries"] = 1
+        else:
+            traces = last["traces"]
+            if last["ep"] not in last["traces"].keys():
+                entry = {}
+                traces[last["ep"]] = entry
+                entry["ep"] = last["ep"]
+                entry["load"] = self._forecast["npkts"]
+                entry["tries"] = 1
+            else:
+                entry = traces[last["ep"]]
+                entry["load"] = self._forecast["npkts"]
+                entry["tries"] += 1
+
         #print json.dumps(pkt)
         #pkt.pop()
         #print json.dumps(pkt)
