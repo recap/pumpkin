@@ -124,12 +124,16 @@ class tracula(PmkSeed.Seed):
 
 
     def pre_run(self, pkt, *args):
-        if self.get_state(pkt) == "NOROUTE":
-            return True
-
         ship_id = self.get_ship_id(pkt)
         stag = self.get_last_stag(pkt)
+
+        if self.get_state(pkt) == "NOROUTE":
+            print "ACEPTING NOROUTE: "+ship_id+" "+stag
+            return True
+
+
         if not self.keep(ship_id, stag):
+            print "REJECTING: "+ship_id+" "+stag
             self.re_dispatch(pkt)
             return False
         else:
@@ -150,7 +154,7 @@ class tracula(PmkSeed.Seed):
 
         if self.state_barrier(ship_id):
             print "Go Ahead"
-            time.sleep(360)
+            time.sleep(5)
             script_path = self.wd+self.copy_file_to_wd(self.dav_dir+self.script, 0755)
             conf_file = self.wd+self.copy_file_to_wd(self.dav_dir+"tracula.conf", 0644)
 

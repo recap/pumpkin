@@ -108,14 +108,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_response(200)
             s.send_header("Content-type", "application/json")
             s.end_headers()
-            s.wfile.write(str(rep))
+            s.wfile.write(rep)
 
         if s.path =="/extgraph.json":
             rep = context.getProcGraph().dumpExternalRegistry()
             s.send_response(200)
             s.send_header("Content-type", "application/json")
             s.end_headers()
-            s.wfile.write(str(rep))
+            s.wfile.write(rep)
 
         if s.path =="/txrx.json":
 
@@ -135,7 +135,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
             rep  = context.getProcGraph().dumpRoutingTable()
 
-            s.wfile.write(str(rep))
+            s.wfile.write(rep)
 
         if s.path =="/packets.json":
             s.send_response(200)
@@ -143,7 +143,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
             rep = json.dumps(dict(context.getPktShelve()))
 
-            s.wfile.write(str(rep))
+            s.wfile.write(rep)
 
         if s.path == "/counters.json":
             s.send_response(200)
