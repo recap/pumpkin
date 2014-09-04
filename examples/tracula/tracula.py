@@ -70,7 +70,7 @@ class tracula(PmkSeed.Seed):
         return s
 
     def busy(self, id):
-        return True
+
         if len(self.patients) >= 1 and id not in self.patients.keys():
             return True
         else:
@@ -95,8 +95,18 @@ class tracula(PmkSeed.Seed):
 
         return (self.patients[id][0], self.patients[id][1])
 
+    def clear_patient(self, id):
+        if id in self.patients.keys():
+            self.patients.pop(id)
+            return True
+        return False
+
+
 
     def pre_run(self, pkt, *args):
+        if self.get_state(pkt) == "NOROUTE":
+            return True
+
         ship_id = self.get_ship_id(pkt)
         #stag = self.get_last_stag(pkt)
         if self.busy(ship_id):
@@ -108,7 +118,7 @@ class tracula(PmkSeed.Seed):
 
 
     def run(self, pkt, data):
-        print "TRACULA: "+str(data)
+        #print "TRACULA: "+str(data)
         ship_id = self.get_ship_id(pkt)
         stag = self.get_last_stag(pkt)
 
@@ -119,7 +129,7 @@ class tracula(PmkSeed.Seed):
 
         if self.state_barrier(ship_id):
             print "Go Ahead"
-
+            time.sleep(360)
             script_path = self.wd+self.copy_file_to_wd(self.dav_dir+self.script, 0755)
             conf_file = self.wd+self.copy_file_to_wd(self.dav_dir+"tracula.conf", 0644)
 
@@ -140,6 +150,8 @@ class tracula(PmkSeed.Seed):
             shutil.move(self.wd+"/"+output_file,dav_wd+"/"+output_file)
 
             message = dav_re+"/"+output_file
+
+            self.clear_patient(ship_id)
 
             print "RESULT: "+message
 

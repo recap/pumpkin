@@ -173,6 +173,9 @@ class Seed(object):
     def get_ship_id(self, pkt):
         return pkt[0]["ship"]
 
+    def get_state(self, pkt):
+        return pkt[0]["state"]
+
     def _tar_to_gz(self, source, destination=None, suffix=None):
         src = self.context.getWorkingDir()+source
         dst = destination

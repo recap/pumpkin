@@ -145,7 +145,8 @@ class ExternalDispatch(SThread):
                         if state == "REDISPATCH":
                             last = dcpkt[len(pkt) -1]
                             #ex_eps = last["ep"].split("|,|")
-                            pep = self.ep_sched.pick_route_exc(r, last["traces"].keys())
+                            pep, lstate = self.ep_sched.pick_route_exc(r, last["traces"])
+                            dcpkt[0]["state"] = lstate
                         else:
                             pep = self.ep_sched.pick_route(r)
 
@@ -244,20 +245,32 @@ class EndpointPicker(object):
             return True
         return False
 
-    def pick_route_exc(self, route, ex_eps=[]):
+    def pick_route_exc(self, route, traces):
+        ex_eps = traces.keys()
         rep = None
         found = True
+        load = 10000000
+        lep = None
         for ep in route["endpoints"]:
             found = True
             for xep in ex_eps:
+
                 if ep["ep"] == xep:
                     found = False
+                    xload = traces[xep]["load"]
+                    if xload < load:
+                        load = xload
+                        lep = ep
                     continue
 
             if found == True:
                 rep = ep
+                return (rep, "REDISPATCH")
 
-        return rep
+        if found == False:
+            rep = lep
+            return  (rep, "NOROUTE")
+
 
     def pick_route(self, route):
         route_id = route["name"]
