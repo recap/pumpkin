@@ -69,12 +69,32 @@ class tracula(PmkSeed.Seed):
 
         return s
 
-    def busy(self, id):
 
+
+    def keep(self, id, stag):
+        prec = {}
+        prec["MRI_BRAINSEGMENT"] = 1
+        prec["DTI_PREPROC"] = 2
+        prec["DTI_FIBER"] = 3
+
+        # busy with another patient
         if len(self.patients) >= 1 and id not in self.patients.keys():
-            return True
-        else:
             return False
+        # if not busy use precedence to keep file of find the "master" node
+        if id not in self.patients.keys():
+            if prec[stag] > 1:
+                return False
+
+        # keep packet only if MRI_BRAINSEGMENT has arrived
+        if id in self.patients.keys() and prec[stag] > 1:
+            return True
+
+        # keep first packet MRI_BRAINSEGMENT
+        if id not in self.patients.keys() and prec[stag] == 1:
+            return True
+
+        return False
+
 
     def new_patient(self, id):
         state_tr = {}
@@ -108,9 +128,8 @@ class tracula(PmkSeed.Seed):
             return True
 
         ship_id = self.get_ship_id(pkt)
-        #stag = self.get_last_stag(pkt)
-        if self.busy(ship_id):
-            #do something
+        stag = self.get_last_stag(pkt)
+        if not self.keep(ship_id, stag):
             self.re_dispatch(pkt)
             return False
         else:
