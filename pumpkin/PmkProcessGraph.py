@@ -88,7 +88,7 @@ class ProcessGraph(object):
         threading.Timer(self.INT_TTL, self.__update_registry_t).start()
 
     def dumpRoutingTable(self):
-        return self.tagroute
+        return json.dumps(self.tagroute)
 
     def updateRegistry(self, entry, loc="remote"):
 

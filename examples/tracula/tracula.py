@@ -10,7 +10,7 @@ __author__ = 'reggie'
 ##                  {
 ##                      "name": "tracula_input",
 ##                      "type": "Composite",
-##                      "state" : "MRI_BRAINSEGMENT&DTI_PREPROC&DTI_FIBER"
+##                      "state" : "MRI_BRAINSEGMENT&DTI_PREPROC1&DTI_FIBER"
 ##                  }
 ## ],
 ##"return": [

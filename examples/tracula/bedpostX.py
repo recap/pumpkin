@@ -10,7 +10,7 @@ __author__ = 'reggie'
 ##                  {
 ##                      "name": "bedpostx_input",
 ##                      "type": "Composite",
-##                      "state" : "DTI_PREPROC"
+##                      "state" : "DTI_PREPROC2"
 ##                  }
 ## ],
 ##"return": [
