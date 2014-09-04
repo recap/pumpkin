@@ -127,7 +127,7 @@ class tracula(PmkSeed.Seed):
         ship_id = self.get_ship_id(pkt)
         stag = self.get_last_stag(pkt)
 
-        if self.get_state(pkt) == "NOROUTE":
+        if self.get_state(pkt) == "NOROUTE" and stag == "MRI_BRAINSEGMENT":
             print "ACEPTING NOROUTE: "+ship_id+" "+stag
             return True
 
