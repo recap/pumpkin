@@ -118,9 +118,11 @@ class tracula(PmkSeed.Seed):
 
 
     def run(self, pkt, data):
-        #print "TRACULA: "+str(data)
+
         ship_id = self.get_ship_id(pkt)
         stag = self.get_last_stag(pkt)
+
+        print "TRACULA: "+ship_id+" "+stag
 
         state_tr, ifiles = self.new_patient(ship_id)
 

@@ -169,7 +169,7 @@ class RabbitMQMonitor():
                         else:
                             self.cnt += 1
                             body = zlib.decompress(bodyz)
-                            logging.info("RabbitMQ received from "+self.queue+": "+ str(body))
+                            logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
                             pkt = json.loads(body)
                             rx.dig(pkt)
                             rx.put(pkt)
