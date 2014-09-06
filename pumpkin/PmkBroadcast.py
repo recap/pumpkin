@@ -101,6 +101,7 @@ def get_zmq_supernodes(node_list):
         ret.append(s)
     return ret
 
+
 class RabbitMQBroadcaster(SThread):
     def __init__(self, context, exchange='global'):
         SThread.__init__(self)

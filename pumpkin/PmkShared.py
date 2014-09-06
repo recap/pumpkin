@@ -24,6 +24,13 @@ HTTP_BUFFER_SIZE = 1024
 ZMQ_ENDPOINT_PORT = 7900
 ZMQ_PUB_PORT = 7901
 
+
+TIMING_BIT =            0b1
+TRACK_BIT =             0b10
+ACK_BIT =               0b100
+TRACER_BIT =            0b1000
+
+
 #SUPERNODES = ["127.0.0.1", "flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]
 #SUPERNODES = [ "elab.lab.uvalight.net"]
 SUPERNODES = [ "127.0.0.1"]

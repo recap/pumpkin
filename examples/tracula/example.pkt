@@ -13,7 +13,8 @@
     "stop_func": "None",
     "ttl": "D",
     "container": "a0560550",
-    "ship": "patient_X"
+    "ship": "patient_X",
+    "aux" : 7
   },
   {},
   {

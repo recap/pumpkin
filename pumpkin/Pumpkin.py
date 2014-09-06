@@ -276,9 +276,19 @@ class Pumpkin(Daemon):
             bunnylistener.start()
             context.addThread(bunnylistener)
 
-            logging.debug("Adding RabbitMQ monitor: "+context.getUuid())
+            logging.debug("Adding RabbitMQ queue: "+context.getUuid())
             rabbitmq.add_monitor_queue(context.getUuid())
             #rabbitmq.add_monitor_queue("test")
+
+            qm = context.get_group()+":track"
+            monitor = RabbitMqLog(self.context)
+            monitor.connect(qm)
+
+            mon_dispatcher = LogDisptacher(self.context)
+            mon_dispatcher.add_monitor(monitor)
+            mon_dispatcher.start()
+            context.addThread(mon_dispatcher)
+
 
 
 

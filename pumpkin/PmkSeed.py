@@ -32,8 +32,8 @@ iplugins = {}
 #PKT_OLDBOX = 02
 MORE_PKT = 1
 LAST_PKT = 0
-
 PKT_PROCESS_WINDOW = 100
+
 
 class SeedType(type):
     def __init__(cls, name, bases, attrs):
@@ -508,7 +508,7 @@ class Seed(object):
         forecast["msize"] = msize
         forecast["pexec"] = pexec
 
-        pkt[0]["aux_bits"] = 0x10
+        pkt[0]["aux"] = pkt[0]["aux"] | TIMING_BIT
         pkt[0]["pexec"] = pred_time
         pkt[0]["dsize"] = data_len
 
@@ -522,8 +522,8 @@ class Seed(object):
         return (qpkts, msize, pexec)
 
     def adj_forecast(self, pkt):
-        if "aux_bits" in pkt[0].keys():
-            if pkt[0]["aux_bits"] == 0x10:
+        if "aux" in pkt[0].keys():
+            if pkt[0]["aux"] & TIMING_BIT:
                 ptime = pkt[0]["pexec"]
                 dsize = pkt[0]["dsize"]
 
@@ -915,11 +915,25 @@ class Seed(object):
              exdisp.send_to_last(dpkt)
         pass
 
+    def track(self, data):
+        mx = self.context.get_mx()
+        mx.put(data)
+
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
         pkt = dpkt
         lpkt = dpkt
         caller = "run"
+        aux = 0
+        if "aux" in lpkt[0].keys():
+            aux = lpkt[0]["aux"]
+
+        if aux & TRACK_BIT:
+            d = {}
+            d["ship_id"] = self.get_ship_id(lpkt)
+            d["stag"] = tag
+            d["host"] = last_entry = lpkt[len(lpkt)-1]["ep"]
+            self.track(d)
 
         if not self.context.is_speedy():
             pkt = copy.deepcopy(dpkt)
@@ -1115,10 +1129,22 @@ class Seed(object):
 
     def finalize(self,pkt, msg=None, type="END", tag="END"):
 
+
         lpkt = pkt
         caller = "run"
         stag = "END"
         lpkt_id = self.get_pkt_id(pkt)
+
+        if "aux" in lpkt[0].keys():
+            aux = lpkt[0]["aux"]
+
+        if aux & TRACK_BIT:
+            d = {}
+            d["ship_id"] = self.get_ship_id(lpkt)
+            d["stag"] = tag
+            d["host"] = last_entry = lpkt[len(lpkt)-1]["ep"]
+            self.track(d)
+
         if not type:
             otype = self.conf["return"][0]["type"]
         else:

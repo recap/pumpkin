@@ -13,6 +13,7 @@ import PmkShared
 
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
+from PmkMonitor import *
 from PmkBroadcast import *
 
 
@@ -49,6 +50,7 @@ class MainContext(object):
 
             self.rx = None #rx(100000)
             self.tx = None #tx(100000)
+            self.mx = None
 
             self.cmd = cmd()
             self.registry = {}
@@ -470,6 +472,9 @@ class MainContext(object):
         def getTx(self):
             return self.tx
 
+        def get_mx(self):
+            return self.mx
+
         def get_cores(self):
             c = int(self.__attrs.cores)
             return c
@@ -499,6 +504,7 @@ class MainContext(object):
             logging.info("Setting buffer queue limit to: "+str(self.get_buffer_size()))
             self.rx = rx(self.get_buffer_size())
             self.tx = tx(self.get_buffer_size())
+            self.mx = mx()
             pass
 
 
