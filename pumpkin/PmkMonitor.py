@@ -72,12 +72,12 @@ class RabbitMqLog(Monitor):
         while not send:
             try:
                 if not self.connection.is_closed:
-                    logging.debug("Sending message to rabbitmq")
+                    logging.info("Sending message to rabbitmq")
                     self.channel.basic_publish(exchange=str(self.queue),routing_key='',body=message)
                     send = True
                 else:
                     self.connect(None)
-                    logging.debug("Sending message to rabbitmq")
+                    logging.info("Sending message to rabbitmq")
                     self.channel.basic_publish(exchange=str(self.queue),routing_key='',body=message)
                     send = True
             except:
