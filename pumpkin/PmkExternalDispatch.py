@@ -121,14 +121,14 @@ class ExternalDispatch(SThread):
             while 1:
                 routes = self.graph.getRoutes(otag)
                 if routes:
-                     logging.info("Found Routes: "+json.dumps(routes))
+                     logging.debug("Found Routes: "+json.dumps(routes))
                      break
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling up
 
                     if self.context.is_speedy():
                         break
-                    logging.info("No Route: "+str(otag))
+                    logging.debug("No Route: "+str(otag))
                     time.sleep(5)
 
             if routes:
@@ -489,12 +489,12 @@ class RabbitMQDispatch(Dispatch):
         while not send:
             try:
                 if not self.connection.is_closed:
-                    logging.info("Sending pkt to rabbitmq")
+                    logging.debug("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
                 else:
                     self.connect(None)
-                    logging.info("Sending pkt to rabbitmq")
+                    logging.debug("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
             except:
@@ -504,7 +504,7 @@ class RabbitMQDispatch(Dispatch):
     def dispatch(self, pkt):
 
         message = zlib.compress(json.dumps(pkt))
-        logging.info("Sending pkt to rabbitmq")
+        logging.debug("Sending pkt to rabbitmq")
         self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
 
         pass
