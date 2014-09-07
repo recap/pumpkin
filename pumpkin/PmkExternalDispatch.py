@@ -139,72 +139,89 @@ class ExternalDispatch(SThread):
                     else:
                         dcpkt = pkt
 
+                    header = dcpkt[0]
                     rtag = r["otype"]+":"+r["ostate"]
                     if (ntag and ntag == rtag) or not ntag:
+
+                        pep_ar = []
 
                         if state == "REDISPATCH":
                             last = dcpkt[len(pkt) -1]
                             #ex_eps = last["ep"].split("|,|")
-                            pep, lstate = self.ep_sched.pick_route_exc(r, last["traces"])
+                            pep_ar, lstate = self.ep_sched.pick_route_exc(r, last["traces"])
                             dcpkt[0]["state"] = lstate
                         else:
-                            pep = self.ep_sched.pick_route(r)
+                            aux = 0
+                            if "aux" in header.keys():
+                                aux = header["aux"]
+                                if aux & BROADCAST_BIT:
+                                    pep_ar = r["endpoints"]
+                                    header["aux"] = 0
+                                else:
+                                    pep_ar = self.ep_sched.pick_route(r)
 
-                        if not pep:
+                        if len(pep_ar) == 0:
                             logging.debug("No Route...")
                             found = False
                             continue
 
-                        oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
-                        dcpkt[0]["last_contact"] = oep[0]
-
-                        if pep:
-                            found = True
-                            entry = pep
-                            ep = pep["ep"]
-
-                            if state == "REDISPATCH":
-                                last = dcpkt[len(pkt) -1]
-                                last["ep"] = ep
-                                pass
-                            else:
-                                next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
-                                dcpkt.append(next_hop)
+                        for pep in pep_ar:
+                            #if len(pep_ar) > 1:
+                            dcpkt2 = copy.deepcopy(dcpkt)
 
 
-                            if ep in self.dispatchers.keys():
-                                disp = self.dispatchers[ep]
-                                disp.dispatch(dcpkt)
-                                #disp.dispatch(json.dumps(dcpkt))
-                                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+                            #print json.dumps(dcpkt2)
 
-                            else:
-                                disp = None
-                                if entry["mode"] == "zmq.PULL":
-                                    disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                                    #disp = ZMQPacketDispatch(self.context)
-                                    #disp = self.gdisp
+                            oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
+                            dcpkt2[0]["last_contact"] = oep[0]
 
-                                if entry["mode"] == "amqp.PUSH":
-                                    disp = RabbitMQDispatch(self.context)
+                            if pep:
+                                found = True
+                                entry = pep
+                                ep = pep["ep"]
+
+                                if state == "REDISPATCH":
+                                    last = dcpkt2[len(dcpkt2) -1]
+                                    last["ep"] = ep
                                     pass
+                                else:
+                                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
+                                    dcpkt2.append(next_hop)
 
-                                if entry["mode"] == "raw.Q":
-                                    disp = InternalRxQueue(self.context)
-                                    pass
 
-                                if not disp == None:
-                                    self.dispatchers[ep] = disp
-                                    disp.connect(ep)
-                                    disp.dispatch(dcpkt)
+                                if ep in self.dispatchers.keys():
+                                    disp = self.dispatchers[ep]
+                                    disp.dispatch(dcpkt2)
                                     #disp.dispatch(json.dumps(dcpkt))
                                     #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                                 else:
-                                    logging.error("No dispatchers found for: "+ep)
+                                    disp = None
+                                    if entry["mode"] == "zmq.PULL":
+                                        disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                        #disp = ZMQPacketDispatch(self.context)
+                                        #disp = self.gdisp
 
-                            if state == "REDISPATCH" and found == True:
-                                break
+                                    if entry["mode"] == "amqp.PUSH":
+                                        disp = RabbitMQDispatch(self.context)
+                                        pass
+
+                                    if entry["mode"] == "raw.Q":
+                                        disp = InternalRxQueue(self.context)
+                                        pass
+
+                                    if not disp == None:
+                                        self.dispatchers[ep] = disp
+                                        disp.connect(ep)
+                                        disp.dispatch(dcpkt2)
+                                        #disp.dispatch(json.dumps(dcpkt))
+                                        #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+
+                                    else:
+                                        logging.error("No dispatchers found for: "+ep)
+
+                                if state == "REDISPATCH" and found == True:
+                                    break
         pass
 
     def __loop_body(self):
@@ -247,7 +264,8 @@ class EndpointPicker(object):
 
     def pick_route_exc(self, route, traces):
         ex_eps = traces.keys()
-        rep = None
+
+        rep = []
         found = True
         load = 10000000
         lep = None
@@ -264,26 +282,31 @@ class EndpointPicker(object):
                     continue
 
             if found == True:
-                rep = ep
+                rep.append(ep)
                 return (rep, "REDISPATCH")
 
         if found == False:
-            rep = lep
+            rep.append(lep)
             return  (rep, "NOROUTE")
 
 
     def pick_route(self, route):
         route_id = route["name"]
         no_entries = len(route["endpoints"])
+        ret_peps = []
         try:
             if no_entries == 0:
                 return False
 
             logging.debug("Route Picker: "+route_id+" entries: "+str(no_entries))
             if no_entries == 1:
-                return route["endpoints"][0]
+                ret_peps.append(route["endpoints"][0])
+                return ret_peps
+                #return route["endpoints"][0]
             if route["remoting"] == False and no_entries > 0:
-                return route["endpoints"][0]
+                ret_peps.append(route["endpoints"][0])
+                return ret_peps
+                #return route["endpoints"][0]
 
 
             if not route_id in self.route_index.keys():
@@ -296,28 +319,12 @@ class EndpointPicker(object):
                 ep = route["endpoints"][s_idx]
                 if not self.is_local_ext_ep(ep):
                     self.route_index[route_id] = s_idx
-                    return ep
+                    ret_peps.append(ep)
+                    return ret_peps
+
         except IndexError:
             return False
             pass
-
-        #
-        # for ep in route['endpoints']:
-        #     if not self.is_local_ext_ep(ep):
-        #         pkt_counter = 0
-        #         if not ep["ep"] in self.route_index.keys():
-        #             self.route_index[ep["ep"]] = 1
-        #             return ep
-        #
-        #
-        #         cuid = ep["cuid"]
-        #         p = int(ep["priority"])
-        #
-        #
-        #         if p < prt:
-        #             bep = ep
-        #             prt = p
-        #
 
 
 class Dispatch(object):

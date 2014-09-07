@@ -42,6 +42,7 @@ class tracer(PmkSeed.Seed):
 
 
     def run(self, pkt, data):
+        print "INVOKE"
         stat = self.context.get_stat()
         self.fork_dispatch(pkt, stat, "TRACE_OUT")
         pass

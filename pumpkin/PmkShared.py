@@ -29,6 +29,7 @@ TIMING_BIT =            0b1
 TRACK_BIT =             0b10
 ACK_BIT =               0b100
 TRACER_BIT =            0b1000
+BROADCAST_BIT =         0b10000
 
 
 #SUPERNODES = ["127.0.0.1", "flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]

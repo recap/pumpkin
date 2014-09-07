@@ -336,11 +336,11 @@ class Seed(object):
         self._lock_in_fpkts.acquire()
 
         if pkt_id in self.in_flight_pkts.keys():
-            print json.dumps(pkt)
+            #print json.dumps(pkt)
             self._lock_in_fpkts.release()
             return True
         if self.context.isPktShelved(pkt):
-            print json.dumps(pkt)
+            #print json.dumps(pkt)
             self._lock_in_fpkts.release()
             return True
         self._lock_in_fpkts.release()
@@ -784,6 +784,15 @@ class Seed(object):
     def fork_dispatch(self, pkt, msg, state):
         npkt = self.duplicate_pkt_new_container(pkt)
         self.dispatch(npkt, msg, state)
+        pass
+
+    def broadcast(self, pkt, msg, state):
+        aux = 0
+        if "aux" in pkt[0].keys():
+            aux = pkt[0]["aux"]
+        aux = aux | BROADCAST_BIT
+
+        self.fork_dispatch(pkt, msg, state)
         pass
 
     def ifFile(self, msg):

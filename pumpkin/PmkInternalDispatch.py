@@ -91,9 +91,12 @@ class InternalDispatch(SThread):
                     self.context.put_pkt_in_shelve2(pkt)
                     continue
 
+            #print json.dumps(pkt)
             l = len(pkt)
             func = pkt[l-1]["func"]
             data = pkt[l-2]["data"]
+
+
 
             if ":" in func:
                 func = func.split(":")[1]
