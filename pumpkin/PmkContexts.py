@@ -8,6 +8,7 @@ import imp
 import PmkSeed
 import re
 import logging
+import json
 
 import PmkShared
 
@@ -465,6 +466,55 @@ class MainContext(object):
         #
         # def getMePeer(self):
         #     return self.__peer
+
+        def get_stat(self):
+            tm = time.time()
+            ip = str(self.get_local_ip())
+            guid = str(self.getUuid())
+
+            rep = "["
+            rep += '{"host_id": "'+guid+'", "timestamp" : '+str(tm)+',"ip" : "'+ip+'"},\n'
+
+            jrep = {}
+            total_in = 0
+            total_out = 0
+            total_pexec = 0
+            total_npkts = 0
+            for x in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[x]
+                forecast = klass.get_forecast()
+                jrep[klass.get_name()]={}
+                jrep[klass.get_name()]["enabled"] = klass.is_enabled()
+                jrep[klass.get_name()]["stags"] = klass.get_state_counters()
+                jrep[klass.get_name()]["npkts"] = forecast[0]
+                jrep[klass.get_name()]["msize"] = forecast[1]
+                jrep[klass.get_name()]["pexec"] = forecast[2]
+                tin, tout = klass.get_all_counters()
+                total_in += tin
+                total_out += tout
+                total_pexec += forecast[2]
+                total_npkts += forecast[0]
+
+            #jreps = json.dumps(jrep, separators=(',',':') )
+            jreps = json.dumps(jrep)
+
+            rep += jreps
+            rep += ","
+
+            rep += '\n'
+            rep = rep + '{"total_in":'+str(total_in)+',"total_out":'+str(total_out)+'}'
+            rep += ","
+
+            #rx_size = context.get_rx_size()
+            tx_size = self.get_tx_size()
+
+            rep += '\n'
+            rep += '{"rx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
+
+            rep += "]"
+
+            return rep
+
 
         def getRx(self):
             return self.rx

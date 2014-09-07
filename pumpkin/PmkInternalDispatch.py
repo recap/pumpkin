@@ -52,6 +52,15 @@ class InternalDispatch(SThread):
         while 1:
             #already in json format
             pkt = rx.get(True)
+            aux = 0
+            if "aux" in pkt[0].keys():
+                aux = pkt[0]["aux"]
+            if aux & TRACER_BIT:
+                #stat = self.context.get_stat()
+                #print stat
+                #continue
+                pass
+
             #logging.debug("Packet received: \n"+pkts)
             #pkt = json.loads(pkts)
             #pkt = loads(pkts)

@@ -933,7 +933,7 @@ class Seed(object):
             d["ship_id"] = self.get_ship_id(lpkt)
             d["stag"] = tag
             d["host"] = last_entry = lpkt[len(lpkt)-1]["ep"]
-            print("TRACKING")
+            d["data"] = msg
             self.track(d)
 
         if not self.context.is_speedy():

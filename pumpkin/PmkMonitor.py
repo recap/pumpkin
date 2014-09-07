@@ -12,6 +12,11 @@ class mx(Queue):
         Queue.__init__(self, maxsize)
         pass
 
+class lx(Queue):
+    def __init__(self, maxsize=0):
+        Queue.__init__(self, maxsize)
+        pass
+
 class Monitor(object):
 
     def get_id(self):
@@ -41,6 +46,9 @@ class LogDisptacher(SThread):
                 mon.write(message)
 
         pass
+
+
+
 
 class RabbitMqLog(Monitor):
     def __init__(self, context):
