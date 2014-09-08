@@ -43,6 +43,12 @@ class tracer_collector(PmkSeed.Seed):
 
         pass
 
+    def _connect(self):
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        self.channel = self.connection.channel()
+
     def on_load(self):
 
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -54,6 +60,8 @@ class tracer_collector(PmkSeed.Seed):
 
     def run(self, pkt, data):
         #print data[0]
+        if self.connection.is_closed:
+                    self._connect()
         self.channel.basic_publish(exchange=self.exchange,routing_key='',body=data[0])
         #stat = self.context.get_stat()
         #self.fork_dispatch(pkt, stat, "TRACE_OUT")

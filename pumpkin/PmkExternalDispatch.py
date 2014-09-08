@@ -490,7 +490,7 @@ class RabbitMQDispatch(Dispatch):
         #self.channel.exchange_declare(exchange=str(self.queue), type='fanout')
         #self.channel.queue_declare(queue=str(self.queue), durable=False)
 
-    def dispatch_bak(self, pkt):
+    def dispatch(self, pkt):
         send = False
         message = zlib.compress(json.dumps(pkt))
         while not send:
@@ -508,7 +508,7 @@ class RabbitMQDispatch(Dispatch):
                 time.sleep(1)
         pass
 
-    def dispatch(self, pkt):
+    def dispatch_bak(self, pkt):
 
         message = zlib.compress(json.dumps(pkt))
         logging.debug("Sending pkt to rabbitmq")

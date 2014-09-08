@@ -238,7 +238,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             rep = ""
             parts = s.path.split("?")
             pkt_id = parts[1]
-            oep = context.get_our_endpoint("tcp://")
+            oep = context.get_our_endpoint("amqp://")
             if oep:
                 cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+oep[0]+'"}'
                 logging.debug("Queueing command: "+cmd_str)

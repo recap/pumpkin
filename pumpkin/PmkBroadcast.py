@@ -115,6 +115,12 @@ class RabbitMQBroadcaster(SThread):
         self.channel.exchange_declare(exchange=self.exchange, type='fanout')
         #self.queue = self.channel.queue_declare(exclusive=True)
 
+    def _connect(self):
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        self.channel = self.connection.channel()
+
     def run(self):
         while True:
 
@@ -123,7 +129,12 @@ class RabbitMQBroadcaster(SThread):
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 dataz = zlib.compress(data)
+
+                if self.connection.is_closed:
+                    self._connect()
+
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
+
 
                 if self.stopped():
                     logging.debug("Exiting thread: "+self.__class__.__name__)
@@ -135,6 +146,9 @@ class RabbitMQBroadcaster(SThread):
                 data = self.context.getProcGraph().dumpExternalRegistry()
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()
+
+                if self.connection.is_closed:
+                    self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
 
