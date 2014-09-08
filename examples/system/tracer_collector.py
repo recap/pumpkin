@@ -40,21 +40,22 @@ class tracer_collector(PmkSeed.Seed):
         self.context = context
         self.exchange = context.get_group()+":stats"
         self.channel = None
+        self.connection = None
 
         pass
 
     def _connect(self):
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
         credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, credentials=credentials, virtual_host=vhost))
         self.channel = self.connection.channel()
 
     def on_load(self):
 
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
         credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
-        self.channel = connection.channel()
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+        self.channel = self.connection.channel()
         self.channel.exchange_declare(exchange=self.exchange, type='fanout')
 
 
