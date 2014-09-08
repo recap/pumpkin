@@ -30,6 +30,7 @@ from subprocess import call
 from pumpkin import *
 
 import os, sys, stat
+import pika
 
 
 
@@ -37,12 +38,23 @@ class tracer_collector(PmkSeed.Seed):
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context, poi)
         self.context = context
+        self.exchange = context.get_group()+":stats"
+        self.channel = None
 
         pass
 
+    def on_load(self):
+
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+        self.channel = connection.channel()
+        self.channel.exchange_declare(exchange=self.exchange, type='fanout')
+
 
     def run(self, pkt, data):
-        print data[0]
+        #print data[0]
+        self.channel.basic_publish(exchange=self.exchange,routing_key='',body=data[0])
         #stat = self.context.get_stat()
         #self.fork_dispatch(pkt, stat, "TRACE_OUT")
         pass
