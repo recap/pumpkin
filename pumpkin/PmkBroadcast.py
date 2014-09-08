@@ -122,7 +122,10 @@ class RabbitMQBroadcaster(SThread):
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
-                dataz = zlib.compress(data)
+
+                #dataz = zlib.compress(data)
+                dataz = data
+
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
 
                 if self.stopped():
@@ -133,7 +136,10 @@ class RabbitMQBroadcaster(SThread):
 
             if self.context.getProcGraph().isRegistryModified():
                 data = self.context.getProcGraph().dumpExternalRegistry()
-                dataz = zlib.compress(data)
+
+                #dataz = zlib.compress(data)
+                dataz = data
+
                 self.context.getProcGraph().ackRegistryUpdate()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
@@ -169,7 +175,10 @@ class RabbitMQBroadcastSubscriber(SThread):
                 if (method.NAME == 'Basic.GetEmpty'):
                     time.sleep(1)
                 else:
-                    data = zlib.decompress(dataz)
+
+                    #data = zlib.decompress(dataz)
+                    data = dataz
+
                     logging.debug("Incomming data from ["+self.queue+"]: "+data)
                     d = json.loads(data)
                     for k in d.keys():
@@ -230,7 +239,10 @@ class ZMQBroadcaster(SThread):
                         data = data+","+cmd_str+"}"
                     else:
                         data = "{"+cmd_str+"}"
-                dataz = zlib.compress(data)
+
+                #dataz = zlib.compress(data)
+                dataz = data
+
                 sock.send(dataz)
                 if self.stopped():
                     logging.debug("Exiting thread: "+self.__class__.__name__)
@@ -248,7 +260,10 @@ class ZMQBroadcaster(SThread):
                         data = data+","+cmd_str+"}"
                     else:
                         data = "{"+cmd_str+"}"
-                dataz = zlib.compress(data)
+
+                #dataz = zlib.compress(data)
+                dataz = data
+
                 sock.send(dataz)
                 if self.stopped():
                     logging.debug("Exiting thread: "+self.__class__.__name__)
@@ -274,7 +289,10 @@ class ZMQBroadcastSubscriber(SThread):
         while True:
 
             dataz = sock.recv()
-            data = zlib.decompress(dataz)
+
+            #data = zlib.decompress(dataz)
+            data = dataz
+
             logging.debug("Incomming data from ["+self.zmq_endpoint+"]: "+data)
             d = json.loads(data)
             for k in d.keys():
