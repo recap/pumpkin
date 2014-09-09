@@ -243,6 +243,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+oep[0]+'"}'
                 logging.debug("Queueing command: "+cmd_str)
                 cmd_queue.put(cmd_str)
+
             #pkt = context.get_pkt_from_shelve(pkt_id)
 
             rep = "["

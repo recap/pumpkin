@@ -63,22 +63,53 @@ class ExternalDispatch(SThread):
         ep.split("://")
         return ep[0]
 
+    def get_mode_from_ep(self, ep):
+        prot = self.getProtoFromEP(ep)
+        mode = None
+        if prot == "tcp":
+            mode = "zmq.PULL"
+            pass
+        if prot == "inqueue":
+            mode = "raw.Q"
+            pass
+        if prot == "amqp":
+            mode = "amqp.PUSH"
+            pass
+
+        return mode
+
     def send_to_ep(self, pkt, ep):
+        mode = self.get_mode_from_ep(ep)
 
         if ep in self.redispatchers.keys():
             disp = self.redispatchers[ep]
             disp.dispatch(json.dumps(pkt))
         else:
-            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+            disp = None
+            if mode == "zmq.PULL":
+                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                #disp = ZMQPacketDispatch(self.context)
+                #disp = self.gdisp
+
+            if mode == "amqp.PUSH":
+                disp = RabbitMQDispatch(self.context)
+                pass
+
+            if mode == "raw.Q":
+                disp = InternalRxQueue(self.context)
+                pass
+
             if not disp == None:
                 self.redispatchers[ep] = disp
                 disp.connect(ep)
-                disp.dispatch(json.dumps(pkt))
+                disp.dispatch(pkt)
 
             else:
                 logging.error("No dispatchers found for: "+ep)
 
         pass
+
+
     def send_to_last(self, pkt):
         ep = pkt[0]["last_contact"]
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher

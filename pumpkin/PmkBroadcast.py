@@ -106,6 +106,7 @@ class RabbitMQBroadcaster(SThread):
     def __init__(self, context, exchange='global'):
         SThread.__init__(self)
         self.context = context
+        self.cmd = self.context.get_cmd_queue()
 
         self.exchange = exchange
         host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -122,12 +123,30 @@ class RabbitMQBroadcaster(SThread):
         self.channel = self.connection.channel()
 
     def run(self):
+
+        test_str = '"cmd" : {"type" : "arp", "id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
+
         while True:
+
+            cmd_str = None
+            #try:
+            #    cmd_str = self.cmd.get_nowait()
+                #cmd_str = self.cmd.get(False)
+            #except Queue.Empty as e:
+            #    pass
 
 
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
+                cmd_str = self.cmd.get()
+                if cmd_str:
+                    if len(data) > 5:
+                        data = data[:-1]
+                        data = data+","+cmd_str+"}"
+                    else:
+                        data = "{"+cmd_str+"}"
+
                 dataz = zlib.compress(data)
 
                 if self.connection.is_closed:
@@ -144,6 +163,14 @@ class RabbitMQBroadcaster(SThread):
 
             if self.context.getProcGraph().isRegistryModified():
                 data = self.context.getProcGraph().dumpExternalRegistry()
+
+                if cmd_str:
+                    if len(data) > 5:
+                        data = data[:-1]
+                        data = data+","+cmd_str+"}"
+                    else:
+                        data = "{"+cmd_str+"}"
+
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()
 
