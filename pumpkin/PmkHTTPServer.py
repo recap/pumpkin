@@ -246,14 +246,68 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             #pkt = context.get_pkt_from_shelve(pkt_id)
 
-            rep = "["
+            res = {}
+            #rep = "["
             for pkt in context.get_pkt_from_shelve(pkt_id):
-                rep += json.dumps(pkt)+","
+                pkt_s = len(pkt)
+                header = pkt[0]
+                llast = pkt[pkt_s - 2]
+                last = pkt[pkt_s - 1]
+                stag = None
+
+                if header["c_tag"] == "None":
+                    stag = last["stag"]
+                    if "data" in last.keys():
+                        data = last["data"].split("|,|")
+                        state = header["state"]
+                        val = {}
+                        val["state"] = state
+                        val["data"] = data
+                        res[stag] = val
+                    pass
+                else:
+                    stag = header["c_tag"]
+                    state = header["state"]
+                    data = llast["data"].split("|,|")
+                    val = {}
+                    val["state"] = state
+                    val["data"] = data
+                    res[stag] = val
+                    pass
+
+                #rep += json.dumps(pkt)+","
             for pkt in context.get_pkt_from_shelve2(pkt_id):
-                rep += json.dumps(pkt)+","
-            if len(rep) > 1:
-                rep = rep[:-1]
-                rep += "]"
+
+                if header["c_tag"] == "None":
+                    stag = last["stag"]
+                    if "data" in last.keys():
+                        data = last["data"].split("|,|")
+                        state = header["state"]
+                        val = {}
+                        val["state"] = state
+                        val["data"] = data
+                        res[stag] = val
+                    pass
+                else:
+                    stag = header["c_tag"]
+                    state = header["state"]
+                    data = llast["data"].split("|,|")
+                    val = {}
+                    val["state"] = state
+                    val["data"] = data
+                    res[stag] = val
+                    pass
+
+                #rep += json.dumps(pkt)+","
+            #if len(rep) > 1:
+            #    rep = rep[:-1]
+            #    rep += "]"
+
+            #else:
+            #    rep = '{"state" : "unavailable_info"}'
+
+            if len(res) > 0:
+                rep  = json.dumps(res)
             else:
                 rep = '{"state" : "unavailable_info"}'
 
