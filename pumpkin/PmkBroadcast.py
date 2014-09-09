@@ -130,31 +130,26 @@ class RabbitMQBroadcaster(SThread):
 
         while True:
 
-
-            #cmd_str = test_str
-            #try:
-            #    cmd_str = self.cmd.get_nowait()
-            #    #cmd_str = self.cmd.get(False)
-            #except Queue.Empty as e:
-            #    pass
-
+            cmd_str = None
 
             if not self.context.getProcGraph().isRegistryModified():
-                time.sleep(self.context.get_broadcast_rate())
+
                 data = self.context.getProcGraph().dumpExternalRegistry()
 
                 try:
-                    cmd_str = self.cmd.get_nowait()
+                    cmd_str = self.cmd.get(False)
                 except Queue.Empty as e:
-                      pass
+                    pass
+
 
                 if cmd_str:
-                    logging.info("ADDINg cmd: "+cmd_str)
                     if len(data) > 5:
                         data = data[:-1]
                         data = data+","+cmd_str+"}"
                     else:
                         data = "{"+cmd_str+"}"
+                else:
+                    time.sleep(self.context.get_broadcast_rate())
 
                 dataz = zlib.compress(data)
 
@@ -173,12 +168,12 @@ class RabbitMQBroadcaster(SThread):
             if self.context.getProcGraph().isRegistryModified():
                 data = self.context.getProcGraph().dumpExternalRegistry()
 
-                if cmd_str:
-                    if len(data) > 5:
-                        data = data[:-1]
-                        data = data+","+cmd_str+"}"
-                    else:
-                        data = "{"+cmd_str+"}"
+                # if cmd_str:
+                #     if len(data) > 5:
+                #         data = data[:-1]
+                #         data = data+","+cmd_str+"}"
+                #     else:
+                #         data = "{"+cmd_str+"}"
 
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()

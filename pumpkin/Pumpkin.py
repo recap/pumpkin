@@ -131,10 +131,10 @@ class Pumpkin(Daemon):
             for p in local_peers:
                 if p not in self.context.peers:
                     self.context.peers[p] = local_peers[p]
-                    logging.debug("Subscribing to new Peer ["+local_peers[p]+"]")
-                    zmqsub = ZMQBroadcastSubscriber(self.context, zmq_context, local_peers[p])
-                    zmqsub.start()
-                    self.context.addThread(zmqsub)
+                    #logging.debug("Subscribing to new Peer ["+local_peers[p]+"]")
+                    #zmqsub = ZMQBroadcastSubscriber(self.context, zmq_context, local_peers[p])
+                    #zmqsub.start()
+                    #self.context.addThread(zmqsub)
 
             local_peers.close()
         except Exception as er:
@@ -208,20 +208,22 @@ class Pumpkin(Daemon):
 
         if not context.is_ghost():
             #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
-            zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
-            zmqbc.start()
-            context.addThread(zmqbc)
+            #zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            #zmqbc.start()
+            #context.addThread(zmqbc)
+            pass
 
         if context.with_broadcast():
             #Listen for UDP broadcasts on LAN
-            udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
-            udplisten.start()
-            context.addThread(udplisten)
+            #udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
+            #udplisten.start()
+            #context.addThread(udplisten)
 
 
-            udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
-            udpbc.start()
-            context.addThread(udpbc)
+            #udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
+            #udpbc.start()
+            #context.addThread(udpbc)
+            pass
 
         #Local stuff to exploit multi-cores still needs testing
 
@@ -339,10 +341,11 @@ class Pumpkin(Daemon):
 
             for sn in get_zmq_supernodes(PmkShared.SUPERNODES):
                 if not str(sn).__contains__("127.0.0.1"):
-                    logging.debug("Subscribing to: "+sn)
-                    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
-                    zmqsub.start()
-                    context.addThread(zmqsub)
+                    #logging.debug("Subscribing to: "+sn)
+                    #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
+                    #zmqsub.start()
+                    #context.addThread(zmqsub)
+                    pass
                 pass
 
             try:
