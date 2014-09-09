@@ -124,11 +124,14 @@ class RabbitMQBroadcaster(SThread):
 
     def run(self):
 
-        test_str = '"cmd" : {"type" : "arp", "id" : "patient_X2", "reply-to" : "amqp://'+self.context.getUuid()+'"}'
+        #test_str = '"cmd" : {"type" : "arp", "id" : "patient_X2", "reply-to" : "amqp://'+self.context.getUuid()+'"}'
+        #test_str = None
+        cmd_str = None
 
         while True:
 
-            cmd_str = test_str
+
+            #cmd_str = test_str
             #try:
             #    cmd_str = self.cmd.get_nowait()
             #    #cmd_str = self.cmd.get(False)
@@ -139,8 +142,14 @@ class RabbitMQBroadcaster(SThread):
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
-                #cmd_str = self.cmd.get()
+
+                try:
+                    cmd_str = self.cmd.get_nowait()
+                except Queue.Empty as e:
+                      pass
+
                 if cmd_str:
+                    logging.info("ADDINg cmd: "+cmd_str)
                     if len(data) > 5:
                         data = data[:-1]
                         data = data+","+cmd_str+"}"
@@ -185,7 +194,6 @@ class RabbitMQBroadcaster(SThread):
                 else:
                     continue
 
-
 class RabbitMQBroadcastSubscriber(SThread):
     def __init__(self, context, exchange='global'):
         SThread.__init__(self)
@@ -229,7 +237,6 @@ class RabbitMQBroadcastSubscriber(SThread):
                                     exdisp.send_to_ep(p, ep)
             else:
                 time.sleep(1)
-
 
 class ZMQBroadcaster(SThread):
     def __init__(self, context, zmq_context,  sn):
@@ -337,12 +344,6 @@ class ZMQBroadcastSubscriber(SThread):
                             logging.debug("Sending ARP response: "+json.dumps(p))
                             exdisp.send_to_ep(p, ep)
 
-
-
-
-
-
-
 class BroadcastListener(Thread):
 
     def __init__(self, context, port, zmq_context=None):
@@ -432,7 +433,6 @@ class BroadcastListener(Thread):
     def stopped(self):
         return self.__stop.isSet()
 
-
 class Broadcaster(SThread):
     def __init__(self, context, port=UDP_BROADCAST_PORT, rate=30):
         SThread.__init__(self)
@@ -490,9 +490,6 @@ class Broadcaster(SThread):
             sok.sendto(msg, (sn, port) )
             time.sleep(1)
         pass
-
-
-
 
 class FileServer(Thread):
     def __init__(self, context, port, root="./rx/"):

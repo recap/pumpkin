@@ -60,8 +60,8 @@ class ExternalDispatch(SThread):
         return connection
 
     def getProtoFromEP(self, ep):
-        ep.split("://")
-        return ep[0]
+        ep_a = ep.split("://")
+        return ep_a[0]
 
     def get_mode_from_ep(self, ep):
         prot = self.getProtoFromEP(ep)
