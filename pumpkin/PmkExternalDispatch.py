@@ -83,7 +83,7 @@ class ExternalDispatch(SThread):
 
         if ep in self.redispatchers.keys():
             disp = self.redispatchers[ep]
-            disp.dispatch(json.dumps(pkt))
+            disp.dispatch(pkt)
         else:
             disp = None
             if mode == "zmq.PULL":
