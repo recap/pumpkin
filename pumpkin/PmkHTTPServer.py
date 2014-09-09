@@ -452,7 +452,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
             logging.debug("Submit packet through http: "+pkt_id)
-            rep = '{"packet_ref":'+pkt_id+', "timestamp":'+str(dt)+'}'
+            rep = '{"packet_ref": "'+pkt_id+'", "timestamp": "'+str(dt)+'"}'
 
             s.wfile.write(rep)
 
