@@ -222,6 +222,8 @@ class RabbitMQMonitor():
 
         def run(self):
             #self.channel.start_consuming()
+
+
             self.loop()
 
     def __init__(self, context, connection):
@@ -346,7 +348,7 @@ class ZMQPacketMonitor(SThread):
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
                 d_msg = zlib.decompress(msg)
-                pkt = json.loads(str(d_msg))
+                pkt = json.loads(d_msg)
 
                 dig(pkt)
                 queue_put(pkt)
