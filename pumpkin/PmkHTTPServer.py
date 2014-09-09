@@ -247,6 +247,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             #pkt = context.get_pkt_from_shelve(pkt_id)
 
             res = {}
+
             #rep = "["
             for pkt in context.get_pkt_from_shelve(pkt_id):
                 pkt_s = len(pkt)
@@ -277,6 +278,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                 #rep += json.dumps(pkt)+","
             for pkt in context.get_pkt_from_shelve2(pkt_id):
+                pkt_s = len(pkt)
+                header = pkt[0]
+                llast = pkt[pkt_s - 2]
+                last = pkt[pkt_s - 1]
+                stag = None
 
                 if header["c_tag"] == "None":
                     stag = last["stag"]
