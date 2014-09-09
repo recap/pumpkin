@@ -255,7 +255,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 rep = rep[:-1]
                 rep += "]"
             else:
-                rep = "{unavailable_info}"
+                rep = '{"state" : "unavailable_info"}'
 
             s.wfile.write(str(rep))
 
