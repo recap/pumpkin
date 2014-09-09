@@ -129,17 +129,17 @@ class RabbitMQBroadcaster(SThread):
         while True:
 
             cmd_str = None
-            #try:
-            #    cmd_str = self.cmd.get_nowait()
+            try:
+                cmd_str = self.cmd.get_nowait()
                 #cmd_str = self.cmd.get(False)
-            #except Queue.Empty as e:
-            #    pass
+            except Queue.Empty as e:
+                pass
 
 
             if not self.context.getProcGraph().isRegistryModified():
                 time.sleep(self.context.get_broadcast_rate())
                 data = self.context.getProcGraph().dumpExternalRegistry()
-                cmd_str = self.cmd.get()
+                #cmd_str = self.cmd.get()
                 if cmd_str:
                     if len(data) > 5:
                         data = data[:-1]
