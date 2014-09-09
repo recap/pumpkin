@@ -124,16 +124,16 @@ class RabbitMQBroadcaster(SThread):
 
     def run(self):
 
-        test_str = '"cmd" : {"type" : "arp", "id" : "afadfadf", "reply-to" : "127.0.0.1:7789"}'
+        test_str = '"cmd" : {"type" : "arp", "id" : "patient_X2", "reply-to" : "amqp://'+self.context.getUuid()+'"}'
 
         while True:
 
-            cmd_str = None
-            try:
-                cmd_str = self.cmd.get_nowait()
-                #cmd_str = self.cmd.get(False)
-            except Queue.Empty as e:
-                pass
+            cmd_str = test_str
+            #try:
+            #    cmd_str = self.cmd.get_nowait()
+            #    #cmd_str = self.cmd.get(False)
+            #except Queue.Empty as e:
+            #    pass
 
 
             if not self.context.getProcGraph().isRegistryModified():
