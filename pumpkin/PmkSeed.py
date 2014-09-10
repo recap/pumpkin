@@ -434,6 +434,7 @@ class Seed(object):
 
     def _stage_run(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
+        logging.debug(json.dumps(pkt))
         pstate =  pkt[0]["state"]
         if not self.is_duplicate(pkt):
             tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
