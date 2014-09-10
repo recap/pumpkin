@@ -291,6 +291,7 @@ class ExternalDispatch(SThread):
                             #    self._bunch = 15000
                             #self._bunch = 512
                             if len(cq[key]) > self._bunch:
+                                #print "BUNCH: "+str(self._bunch)
                                 multi_pkt = []
                                 multi_pkt.append({})
 
