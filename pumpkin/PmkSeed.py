@@ -434,7 +434,7 @@ class Seed(object):
 
     def _stage_run(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
-        logging.debug(json.dumps(pkt))
+
         pstate =  pkt[0]["state"]
         if not self.is_duplicate(pkt):
             tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
@@ -479,7 +479,10 @@ class Seed(object):
                     for x in range (1,len(args)-1):
                         nargs.append(args[x])
 
-                pkt[0]["pexec"] = "{:.12f}".format(time.time())
+                tm = time.time()
+                logging.debug("Time: "+str(tm))
+                pkt[0]["pexec"] = "{:.12f}".format(tm)
+
                 if pstate == "MERGE":
                     self.merge(pkt,nargs)
                     return
