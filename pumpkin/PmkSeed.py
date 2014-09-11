@@ -331,6 +331,11 @@ class Seed(object):
     def is_duplicate(self, pkt):
         if(self.context.is_speedy()):
             return False
+        aux = 0
+        if "aux" in pkt[0].keys():
+            aux = pkt[0]["aux"]
+            if aux & FORCE_BIT:
+                return False
 
         pkt_id = self.get_pkt_id(pkt)
         self._lock_in_fpkts.acquire()

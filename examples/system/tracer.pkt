@@ -12,7 +12,7 @@
     "state": "NEW",
     "stop_func": "None",
     "ttl": "D",
-    "container": "a0560550",
+    "container": "CONT_ID",
     "ship": "tracer",
     "aux" : 24
   },
