@@ -18,7 +18,7 @@ class rx(Queue):
         pass
 
     def dig(self, pkt):
-        print "DIG: "+json.dumps(pkt)
+        #print "DIG: "+json.dumps(pkt)
         if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
             iplugins = PmkSeed.iplugins
             keys = PmkSeed.iplugins.keys
