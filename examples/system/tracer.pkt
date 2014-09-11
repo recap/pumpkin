@@ -14,7 +14,7 @@
     "ttl": "D",
     "container": "CONT_ID",
     "ship": "tracer",
-    "aux" : 24
+    "aux" : 56
   },
   {},
   {

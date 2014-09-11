@@ -333,8 +333,10 @@ class Seed(object):
             return False
         aux = 0
         if "aux" in pkt[0].keys():
-            aux = pkt[0]["aux"]
+            aux = int(pkt[0]["aux"])
             if aux & FORCE_BIT:
+                return False
+            if aux & TRACER_BIT:
                 return False
 
         pkt_id = self.get_pkt_id(pkt)

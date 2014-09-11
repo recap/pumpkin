@@ -187,7 +187,7 @@ class ExternalDispatch(SThread):
                                 aux = header["aux"]
                                 if aux & BROADCAST_BIT:
                                     pep_ar = r["endpoints"]
-                                    header["aux"] = 0
+                                    header["aux"] = aux & (~BROADCAST_BIT)
                                 else:
                                     pep_ar = self.ep_sched.pick_route(r)
 
