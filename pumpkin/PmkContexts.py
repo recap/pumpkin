@@ -320,8 +320,8 @@ class MainContext(object):
                 #self.__attrs.eps = "tcp://*:*"
                 self.__attrs.eps = "inqueue://*"
 
-            if self.fallback_rabbitmq():
-                self.__attrs.eps += ";amqp://*"
+            #if self.fallback_rabbitmq():
+            #    self.__attrs.eps += ";amqp://*"
 
             epl = self.__attrs.eps.split(";")
             for ep in epl:
