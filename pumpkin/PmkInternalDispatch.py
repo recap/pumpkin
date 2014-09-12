@@ -8,7 +8,7 @@ import pika
 import zlib
 
 import PmkSeed
-
+import PmkShared
 from PmkShared import *
 from Queue import *
 
@@ -336,7 +336,13 @@ class ZMQPacketMonitor(SThread):
         soc = self.zmq_cntx.socket(zmq.PULL)
         soc.setsockopt(zmq.RCVBUF, 2000)
         #soc.setsockopt(zmq.HWM, 100)
-        soc.bind(self.bind_to)
+        try:
+            soc.bind(self.bind_to)
+        except zmq.ZMQBindError as e:
+            self.bind_to = "tcp://"+str(PmkShared.get_llocal_ip())+":"+str(PmkShared.ZMQ_PUB_PORT)
+            soc.bind(self.bind_to)
+
+
         #soc.setsockopt(zmq.HWM, 1000)
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)

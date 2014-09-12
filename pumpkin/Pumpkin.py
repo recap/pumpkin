@@ -511,6 +511,9 @@ def main():
     requests_log = logging.getLogger("pika")
     requests_log.setLevel(logging.WARNING)
 
+    stun_log = logging.getLogger("stun")
+    stun_log.setLevel(logging.WARNING)
+
 
 
     P = Pumpkin()

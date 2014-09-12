@@ -73,6 +73,29 @@ def get_interface_ip(ifname):
 #                pass
 #    return ip
 
+def get_llan_ip():
+    ip = get_cloud_ip()
+
+    if not ip:
+        interfaces = [
+            "eth0",
+            "eth1",
+            "eth2",
+            "wlan0",
+            "wlan1",
+            "wifi0",
+            "ath0",
+            "ath1",
+            "ppp0",
+            ]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                break
+            except:
+                pass
+    return ip
+
 def get_lan_ip():
 
     pip = get_public_ip()
