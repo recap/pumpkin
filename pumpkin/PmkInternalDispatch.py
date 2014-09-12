@@ -338,8 +338,10 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.HWM, 100)
         try:
             soc.bind(self.bind_to)
-        except zmq.ZMQBindError as e:
-            self.bind_to = "tcp://"+str(PmkShared.get_llocal_ip())+":"+str(PmkShared.ZMQ_PUB_PORT)
+        except zmq.ZMQError as e:
+            nip = PmkShared.get_llocal_ip()
+            self.bind_to = "tcp://"+str(nip)+":"+str(PmkShared.ZMQ_PUB_PORT)
+            logging.warning("Rebinding to: "+self.bind_to)
             soc.bind(self.bind_to)
 
 
