@@ -341,7 +341,7 @@ class ZMQPacketMonitor(SThread):
             soc.bind(self.bind_to)
         except zmq.ZMQError as e:
             nip = PmkBroadcast.get_llan_ip()
-            self.bind_to = "tcp://"+str(nip)+":"+str(PmkShared.ZMQ_PUB_PORT)
+            self.bind_to = "tcp://"+str(nip)+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)
             logging.warning("Rebinding to: "+self.bind_to)
             soc.bind(self.bind_to)
 
