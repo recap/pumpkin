@@ -8,6 +8,7 @@ import pika
 import zlib
 
 import PmkSeed
+import PmkBroadcast
 import PmkShared
 from PmkShared import *
 from Queue import *
@@ -339,7 +340,7 @@ class ZMQPacketMonitor(SThread):
         try:
             soc.bind(self.bind_to)
         except zmq.ZMQError as e:
-            nip = PmkShared.get_llocal_ip()
+            nip = PmkBroadcast.get_llocal_ip()
             self.bind_to = "tcp://"+str(nip)+":"+str(PmkShared.ZMQ_PUB_PORT)
             logging.warning("Rebinding to: "+self.bind_to)
             soc.bind(self.bind_to)
