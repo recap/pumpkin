@@ -25,6 +25,8 @@ class ProcessGraph(object):
         self.__display_graph = False
         self.rlock = threading.RLock()
         self.graph = nx.DiGraph()
+        self.ep_graph = nx.DiGraph()
+        self.func_graph = nx.DiGraph()
         self.tagroute = {}
         self.ttl = {}
 
@@ -196,10 +198,27 @@ class ProcessGraph(object):
 
         return eps
 
+    def get_ep_with_priority(self, eps, priority):
+        p = priority
+        lep = None
+        for ep in eps:
+            if int(ep["priority"]) >= p:
+
+                lep = ep
+                return lep
+
+        return lep
+
+
     def buildGraph(self):
         self.tagroute = {}
         self.graph = nx.DiGraph()
+        self.ep_graph = nx.DiGraph()
+        self.func_graph = nx.DiGraph()
         G = self.graph
+        E = self.ep_graph
+        F = self.func_graph
+
 
         for xo in self.registry.keys():
             eo = self.registry[xo]
@@ -217,12 +236,64 @@ class ProcessGraph(object):
                         if ostype == "NONE:NONE":
                             ostype = "EXTRACTION"
                         ostype = eo["group"] +":"+ ostype
-                        G.add_edge(istype, ostype, function=eo["name"])
+                        lep = self.get_ep_with_priority(eo["endpoints"], 0)
+                        if lep:
+                            G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"])
+                        else:
+                            G.add_edge(istype, ostype, function=eo["name"])
+
                     if istype in self.tagroute.keys():
                         self.tagroute[istype].append(eo)
                     else:
                         self.tagroute[istype] = []
                         self.tagroute[istype].append(eo)
+
+        for edge in G.edges(data=True):
+            n1 = edge[0]
+            n2 = edge[1]
+
+            n1_routes = []
+            n2_routes = []
+            n2_name = None
+            n1_name = None
+            if n1 in self.tagroute.keys() and "TRACE" not in n1:
+                n1_routes = self.tagroute[n1][0]["endpoints"]
+                n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
+            if n2 in self.tagroute.keys() and "TRACE" not in n2:
+                n2_routes = self.tagroute[n2][0]["endpoints"]
+                n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
+
+
+            #if len(n2_name.split(":")) > 1:
+            #    n2_name = n2_name.split(":")[1]
+
+            #if len(n2_name.split(":")) > 1:
+            #    n2_name = n2_name.split(":")[1]
+
+
+            for n1s in n1_routes:
+                for n2s in n2_routes:
+                    E.add_edge(n1s["ep"],n2s["ep"])
+                    F.add_edge(n1_name, n2_name)
+            #girien = G.neighbors(edge[1])
+
+            #n1 = edge[2]["ep"]
+            #n_name = edge[2]["function"]
+            #n2 = None
+
+            #for g in girien:
+            #    for e in G.edges(g, data=True):
+            #        n2 = e[2]["ep"]
+            #        print n1+"->"+n2+" "+n_name
+
+            #if len(gara) > 0:
+            #    gara_edge = G.out_edges(gara[0], data=True)
+            #    if len(gara_edge) > 0:
+            #        n2 = gara_edge[0][2]["ep"]
+
+            #if n2:
+            #    print n1+"->"+n2+" "+n_name
+
 
 
         return G
@@ -248,8 +319,28 @@ class ProcessGraph(object):
         return json.dumps(d)
         #return str(nx.generate_graphml(self.graph))
 
+    def dump_ep_graph(self):
+        d = json_graph.node_link_data(self.ep_graph)
+        return json.dumps(d)
+
+    def dump_func_graph(self):
+        d = json_graph.node_link_data(self.func_graph)
+        return json.dumps(d)
+
     def dumpGraphToFile(self, filename):
         d = json_graph.node_link_data(self.graph)
+        json.dump(d, open(filename,'w'))
+
+        pass
+
+    def dump_ep_graph_to_file(self, filename):
+        d = json_graph.node_link_data(self.ep_graph)
+        json.dump(d, open(filename,'w'))
+
+        pass
+
+    def dump_func_graph_to_file(self, filename):
+        d = json_graph.node_link_data(self.func_graph)
         json.dump(d, open(filename,'w'))
 
         pass

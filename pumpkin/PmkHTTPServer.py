@@ -84,27 +84,78 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_response(200)
             s.send_header("Content-type", "text/html")
             s.end_headers()
-
-            context.getProcGraph().dumpGraphToFile("force.json")
+            context.getProcGraph().dumpGraphToFile("states.json")
+            context.getProcGraph().dump_ep_graph_to_file("eps.json")
+            context.getProcGraph().dump_func_graph_to_file("funcs.json")
             with open("force.html") as f:
                 content = f.read()
             f.close()
-
             s.wfile.write(content)
-        if s.path == "/force.json":
+
+        if s.path == "/epd3":
+            s.send_response(200)
+            s.send_header("Content-type", "text/html")
+            s.end_headers()
+            context.getProcGraph().dump_ep_graph_to_file("force.json")
+            with open("force.html") as f:
+                content = f.read()
+                f.close()
+            s.wfile.write(content)
+
+        if s.path == "/funcd3":
+            s.send_response(200)
+            s.send_header("Content-type", "text/html")
+            s.end_headers()
+            context.getProcGraph().dump_func_graph_to_file("force.json")
+            with open("force.html") as f:
+                content = f.read()
+                f.close()
+            s.wfile.write(content)
+
+        if s.path == "/funcs.json":
             s.send_response(200)
             s.send_header("Content-type", "application/json")
             s.end_headers()
 
             #context.getProcGraph().dumpGraphToFile("force.json")
-            with open("force.json") as f:
+            with open("funcs.json") as f:
+                content = f.read()
+            f.close()
+            s.wfile.write(content)
+
+        if s.path == "/eps.json":
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            #context.getProcGraph().dumpGraphToFile("force.json")
+            with open("eps.json") as f:
+                content = f.read()
+            f.close()
+            s.wfile.write(content)
+
+        if s.path == "/states.json":
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            #context.getProcGraph().dumpGraphToFile("force.json")
+            with open("states.json") as f:
                 content = f.read()
             f.close()
             s.wfile.write(content)
 
 
+
         if s.path =="/graph.json":
             rep = context.getProcGraph().dumpGraph()
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            s.wfile.write(rep)
+
+        if s.path =="/ep_graph.json":
+            rep = context.getProcGraph().dump_ep_graph()
             s.send_response(200)
             s.send_header("Content-type", "application/json")
             s.end_headers()
@@ -238,6 +289,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             rep = ""
             parts = s.path.split("?")
             pkt_id = parts[1]
+
+            if len(pkt_id.split(":")) == 1:
+                pkt_id += ":"
+
             oep = context.get_our_endpoint("amqp://")
             if oep:
                 cmd_str = '"cmd" : {"type" : "arp", "id" : "'+pkt_id+'", "reply-to" : "'+oep[0]+'"}'

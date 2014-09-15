@@ -5,17 +5,58 @@
 <title>Pumpkin Data States</title>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <style type="text/css">
+	.box1 {
+          width: 100%;
+          height: 500px;
+          float: left;
+          margin: 0 20px 0 20px;
+      }
+	.box2 {
+          width: 50%;
+          height: 400px;
+          float: left;
+          margin: 0 20px 0 20px;
+      }
+
+      .box1 div, .box1 input {
+          border: 1px solid;
+          -moz-border-radius: 4px;
+          border-radius: 4px;
+          width: 100%;
+          padding: 5px;
+          margin: 3px 0 10px 0;
+      }
+	.box1 div {
+          border-color: grey;
+          height: 300px;
+          overflow: auto;
+      }
+	
+
+
 </style>
 </head>
+<div id="states" class="box1">
+<h2>State Diagram</h2>
+</div>
+
+<div id="funcs" class="box1">
+<h2>Function Network</h2>
+</div>
+
+
+<div id="eps" class="box1">
+<h2>Node Network</h2>
+</div>
 <body>
 
 <script type="text/javascript">
   var datax;
-    function loadJSON(callback) {   
+    function loadJSON_states(callback) {
 
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'force.json', true); 
+	xobj.open('GET', 'states.json', true);
 	xobj.onreadystatechange = function () {
           if (xobj.readyState == 4 && xobj.status == "200") {
             callback(xobj.responseText);
@@ -24,39 +65,64 @@
     xobj.send(null);  
  }
 
-function init() {
- loadJSON(function(response) {
-	datax = JSON.parse(response);
+ function loadJSON_funcs(callback) {
 
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+	xobj.open('GET', 'funcs.json', true);
+	xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);
+ }
 
-    var w = window,
+ function loadJSON_eps(callback) {
+
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+	xobj.open('GET', 'eps.json', true);
+	xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);
+ }
+
+function render(data, div_name){
+datax = data;
+console.log("HERE");
+var w = window,
     d = document,
     e = d.documentElement,
-    g = d.getElementsByTagName('body')[0],
-    x = w.innerWidth || e.clientWidth || g.clientWidth,
-    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+    g = d.getElementsByClassName('box1')[0],
+    //x = w.innerWidth || e.clientWidth || g.clientWidth,
+    //y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+    x = g.clientWidth,
+    y = g.clientHeight;
 
     var w = x - 30;
     var h = y - 30;
-    var linkDistance=200;
+    //var w = 400;
+    //var h = 400;
 
     var colors = d3.scale.category10();
 
 
- 
-    var svg = d3.select("body").append("svg").attr({"width":w,"height":h});
+
+    var svg = d3.select(div_name).append("svg").attr({"width":w,"height":h});
 
     var force = d3.layout.force()
         .nodes(datax.nodes)
         .links(datax.links)
-        .size([w,h])
-        .linkDistance([linkDistance])
-        .charge([-300])
-        .theta(0.5)
-        .gravity(0.001)
+      	.size([w,h])
+        .linkDistance([20])
+        .charge([-1500])
+        .theta(1)
+        .gravity(0.05)
         .start();
-
- 
 
     var edges = svg.selectAll("line")
       .data(datax.links)
@@ -66,17 +132,17 @@ function init() {
       .attr('marker-end','url(#arrowhead)')
       .style("stroke","#ccc")
       .style("pointer-events", "none");
-    
+
     var nodes = svg.selectAll("circle")
       .data(datax.nodes)
       .enter()
       .append("circle")
-      .attr({"r":15})
+      .attr({"r": 20})
+      .attr("opacity", 0.5)
       .style("fill",function(d,i){return colors(i);})
       .call(force.drag)
 
-
-    var nodelabels = svg.selectAll(".nodelabel") 
+    var nodelabels = svg.selectAll(".nodelabel")
        .data(datax.nodes)
        .enter()
        .append("text")
@@ -132,7 +198,7 @@ function init() {
             .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
             .attr('fill', '#ccc')
             .attr('stroke','#ccc');
-     
+
 
     force.on("tick", function(){
 
@@ -145,13 +211,17 @@ function init() {
         nodes.attr({"cx":function(d){return d.x;},
                     "cy":function(d){return d.y;}
         });
+        //nodes.attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
+        //            "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
+        //});
 
-        nodelabels.attr("x", function(d) { return d.x; }) 
+
+        nodelabels.attr("x", function(d) { return d.x; })
                   .attr("y", function(d) { return d.y; });
 
         edgepaths.attr('d', function(d) { var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
                                            //console.log(d)
-                                           return path});       
+                                           return path});
 
         edgelabels.attr('transform',function(d,i){
             if (d.target.x<d.source.x){
@@ -166,6 +236,20 @@ function init() {
         });
     });
 
+}
+
+function init() {
+ loadJSON_states(function(response) {
+	data1 = JSON.parse(response);
+    	render(data1, "#states")
+ });
+ loadJSON_funcs(function(response) {
+	data3 = JSON.parse(response);
+    render(data3, "#funcs")
+ });
+loadJSON_eps(function(response) {
+	data2 = JSON.parse(response);
+    render(data2, "#eps")
  });
 }
 init();
