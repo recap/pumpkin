@@ -20,6 +20,7 @@ from numpy import arange,array,ones,linalg
 import PmkShared
 
 from PmkShared import *
+from PmkBroadcast import *
 from PmkExternalDispatch import ExternalDispatch
 from networkx.readwrite import json_graph
 
@@ -763,7 +764,10 @@ class Seed(object):
     def __getEps(self):
         aep = ""
         for ep in self.context.endpoints:
-            s =  '{"pip" : "'+self.context.get_public_ip()+'", "ip" : "'+self.context.get_local_ip()+'", "ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'", "priority" : "'+str(ep[3])+'"}'
+            attrs = "None"
+            if is_amazon(self.context.get_public_ip()):
+                attrs = "ec2"
+            s =  '{"attrs" : "'+attrs+'", "pip" : "'+self.context.get_public_ip()+'", "ip" : "'+self.context.get_local_ip()+'", "ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'", "priority" : "'+str(ep[3])+'"}'
             aep = aep + s + ","
         aep = aep[:len(aep)-1]
         return aep
