@@ -55,6 +55,9 @@ from PmkFtpServer import *
 class Pumpkin(Daemon):
     def __init__(self, pidfile="/tmp/pumpkin.pid"):
         Daemon.__init__(self,pidfile, "/dev/null", "/tmp/pumpkin.stdout", "/tmp/pumpkin.stderr")
+
+        #if os.path.isfile("/tmp/id")
+
         uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
         ex_cntx = str(uuid.uuid4())[:8]
 
@@ -63,6 +66,7 @@ class Pumpkin(Daemon):
         self.context.setExecContext(ex_cntx)
         self.context.setSupernodeList(SUPERNODES)
         self.context.set_local_ip(get_lan_ip())
+        self.context.set_public_ip(get_public_ip())
         self.context.__pumpkin = self
 
         self.zmq_context = zmq.Context()

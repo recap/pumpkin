@@ -59,7 +59,7 @@ class MainContext(object):
             self.endpoints = []
             self.__reg_update = False
             self.rlock = threading.RLock()
-            self.proc_graph = ProcessGraph()
+            self.proc_graph = ProcessGraph(self)
             self.__exec_context = None
             self.zmq_context = None
             self.working_dir = "~/.pumpkin/"+self.__uuid
@@ -286,6 +286,12 @@ class MainContext(object):
 
         def get_local_ip(self):
             return self.__ip
+
+        def set_public_ip(self, pip):
+            self.__pip = pip
+
+        def get_public_ip(self):
+            return self.__pip
 
         def getProcGraph(self):
             return self.proc_graph

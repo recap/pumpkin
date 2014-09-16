@@ -17,7 +17,7 @@ class ProcessGraph(object):
 
     MAX_TTL = 60 #seconds
     INT_TTL = 15 #seconds
-    def __init__(self):
+    def __init__(self, context):
 
         self.registry = {}
         self.external_registry = {}
@@ -29,6 +29,7 @@ class ProcessGraph(object):
         self.func_graph = nx.DiGraph()
         self.tagroute = {}
         self.ttl = {}
+        self.context = context
 
         threading.Timer(self.INT_TTL, self.__update_registry_t).start()
 
@@ -273,8 +274,11 @@ class ProcessGraph(object):
 
             for n1s in n1_routes:
                 for n2s in n2_routes:
-                    E.add_node(n1s["ep"], ip= n1s["ip"])
-                    E.add_node(n2s["ep"], ip= n2s["ip"])
+                    #E.add_node(n1s["ep"], ip= n1s["ip"], cuid=self.context.getUUid(), public_ip=self.context.get_public_ip())
+                    #E.add_node(n2s["ep"], ip= n2s["ip"], cuid=self.context.getUUid(), public_ip=self.context.get_public_ip())
+                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=self.context.get_public_ip())
+                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=self.context.get_public_ip())
+
 
                     E.add_edge(n1s["ep"],n2s["ep"])
                     #F.add_edge(n1s["cuid"], n2s["cuid"])
