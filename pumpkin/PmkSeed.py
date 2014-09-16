@@ -763,7 +763,7 @@ class Seed(object):
     def __getEps(self):
         aep = ""
         for ep in self.context.endpoints:
-            s =  '{"ip" : "'+self.context.get_local_ip()+'", "ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'", "priority" : "'+str(ep[3])+'"}'
+            s =  '{"pip" : "'+self.context.get_public_ip()+'", "ip" : "'+self.context.get_local_ip()+'", "ep" : "'+ep[0]+'", "cuid" : "'+self.context.getUuid()+'", "type" : "'+ep[1]+'", "mode" : "'+ep[2]+'", "priority" : "'+str(ep[3])+'"}'
             aep = aep + s + ","
         aep = aep[:len(aep)-1]
         return aep
