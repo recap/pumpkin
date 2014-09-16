@@ -247,6 +247,8 @@ class MainContext(object):
         def set_local_ip(self,ip):
             self.__ip = ip
 
+
+
             #FIXME dynamic configuration
             #self.endpoints.append( ("ipc://"+self.getUuid(), "zmq.ipc", "zmq.PULL" ) )
             #self.endpoints.append( ("ipc://"+self.getUuid(), "zmq.ipc", "zmq.PUB" ) )
