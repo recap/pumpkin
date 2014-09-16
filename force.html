@@ -3,22 +3,31 @@
 <head>
 <meta charset="utf-8">
 <title>Pumpkin Data States</title>
+ <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<link rel="stylesheet" href="/resources/demos/style.css">
+<script>
+$(function() {
+$( "#tabs" ).tabs();
+});
+</script>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <style type="text/css">
 	.box1 {
-          width: 100%;
+          width: 95%;
           height: 500px;
           float: left;
           margin: 0 20px 0 20px;
+          border: 1px solid;
       }
-	.box2 {
-          width: 50%;
-          height: 400px;
+	.hh {
+          width: 100%;
           float: left;
-          margin: 0 20px 0 20px;
+          margin: 0 0px 0 20px;
       }
 
-      .box1 div, .box1 input {
+      /*.box1 div, .box1 input {
           border: 1px solid;
           -moz-border-radius: 4px;
           border-radius: 4px;
@@ -30,24 +39,45 @@
           border-color: grey;
           height: 300px;
           overflow: auto;
-      }
+      }*/
 	
 
 
 </style>
 </head>
-<div id="states" class="box1">
+<div id="tabs">
+<ul>
+<li><a href="#tabs-1">State Diagram</a></li>
+<li><a href="#tabs-2">Function Network</a></li>
+<li><a href="#tabs-3">Node Network</a></li>
+</ul>
+<div id="tabs-1">
+</div>
+<div id="tabs-2">
+</div>
+<div id="tabs-3">
+</div>
+</div>
+
+
+<!--<div class="hh">
 <h2>State Diagram</h2>
 </div>
+<div id="states" class="box1">
+</div>
 
-<div id="funcs" class="box1">
+<div class="hh">
 <h2>Function Network</h2>
 </div>
+<div id="funcs" class="box1">
+</div>
 
 
-<div id="eps" class="box1">
+<div class="hh">
 <h2>Node Network</h2>
 </div>
+<div id="eps" class="box1">
+</div>-->
 <body>
 
 <script type="text/javascript">
@@ -93,22 +123,22 @@
 
 function render(data, div_name){
 datax = data;
-console.log("HERE");
 var w = window,
     d = document,
     e = d.documentElement,
-    g = d.getElementsByClassName('box1')[0],
-    //x = w.innerWidth || e.clientWidth || g.clientWidth,
-    //y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-    x = g.clientWidth,
-    y = g.clientHeight;
+    g = d.getElementsByClassName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+    //x = g.clientWidth,
+    //y = g.clientHeight;
 
-    var w = x - 30;
-    var h = y - 30;
+    var w = x - 50;
+    var h = y - 150;
+    var r = 20;
     //var w = 400;
     //var h = 400;
 
-    var colors = d3.scale.category10();
+    var colors = d3.scale.category20c();
 
 
 
@@ -118,7 +148,8 @@ var w = window,
         .nodes(datax.nodes)
         .links(datax.links)
       	.size([w,h])
-        .linkDistance([20])
+	//.size([w *= 2 / 3, h *= 2 / 3])
+        .linkDistance([200])
         .charge([-1500])
         .theta(1)
         .gravity(0.05)
@@ -202,18 +233,20 @@ var w = window,
 
     force.on("tick", function(){
 
+
+        //nodes.attr({"cx":function(d){return d.x;},
+        //            "cy":function(d){return d.y;}
+        //});
+	//console.log("W: "+w+", H: "+h+", R: "+r)
+        nodes.attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
+                    "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
+        });
         edges.attr({"x1": function(d){return d.source.x;},
                     "y1": function(d){return d.source.y;},
                     "x2": function(d){return d.target.x;},
                     "y2": function(d){return d.target.y;}
         });
 
-        nodes.attr({"cx":function(d){return d.x;},
-                    "cy":function(d){return d.y;}
-        });
-        //nodes.attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
-        //            "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
-        //});
 
 
         nodelabels.attr("x", function(d) { return d.x; })
@@ -241,15 +274,15 @@ var w = window,
 function init() {
  loadJSON_states(function(response) {
 	data1 = JSON.parse(response);
-    	render(data1, "#states")
+    	render(data1, "#tabs-1")
  });
  loadJSON_funcs(function(response) {
 	data3 = JSON.parse(response);
-    render(data3, "#funcs")
+    render(data3, "#tabs-2")
  });
 loadJSON_eps(function(response) {
 	data2 = JSON.parse(response);
-    render(data2, "#eps")
+    render(data2, "#tabs-3")
  });
 }
 init();
