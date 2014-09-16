@@ -1,9 +1,9 @@
-__author__ = 'reggie'
-
 ###START-CONF
 ##{
 ##"object_name": "tweetinject",
 ##"object_poi": "qpwo-2345",
+##"auto-load": true,
+##"remoting" : false,
 ##"parameters": [
 ##
 ##              ],
@@ -14,7 +14,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "NOTINUSE"
+##                      "state" : "RAW"
 ##                  }
 ##
 ##          ] }
@@ -24,36 +24,36 @@ __author__ = 'reggie'
 
 from os import listdir
 from os.path import isfile, join
-
-
+import pika
+from os.path import expanduser
 from pumpkin import *
-
-import zmq
 
 class tweetinject(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.zmq_cntx = zmq.Context()
-        self.sock = self.zmq_cntx.socket(zmq.PUSH)
-        self.sock.bind("tcp://*:7885")
-        pass
+        self.connection = None
+        self.channel = None
 
     def on_load(self):
         print "Loading: " + self.__class__.__name__
-        #print os.getcwd()
-        #self._pre()
+        self.connection, self.channel = self.__open_rabbitmq_channel()
 
-        pass
+    def __open_rabbitmq_channel(self):
+        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+        channel = connection.channel()
+        return (connection, channel)
+
 
     def run(self, pkt):
-        dir = "/home/reggie/scratch/"
+        dir = expanduser("~")+"/tweets/"
         onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
         for fl in onlyfiles:
             fullpath = dir+fl
             if( fl[-3:] == "txt"):
                 print "File: "+str(fl)
-                tweet = ""
                 with open(fullpath) as f:
                     for line in f:
                         if line.startswith('T'):
@@ -65,99 +65,12 @@ class tweetinject(PmkSeed.Seed):
                                 line =""
                             else:
                                 tweet = tweet + line
-                                self.publish(tweet)
-                            #self.__testfilter(tweet)
-                            #self.dispatch(pkt, tweet,"RAW")
+                                self.dispatch(pkt, tweet, "RAW")
+                                del line
+                                del tweet
 
-                            #time.sleep(2)
+    def publish(self, data, queue):
+        self.channel.basic_publish(exchange='',
+                              routing_key=queue,
+                              body=str(data))
 
-
-        pass
-
-    def publish(self, tweet):
-        #log.debug("Sending...")
-        self.sock.send(tweet)
-
-    #def _pre(self):
-    #    nltk.data.path.append(os.getcwd()+"/examples/tweeter/nltk_data")
-    #    pass
-    #def is_english(self, text):
-    #
-    #    #nltk.download(nltk.corpus.stopwords)
-    #
-    #    ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words('english'))
-    #    NON_ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words()) - ENGLISH_STOPWORDS
-    #
-    #    text = text.lower()
-    #    words = set(nltk.wordpunct_tokenize(text))
-    #    return len(words & ENGLISH_STOPWORDS) > len(words & NON_ENGLISH_STOPWORDS)
-    #
-    #def is_a(self,text):
-    #    m = re.search('([A-Z]+[A-Za-z]+\s*[A-Za-z]*\s(has an|has a)\s[A-Z]+[A-Za-z]+)', text, re.S)
-    #    if m:
-    #        tw = m.group(0)
-    #        return tw
-    #
-    #def __testfilter(self, tweet):
-    #
-    #
-    #    m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
-    #    if m:
-    #        tw = m.group(2)
-    #        self.is_a(tw)
-    #
-    #    pass
-    #
-    #def is_haiku(self, text):
-    #
-    #    text_orig = text
-    #    text = text.lower()
-    #    if filter(str.isdigit, str(text)):
-    #        return False
-    #    words = nltk.wordpunct_tokenize(re.sub('[^a-zA-Z_ ]', '',text))
-    #    #print words
-    #    syl_count = 0
-    #    word_count = 0
-    #    haiku_line_count = 0
-    #    lines = []
-    #    d = cmudict.dict()
-    #
-    #    for word in words:
-    #        if word.lower() in d.keys():
-    #            syl_count += [len(list(y for y in x if isdigit(y[-1]))) for x in
-    #                    d[word.lower()]][0]
-    #        if haiku_line_count == 0:
-    #            if syl_count == 5:
-    #                lines.append(word)
-    #                haiku_line_count += 1
-    #        elif haiku_line_count == 1:
-    #            if syl_count == 12:
-    #                lines.append(word)
-    #                haiku_line_count += 1
-    #        else:
-    #            if syl_count == 17:
-    #                lines.append(word)
-    #                haiku_line_count += 1
-    #
-    #    if syl_count == 17:
-    #        try:
-    #            final_lines = []
-    #
-    #            str_tmp = ""
-    #            counter = 0
-    #            for word in text_orig.split():
-    #                str_tmp += str(word) + " "
-    #                if lines[counter].lower() in str(word).lower():
-    #                    final_lines.append(str_tmp.strip())
-    #                    counter += 1
-    #                    str_tmp = ""
-    #            if len(str_tmp) > 0:
-    #                final_lines.append(str_tmp.strip())
-    #            return True
-    #        except Exception as e:
-    #            print e
-    #            return False
-    #    else:
-    #        return False
-    #
-    #    return True

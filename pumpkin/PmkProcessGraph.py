@@ -273,7 +273,10 @@ class ProcessGraph(object):
 
             for n1s in n1_routes:
                 for n2s in n2_routes:
-                    E.add_edge(n1s["ip"],n2s["ip"])
+                    E.add_node(n1s["ep"], ip= n1s["ip"])
+                    E.add_node(n2s["ep"], ip= n2s["ip"])
+
+                    E.add_edge(n1s["ep"],n2s["ep"])
                     #F.add_edge(n1s["cuid"], n2s["cuid"])
                     F.add_edge(n1_name, n2_name)
             #girien = G.neighbors(edge[1])
