@@ -80,10 +80,13 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         logging.debug("Request "+s.path)
         context = PmkContexts.MainContext(None)
 
+        #s.send_header('Access-Control-Allow-Origin', '*')
 
         if s.path == "/d3":
             s.send_response(200)
+            s.send_header('Access-Control-Allow-Origin', '*')
             s.send_header("Content-type", "text/html")
+
             s.end_headers()
             #context.getProcGraph().dumpGraphToFile("states.json")
             #context.getProcGraph().dump_ep_graph_to_file("eps.json")
@@ -137,6 +140,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if s.path == "/states.json":
             s.send_response(200)
+            s.send_header('Access-Control-Allow-Origin', '*')
             s.send_header("Content-type", "application/json")
             s.end_headers()
 

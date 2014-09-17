@@ -6,7 +6,6 @@
  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
 <script src="//code.jquery.com/jquery-1.10.2.js"></script>
 <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
-<link rel="stylesheet" href="/resources/demos/style.css">
 <script>
 $(function() {
 $( "#tabs" ).tabs();
@@ -103,10 +102,12 @@ $( "#tabs" ).tabs();
 self.addEventListener('message', function(e){
 
 function doCall(){
-        var id = e.data.id;
+        var origin = e.data.origin;
+	var file = e.data.file;
         var oXmlHttp = new XMLHttpRequest();
-        oXmlHttp.overrideMimeType("application/json");
-	oXmlHttp.open('GET', 'states.json', true);
+        //oXmlHttp.overrideMimeType("application/json");
+	
+	oXmlHttp.open('GET', origin+file, true);
 	oXmlHttp.onreadystatechange = function () {
           if (oXmlHttp.readyState == 4 && oXmlHttp.status == "200") {
             //callback(oXmlHttp.responseText);
@@ -125,7 +126,7 @@ doCall();
 
 <script type="text/javascript">
 var graph;
-    function myGraph(div_name) {
+    function myGraph(div_name, acolor){
 
         // Add and remove elements on the graph object
         this.addNode = function (id) {
@@ -236,10 +237,17 @@ var graph;
         };
 
         // set up the D3 visualisation in the specified element
-        var w = 960,
-                h = 450;
+	var w = window,
+    		d = document,
+    		e = d.documentElement,
+    		g = d.getElementsByClassName('body')[0],
+		x = w.innerWidth || e.clientWidth || g.clientWidth,
+    		y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+        var w = x - 50;
+        var h = y - 150;
+	var r = 19;
 
-        var color = d3.scale.category10();
+        var color = d3.scale.category20c();
 
         var vis = d3.select("#"+div_name)
                 .append("svg:svg")
@@ -252,6 +260,7 @@ var graph;
                 .append('svg:g');
 
         var force = d3.layout.force();
+			
 
         var nodes = force.nodes(),
                 links = force.links();
@@ -260,7 +269,8 @@ var graph;
             var link = vis.selectAll("line")
                     .data(links, function (d) {
                         return d.source.id + "-" + d.target.id;
-                    });
+                    })
+		    .attr('marker-end','url(#arrowhead)');
 
             link.enter().append("line")
                     .attr("id", function (d) {
@@ -281,17 +291,20 @@ var graph;
                         return d.id;
                     });
 
+
             var nodeEnter = node.enter().append("g")
                     .attr("class", "node")
                     .call(force.drag);
 
             nodeEnter.append("svg:circle")
-                    .attr("r", 12)
+                    .attr("r", 19)
+		    .attr("opacity", 1)
                     .attr("id", function (d) {
                         return "Node;" + d.id;
                     })
                     .attr("class", "nodeStrokeClass")
-                    .attr("fill", function(d) { return color(d.id); });
+                    //.attr("fill", function(d) { return color(d.id); });
+                    .attr("fill", acolor);
 
             nodeEnter.append("svg:text")
                     .attr("class", "textClass")
@@ -301,15 +314,37 @@ var graph;
                         return d.id;
                     });
 
+	    vis.append('defs').append('marker')
+        		.attr({'id':'arrowhead',
+               		'viewBox':'-0 -5 10 10',
+               		'refX':20,
+               		'refY':0,
+               		'orient':'auto',
+               		'markerWidth':10,
+               		'markerHeight':10,
+               		'xoverflow':'visible'})
+        	.append('svg:path')
+            		.attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            		.attr('fill', '#ccc')
+            		.attr('stroke','#ccc');
+
+
             node.exit().remove();
+
 
             force.on("tick", function () {
 
-                node.attr("transform", function (d) {
-                    return "translate(" + d.x + "," + d.y + ")";
-                });
+                //node.attr("transform", function (d) {
+                //    return "translate(" + d.x + "," + d.y + ")";
+                //});
 
-                link.attr("x1", function (d) {
+		d3.selectAll("circle").attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
+                    "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
+        	});
+
+
+
+                  link.attr("x1", function (d) {
                     return d.source.x;
                 })
                         .attr("y1", function (d) {
@@ -321,14 +356,23 @@ var graph;
                         .attr("y2", function (d) {
                             return d.target.y;
                         });
-            });
+
+		d3.selectAll(".textClass").attr("x", function(d) { return d.x; })
+                  .attr("y", function(d) { return d.y; });
+            	});
+		
+
+
+
 
             // Restart the force layout.
             force
-                    .gravity(.01)
-                    .charge(-80000)
-                    .friction(0)
-                    .linkDistance( function(d) { return d.value * 10 } )
+                    .gravity(0.05)
+                    .charge(-1500)
+                    //.friction(0)
+		    .theta(1)
+                    .linkDistance([200])
+                    //.linkDistance( function(d) { return d.value * 10 } )
                     .size([w, h])
                     .start();
         };
@@ -347,11 +391,94 @@ function keepNodesOnTop() {
 </script>
 
 <script>
+var getLocation = function(href) {
+    var l = document.createElement("a");
+    l.href = href;
+    return l;
+};
+
 function init() {
+var l = getLocation(document.URL);
+var origin = l.protocol+"//"+l.hostname+":"+l.port+"/";
+
 pdata1 = null;
+pdata2 = null;
+pdata3 = null;
 graph1 = null;
 graph2 = null;
 graph3 = null;
+
+function render(graph, data, pdata, div_name, acolor){
+	if (graph == null){
+		console.log("NULL");
+      		graph = new myGraph(div_name, acolor);
+	}
+
+	if(pdata == null){	
+      		for(var i=0;i<data.links.length;i++){
+			l = data.links[i];
+			s = l["source"];
+			t = l["target"];
+			ns = data.nodes[s];
+			nt = data.nodes[t];
+			graph.addNode(ns["id"]);
+			graph.addNode(nt["id"]);
+			graph.addLink(ns["id"],nt["id"],'20');
+		}
+	
+		keepNodesOnTop();
+		pdata = data;
+	}else{
+      		for(var i=0;i<data.links.length;i++){
+			l1 = data.links[i];
+			found = false
+      			for(var k=0;k<pdata.links.length;k++){
+				l2 = pdata.links[k];
+				if (l1["id"] == l2["id"]){
+					found = true;
+				}
+			}
+			if (found == false){
+				l = l1;
+				s = l["source"];
+				t = l["target"];
+				ns = data.nodes[s];
+				nt = data.nodes[t];
+				
+				graph.addNode(ns["id"]);
+				graph.addNode(nt["id"]);
+				graph.addLink(ns["id"],nt["id"],'20');
+				
+			}
+		}
+      		for(var k=0;k<pdata.links.length;k++){
+			l2 = pdata.links[k];
+			found = false
+      			for(var i=0;i<data.links.length;i++){
+				l1 = data.links[i];
+				if (l1["id"] == l2["id"]){
+					found = true;
+				}
+			}
+			if(found == false){
+				l = l2;
+				s = l["source"];
+				t = l["target"];
+				ns = pdata.nodes[s];
+				nt = pdata.nodes[t];
+				graph.removeLink(ns["id"],nt["id"]);
+				
+			}
+		}
+		
+		keepNodesOnTop();
+
+		pdata = data;
+		
+	}
+	graph.removeAnyNodeWithNoLinks();
+	return[graph, pdata];
+     }
 
 var blob = new Blob([
       document.querySelector('#worker1').textContent
@@ -362,95 +489,50 @@ var worker = new Worker(window.URL.createObjectURL(blob));
       //console.log("DATA: "+e.data);
       if (e.data != null){
       	data = JSON.parse(e.data);
-      	//console.log(e.data);
-	if (graph1 == null){
-      		graph1 = new myGraph("tabs-1");
-	}
-
-	if(pdata1 == null){	
-      		for(var i=0;i<data.links.length;i++){
-			l = data.links[i];
-			s = l["source"];
-			t = l["target"];
-			ns = data.nodes[s];
-			nt = data.nodes[t];
-			graph1.addNode(ns["id"]);
-			graph1.addNode(nt["id"]);
-			graph1.addLink(ns["id"],nt["id"],'20');
-		}
-	
-		keepNodesOnTop();
-		pdata1 = data;
-	}else{
-		console.log("NOT NULL");
-      		for(var i=0;i<data.links.length;i++){
-			l1 = data.links[i];
-			found = false
-      			for(var k=0;k<pdata1.links.length;k++){
-				l2 = pdata1.links[k];
-				if (l1["id"] == l2["id"]){
-					found = true;
-				}
-			}
-			if (found == false){
-				console.log("NEW: "+l1["id"]);
-				l = l1;
-				s = l["source"];
-				t = l["target"];
-				ns = data.nodes[s];
-				nt = data.nodes[t];
-				
-				graph1.addNode(ns["id"]);
-				graph1.addNode(nt["id"]);
-				graph1.addLink(ns["id"],nt["id"],'20');
-				
-			}
-		}
-      		for(var k=0;k<pdata1.links.length;k++){
-			l2 = pdata1.links[k];
-			found = false
-      			for(var i=0;i<data.links.length;i++){
-				l1 = data.links[i];
-				if (l1["id"] == l2["id"]){
-					found = true;
-				}
-			}
-			if(found == false){
-				console.log("REMOVE: "+l2["id"]);
-				l = l2;
-				console.log(l);
-				s = l["source"];
-				t = l["target"];
-				ns = pdata1.nodes[s];
-				nt = pdata1.nodes[t];
-				//graph1.addNode(ns["id"]);
-				//graph1.addNode(nt["id"]);
-				graph1.removeLink(ns["id"],nt["id"]);
-				//graph1.removeNodeWithNoLinks(ns["id"]);
-				//graph1.removeNodeWithNoLinks(nt["id"]);
-				
-			}
-		}
-		
-		keepNodesOnTop();
-
-		pdata1 = data;
-		
-	}
-	graph1.removeAnyNodeWithNoLinks();
-      //render(data1, "tabs-1", "blue");
-     }
+	ret = render(graph1,data,pdata1,"tabs-1","blue");
+	graph1 = ret[0];
+	pdata1 = ret[1];
+    	}
     }
+
 worker.postMessage({
-	'id': "soe-id"
+	'origin': origin,
+	'file' : "states.json"
 });
 
 
-//graph = new myGraph("tabs-1");
-//graph.addNode("Dick");
-//graph.addNode("Cunt");
-//graph.addLink('Dick','Cunt','30');
-//keepNodesOnTop();
+var worker_funcs = new Worker(window.URL.createObjectURL(blob));
+    worker_funcs.onmessage = function(e) {
+      //console.log("DATA: "+e.data);
+      if (e.data != null){
+      	data_funcs = JSON.parse(e.data);
+	ret = render(graph2,data_funcs,pdata2,"tabs-2", "blue");
+	graph2 = ret[0];
+	pdata2 = ret[1];
+    	}
+    }
+
+worker_funcs.postMessage({
+	'origin': origin,
+	'file' : "funcs.json"
+});
+var worker_eps = new Worker(window.URL.createObjectURL(blob));
+    worker_eps.onmessage = function(e) {
+      //console.log("DATA: "+e.data);
+      if (e.data != null){
+      	data_eps = JSON.parse(e.data);
+	ret = render(graph3,data_eps,pdata3,"tabs-3","blue");
+	graph3 = ret[0];
+	pdata3 = ret[1];
+    	}
+    }
+
+worker_eps.postMessage({
+	'origin': origin,
+	'file' : "eps.json"
+});
+
+
 }
 init();
 </script>
