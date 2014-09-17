@@ -238,10 +238,11 @@ class ProcessGraph(object):
                             ostype = "EXTRACTION"
                         ostype = eo["group"] +":"+ ostype
                         lep = self.get_ep_with_priority(eo["endpoints"], 0)
+                        s_id= istype+":"+ostype
                         if lep:
-                            G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"])
+                            G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"], id=s_id)
                         else:
-                            G.add_edge(istype, ostype, function=eo["name"])
+                            G.add_edge(istype, ostype, function=eo["name"], id=s_id)
 
                     if istype in self.tagroute.keys():
                         self.tagroute[istype].append(eo)
@@ -279,10 +280,16 @@ class ProcessGraph(object):
                     E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
                     E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
 
-
-                    E.add_edge(n1s["ep"],n2s["ep"])
+                    e_id = n1s["ep"]+":"+n2s["ep"]
+                    E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
                     #F.add_edge(n1s["cuid"], n2s["cuid"])
-                    F.add_edge(n1_name, n2_name)
+                    f_id = n1_name+":"+n2_name
+                    F.add_edge(n1_name, n2_name, id=f_id)
+
+
+            self.dump_ep_graph_to_file("eps.json")
+            self.dump_func_graph_to_file("funcs.json")
+            self.dumpGraphToFile("states.json")
             #girien = G.neighbors(edge[1])
 
             #n1 = edge[2]["ep"]
@@ -301,6 +308,7 @@ class ProcessGraph(object):
 
             #if n2:
             #    print n1+"->"+n2+" "+n_name
+
 
 
 

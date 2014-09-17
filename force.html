@@ -44,6 +44,25 @@ $( "#tabs" ).tabs();
 
 
 </style>
+
+ <style>
+        .link {
+            stroke: #2E2E2E;
+            stroke-width: 2px;
+        }
+
+        .node {
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .textClass {
+            stroke: #323232;
+            font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
+            font-weight: normal;
+            stroke-width: .5;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <div id="tabs">
 <ul>
@@ -80,211 +99,358 @@ $( "#tabs" ).tabs();
 </div>-->
 <body>
 
-<script type="text/javascript">
-  var datax;
-    function loadJSON_states(callback) {
+<script id="worker1" type="javascript/worker">
+self.addEventListener('message', function(e){
 
-    var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'states.json', true);
-	xobj.onreadystatechange = function () {
-          if (xobj.readyState == 4 && xobj.status == "200") {
-            callback(xobj.responseText);
+function doCall(){
+        var id = e.data.id;
+        var oXmlHttp = new XMLHttpRequest();
+        oXmlHttp.overrideMimeType("application/json");
+	oXmlHttp.open('GET', 'states.json', true);
+	oXmlHttp.onreadystatechange = function () {
+          if (oXmlHttp.readyState == 4 && oXmlHttp.status == "200") {
+            //callback(oXmlHttp.responseText);
+	    //console.log(oXmlHttp.responseText);
+	    self.postMessage(oXmlHttp.responseText);
           }
-    };
-    xobj.send(null);  
- }
-
- function loadJSON_funcs(callback) {
-
-    var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'funcs.json', true);
-	xobj.onreadystatechange = function () {
-          if (xobj.readyState == 4 && xobj.status == "200") {
-            callback(xobj.responseText);
-          }
-    };
-    xobj.send(null);
- }
-
- function loadJSON_eps(callback) {
-
-    var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-	xobj.open('GET', 'eps.json', true);
-	xobj.onreadystatechange = function () {
-          if (xobj.readyState == 4 && xobj.status == "200") {
-            callback(xobj.responseText);
-          }
-    };
-    xobj.send(null);
- }
-
-function render(data, div_name, color){
-datax = data;
-var w = window,
-    d = document,
-    e = d.documentElement,
-    g = d.getElementsByClassName('body')[0],
-    x = w.innerWidth || e.clientWidth || g.clientWidth,
-    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-    //x = g.clientWidth,
-    //y = g.clientHeight;
-
-    var w = x - 50;
-    var h = y - 150;
-    var r = 20;
-    //var w = 400;
-    //var h = 400;
-
-    var colors = d3.scale.category20c();
-
-
-
-    var svg = d3.select(div_name).append("svg").attr({"width":w,"height":h});
-
-    var force = d3.layout.force()
-        .nodes(datax.nodes)
-        .links(datax.links)
-      	.size([w,h])
-	//.size([w *= 2 / 3, h *= 2 / 3])
-        .linkDistance([200])
-        .charge([-1500])
-        .theta(1)
-        .gravity(0.05)
-        .start();
-
-    var edges = svg.selectAll("line")
-      .data(datax.links)
-      .enter()
-      .append("line")
-      .attr("id",function(d,i) {return 'edge'+i})
-      .attr('marker-end','url(#arrowhead)')
-      .style("stroke","#ccc")
-      .style("pointer-events", "none");
-
-    var nodes = svg.selectAll("circle")
-      .data(datax.nodes)
-      .enter()
-      .append("circle")
-      .attr({"r": 20})
-      .attr("opacity", 0.7)
-      //.style("fill",function(d,i){return colors(i);})
-      .style("fill",color)
-      .call(force.drag)
-
-    var nodelabels = svg.selectAll(".nodelabel")
-       .data(datax.nodes)
-       .enter()
-       .append("text")
-       .attr({"x":function(d){return d.x;},
-              "y":function(d){return d.y;},
-              "class":"nodelabel",
-              "stroke":"black"})
-       .text(function(d){return d.id;});
-
-    var edgepaths = svg.selectAll(".edgepath")
-        .data(datax.links)
-        .enter()
-        .append('path')
-        .attr({'d': function(d) {return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y},
-               'class':'edgepath',
-               'fill-opacity':0,
-               'stroke-opacity':0,
-               'fill':'blue',
-               'stroke':'red',
-               'id':function(d,i) {return 'edgepath'+i}})
-        .style("pointer-events", "none");
-
-    var edgelabels = svg.selectAll(".edgelabel")
-        .data(datax.links)
-        .enter()
-        .append('text')
-        .style("pointer-events", "none")
-        .attr({'class':'edgelabel',
-               'id':function(d,i){return 'edgelabel'+i},
-               'dx':80,
-               'dy':-2,
-               'font-size':15,
-               'fill':'#aaa'});
-
-    edgelabels.append('textPath')
-        .attr('xlink:href',function(d,i) {return '#edgepath'+i})
-        .style("pointer-events", "none")
-        //.text(function(d,i){return 'label '+i});
-        .text(function(d,i){return d.function});
-
-
-    svg.append('defs').append('marker')
-        .attr({'id':'arrowhead',
-               'viewBox':'-0 -5 10 10',
-               'refX':25,
-               'refY':0,
-               //'markerUnits':'strokeWidth',
-               'orient':'auto',
-               'markerWidth':10,
-               'markerHeight':10,
-               'xoverflow':'visible'})
-        .append('svg:path')
-            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-            .attr('fill', '#ccc')
-            .attr('stroke','#ccc');
-
-
-    force.on("tick", function(){
-
-
-        //nodes.attr({"cx":function(d){return d.x;},
-        //            "cy":function(d){return d.y;}
-        //});
-	//console.log("W: "+w+", H: "+h+", R: "+r)
-        nodes.attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
-                    "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
-        });
-        edges.attr({"x1": function(d){return d.source.x;},
-                    "y1": function(d){return d.source.y;},
-                    "x2": function(d){return d.target.x;},
-                    "y2": function(d){return d.target.y;}
-        });
-
-
-
-        nodelabels.attr("x", function(d) { return d.x; })
-                  .attr("y", function(d) { return d.y; });
-
-        edgepaths.attr('d', function(d) { var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
-                                           //console.log(d)
-                                           return path});
-
-        edgelabels.attr('transform',function(d,i){
-            if (d.target.x<d.source.x){
-                bbox = this.getBBox();
-                rx = bbox.x+bbox.width/2;
-                ry = bbox.y+bbox.height/2;
-                return 'rotate(180 '+rx+' '+ry+')';
-                }
-            else {
-                return 'rotate(0)';
-                }
-        });
-    });
-
+    	};
+        oXmlHttp.send(null);
+        setTimeout(doCall,5000);
 }
+doCall();
 
+}, false);
+
+</script>
+
+<script type="text/javascript">
+var graph;
+    function myGraph(div_name) {
+
+        // Add and remove elements on the graph object
+        this.addNode = function (id) {
+	    n = findNode(id);
+	    if (n == null){
+            	nodes.push({"id": id});
+            	update();
+	    }
+        };
+
+        this.removeNode = function (id) {
+            var i = 0;
+            var n = findNode(id);
+            while (i < links.length) {
+                if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    links.splice(i, 1);
+                }
+                else i++;
+            }
+            nodes.splice(findNodeIndex(id), 1);
+            update();
+        };
+
+        this.removeNodeWithNoLinks = function (id) {
+            var i = 0;
+            var n = findNode(id);
+	    found = false
+            for (var i = 0; i  < links.length;i++) {
+                if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    found = true;
+		    break;
+                }
+            }
+	    if (found == false){
+            	nodes.splice(findNodeIndex(id), 1);
+            	update();
+	    }
+        };
+
+        this.removeAnyNodeWithNoLinks = function () {
+	    remove = true;
+	    while(remove == true){
+            var i = 0;
+	
+	    remove = false;
+            for (var k in nodes){
+		n = nodes[k];
+		console.log("NODE: "+n["id"]);
+	    	found = false;
+            	for (var i = 0; i  < links.length;i++) {
+                	if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    		found = true;
+				console.log("FOUND: "+n["id"])
+		    		break;
+                	}
+            	}
+	    	if (found == false){
+			console.log("REMOVING: "+n["id"]);
+            		nodes.splice(findNodeIndex(n["id"]), 1);
+             		update();
+			remove = true;
+	    	}
+	     }
+		}
+        };
+
+
+
+        this.removeLink = function (source, target) {
+            for (var i = 0; i < links.length; i++) {
+                if (links[i].source.id == source && links[i].target.id == target) {
+                    links.splice(i, 1);
+                    break;
+                }
+            }
+            update();
+        };
+
+        this.removeallLinks = function () {
+            links.splice(0, links.length);
+            update();
+        };
+
+        this.removeAllNodes = function () {
+            nodes.splice(0, links.length);
+            update();
+        };
+
+        this.addLink = function (source, target, value) {
+            links.push({"source": findNode(source), "target": findNode(target), "value": value});
+            update();
+        };
+
+        var findNode = function (id) {
+            for (var i in nodes) {
+                if (nodes[i]["id"] === id) return nodes[i];
+            }
+            ;
+        };
+
+        var findNodeIndex = function (id) {
+            for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].id == id) {
+                    return i;
+                }
+            }
+            ;
+        };
+
+        // set up the D3 visualisation in the specified element
+        var w = 960,
+                h = 450;
+
+        var color = d3.scale.category10();
+
+        var vis = d3.select("#"+div_name)
+                .append("svg:svg")
+                .attr("width", w)
+                .attr("height", h)
+                .attr("id", "svg")
+                .attr("pointer-events", "all")
+                .attr("viewBox", "0 0 " + w + " " + h)
+                .attr("perserveAspectRatio", "xMinYMid")
+                .append('svg:g');
+
+        var force = d3.layout.force();
+
+        var nodes = force.nodes(),
+                links = force.links();
+
+        var update = function () {
+            var link = vis.selectAll("line")
+                    .data(links, function (d) {
+                        return d.source.id + "-" + d.target.id;
+                    });
+
+            link.enter().append("line")
+                    .attr("id", function (d) {
+                        return d.source.id + "-" + d.target.id;
+                    })
+                    .attr("stroke-width", function (d) {
+                        return d.value / 10;
+                    })
+                    .attr("class", "link");
+            link.append("title")
+                    .text(function (d) {
+                        return d.value;
+                    });
+            link.exit().remove();
+
+            var node = vis.selectAll("g.node")
+                    .data(nodes, function (d) {
+                        return d.id;
+                    });
+
+            var nodeEnter = node.enter().append("g")
+                    .attr("class", "node")
+                    .call(force.drag);
+
+            nodeEnter.append("svg:circle")
+                    .attr("r", 12)
+                    .attr("id", function (d) {
+                        return "Node;" + d.id;
+                    })
+                    .attr("class", "nodeStrokeClass")
+                    .attr("fill", function(d) { return color(d.id); });
+
+            nodeEnter.append("svg:text")
+                    .attr("class", "textClass")
+                    .attr("x", 14)
+                    .attr("y", ".31em")
+                    .text(function (d) {
+                        return d.id;
+                    });
+
+            node.exit().remove();
+
+            force.on("tick", function () {
+
+                node.attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
+
+                link.attr("x1", function (d) {
+                    return d.source.x;
+                })
+                        .attr("y1", function (d) {
+                            return d.source.y;
+                        })
+                        .attr("x2", function (d) {
+                            return d.target.x;
+                        })
+                        .attr("y2", function (d) {
+                            return d.target.y;
+                        });
+            });
+
+            // Restart the force layout.
+            force
+                    .gravity(.01)
+                    .charge(-80000)
+                    .friction(0)
+                    .linkDistance( function(d) { return d.value * 10 } )
+                    .size([w, h])
+                    .start();
+        };
+
+
+        // Make it all go
+        update();
+    }
+
+function keepNodesOnTop() {
+        $(".nodeStrokeClass").each(function( index ) {
+            var gnode = this.parentNode;
+            gnode.parentNode.appendChild(gnode);
+        });
+    }
+</script>
+
+<script>
 function init() {
- loadJSON_states(function(response) {
-	data1 = JSON.parse(response);
-    	render(data1, "#tabs-1", "blue")
- });
- loadJSON_funcs(function(response) {
-	data3 = JSON.parse(response);
-    render(data3, "#tabs-2", "red")
- });
-loadJSON_eps(function(response) {
-	data2 = JSON.parse(response);
-    render(data2, "#tabs-3", "green")
- });
+pdata1 = null;
+graph1 = null;
+graph2 = null;
+graph3 = null;
+
+var blob = new Blob([
+      document.querySelector('#worker1').textContent
+    ], { type: "text/javascript" })
+
+var worker = new Worker(window.URL.createObjectURL(blob));
+    worker.onmessage = function(e) {
+      //console.log("DATA: "+e.data);
+      if (e.data != null){
+      	data = JSON.parse(e.data);
+      	//console.log(e.data);
+	if (graph1 == null){
+      		graph1 = new myGraph("tabs-1");
+	}
+
+	if(pdata1 == null){	
+      		for(var i=0;i<data.links.length;i++){
+			l = data.links[i];
+			s = l["source"];
+			t = l["target"];
+			ns = data.nodes[s];
+			nt = data.nodes[t];
+			graph1.addNode(ns["id"]);
+			graph1.addNode(nt["id"]);
+			graph1.addLink(ns["id"],nt["id"],'20');
+		}
+	
+		keepNodesOnTop();
+		pdata1 = data;
+	}else{
+		console.log("NOT NULL");
+      		for(var i=0;i<data.links.length;i++){
+			l1 = data.links[i];
+			found = false
+      			for(var k=0;k<pdata1.links.length;k++){
+				l2 = pdata1.links[k];
+				if (l1["id"] == l2["id"]){
+					found = true;
+				}
+			}
+			if (found == false){
+				console.log("NEW: "+l1["id"]);
+				l = l1;
+				s = l["source"];
+				t = l["target"];
+				ns = data.nodes[s];
+				nt = data.nodes[t];
+				
+				graph1.addNode(ns["id"]);
+				graph1.addNode(nt["id"]);
+				graph1.addLink(ns["id"],nt["id"],'20');
+				
+			}
+		}
+      		for(var k=0;k<pdata1.links.length;k++){
+			l2 = pdata1.links[k];
+			found = false
+      			for(var i=0;i<data.links.length;i++){
+				l1 = data.links[i];
+				if (l1["id"] == l2["id"]){
+					found = true;
+				}
+			}
+			if(found == false){
+				console.log("REMOVE: "+l2["id"]);
+				l = l2;
+				console.log(l);
+				s = l["source"];
+				t = l["target"];
+				ns = pdata1.nodes[s];
+				nt = pdata1.nodes[t];
+				//graph1.addNode(ns["id"]);
+				//graph1.addNode(nt["id"]);
+				graph1.removeLink(ns["id"],nt["id"]);
+				//graph1.removeNodeWithNoLinks(ns["id"]);
+				//graph1.removeNodeWithNoLinks(nt["id"]);
+				
+			}
+		}
+		
+		keepNodesOnTop();
+
+		pdata1 = data;
+		
+	}
+	graph1.removeAnyNodeWithNoLinks();
+      //render(data1, "tabs-1", "blue");
+     }
+    }
+worker.postMessage({
+	'id': "soe-id"
+});
+
+
+//graph = new myGraph("tabs-1");
+//graph.addNode("Dick");
+//graph.addNode("Cunt");
+//graph.addLink('Dick','Cunt','30');
+//keepNodesOnTop();
 }
 init();
 </script>

@@ -80,13 +80,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         logging.debug("Request "+s.path)
         context = PmkContexts.MainContext(None)
 
+
         if s.path == "/d3":
             s.send_response(200)
             s.send_header("Content-type", "text/html")
             s.end_headers()
-            context.getProcGraph().dumpGraphToFile("states.json")
-            context.getProcGraph().dump_ep_graph_to_file("eps.json")
-            context.getProcGraph().dump_func_graph_to_file("funcs.json")
+            #context.getProcGraph().dumpGraphToFile("states.json")
+            #context.getProcGraph().dump_ep_graph_to_file("eps.json")
+            #context.getProcGraph().dump_func_graph_to_file("funcs.json")
             with open("force.html") as f:
                 content = f.read()
             f.close()
