@@ -250,66 +250,39 @@ class ProcessGraph(object):
                         self.tagroute[istype] = []
                         self.tagroute[istype].append(eo)
 
-        for edge in G.edges(data=True):
-            n1 = edge[0]
-            n2 = edge[1]
+        if not self.context.is_speedy():
+            for edge in G.edges(data=True):
+                n1 = edge[0]
+                n2 = edge[1]
 
-            n1_routes = []
-            n2_routes = []
-            n2_name = None
-            n1_name = None
-            if n1 in self.tagroute.keys() and "TRACE" not in n1:
-                n1_routes = self.tagroute[n1][0]["endpoints"]
-                n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
-            if n2 in self.tagroute.keys() and "TRACE" not in n2:
-                n2_routes = self.tagroute[n2][0]["endpoints"]
-                n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
-
-
-            #if len(n2_name.split(":")) > 1:
-            #    n2_name = n2_name.split(":")[1]
-
-            #if len(n2_name.split(":")) > 1:
-            #    n2_name = n2_name.split(":")[1]
+                n1_routes = []
+                n2_routes = []
+                n2_name = None
+                n1_name = None
+                if n1 in self.tagroute.keys() and "TRACE" not in n1:
+                    n1_routes = self.tagroute[n1][0]["endpoints"]
+                    n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
+                if n2 in self.tagroute.keys() and "TRACE" not in n2:
+                    n2_routes = self.tagroute[n2][0]["endpoints"]
+                    n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
 
 
-            for n1s in n1_routes:
-                for n2s in n2_routes:
-                    #E.add_node(n1s["ep"], ip= n1s["ip"], cuid=self.context.getUUid(), public_ip=self.context.get_public_ip())
-                    #E.add_node(n2s["ep"], ip= n2s["ip"], cuid=self.context.getUUid(), public_ip=self.context.get_public_ip())
-                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
-                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
 
-                    e_id = n1s["ep"]+":"+n2s["ep"]
-                    E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
-                    #F.add_edge(n1s["cuid"], n2s["cuid"])
-                    f_id = n1_name+":"+n2_name
-                    F.add_edge(n1_name, n2_name, id=f_id)
+                for n1s in n1_routes:
+                    for n2s in n2_routes:
 
+                        E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
+                        E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
 
-            self.dump_ep_graph_to_file("eps.json")
-            self.dump_func_graph_to_file("funcs.json")
-            self.dumpGraphToFile("states.json")
-            #girien = G.neighbors(edge[1])
-
-            #n1 = edge[2]["ep"]
-            #n_name = edge[2]["function"]
-            #n2 = None
-
-            #for g in girien:
-            #    for e in G.edges(g, data=True):
-            #        n2 = e[2]["ep"]
-            #        print n1+"->"+n2+" "+n_name
-
-            #if len(gara) > 0:
-            #    gara_edge = G.out_edges(gara[0], data=True)
-            #    if len(gara_edge) > 0:
-            #        n2 = gara_edge[0][2]["ep"]
-
-            #if n2:
-            #    print n1+"->"+n2+" "+n_name
+                        e_id = n1s["ep"]+":"+n2s["ep"]
+                        E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
+                        f_id = n1_name+":"+n2_name
+                        F.add_edge(n1_name, n2_name, id=f_id)
 
 
+                self.dump_ep_graph_to_file("eps.json")
+                self.dump_func_graph_to_file("funcs.json")
+                self.dumpGraphToFile("states.json")
 
 
         return G
