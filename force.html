@@ -174,17 +174,17 @@ var graph;
 	    remove = false;
             for (var k in nodes){
 		n = nodes[k];
-		console.log("NODE: "+n["id"]);
+		//console.log("NODE: "+n["id"]);
 	    	found = false;
             	for (var i = 0; i  < links.length;i++) {
                 	if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
                     		found = true;
-				console.log("FOUND: "+n["id"])
+				//console.log("FOUND: "+n["id"])
 		    		break;
                 	}
             	}
 	    	if (found == false){
-			console.log("REMOVING: "+n["id"]);
+			//console.log("REMOVING: "+n["id"]);
             		nodes.splice(findNodeIndex(n["id"]), 1);
              		update();
 			remove = true;
@@ -410,7 +410,7 @@ graph3 = null;
 
 function render(graph, data, pdata, div_name, acolor){
 	if (graph == null){
-		console.log("NULL");
+		//console.log("NULL");
       		graph = new myGraph(div_name, acolor);
 	}
 
