@@ -162,8 +162,9 @@ class ProcessGraph(object):
 
     def stopSeed(self, seed):
         self.rlock.acquire()
-        if seed in self.registry.keys():
-            entry = self.registry[seed]
+        seedf = self.context.get_group()+":"+seed
+        if seedf in self.registry.keys():
+            entry = self.registry[seedf]
             entry["enabled"] = "False"
             self.__reg_update = True
             self.__display_graph = True

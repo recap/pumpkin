@@ -400,6 +400,33 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 s.wfile.write("ERROR")
 
+        if "haltall" in s.path:
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+
+            #parts = s.path.split("?")
+            #func_name = parts[1]
+            #rep = context.getProcGraph().stopSeed(func_name)
+            rep = "{"
+            for fname in PmkSeed.iplugins.keys():
+                context.getProcGraph().stopSeed(fname)
+                klass = PmkSeed.iplugins[fname]
+                klass.disable()
+                rep += fname+","
+            rep = rep[:-1]
+            rep += "}"
+            s.wfile.write(rep)
+
+            #if ":" in func_name:
+            #    func_name = func_name.split(":")[1]
+
+            #if func_name in PmkSeed.iplugins.keys():
+            #    klass = PmkSeed.iplugins[func_name]
+            #    klass.disable()
+
+
+
         if "forecast" in s.path:
             parts = s.path.split("?")
             func_name = parts[1]
