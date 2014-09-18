@@ -473,7 +473,6 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 		
 		keepNodesOnTop();
 
-		pdata = data;
 		
 	}
 	if(dangling == false){
@@ -483,7 +482,22 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 		nk = data.nodes[k];
 		graph.addNode(nk["id"]);
 	     }	
+	     for(var b in pdata.nodes){
+		nb = pdata.nodes[b];
+		found = false;
+		for(var j in data.nodes){
+			nj = data.nodes[j];
+			if(nj["id"] == nb["id"]){
+				found = true;
+				break;
+			}
+		}
+		if(found == false){
+			graph.removeNode(nb["id"]);
+		}
+	     }
 	}
+	pdata = data;
 	return[graph, pdata];
      }
 
