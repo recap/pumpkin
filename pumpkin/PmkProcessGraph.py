@@ -232,12 +232,14 @@ class ProcessGraph(object):
 
                         istype = eo["itype"]+":"+isp
                         if istype == "NONE:NONE":
-                               istype = "INJECTION"
-                        istype = eo["group"] +":"+ istype
+                               istype = eo["name"]+":INJECTION"
+                        else:
+                            istype = eo["group"] +":"+ istype
                         ostype = eo["otype"]+":"+osp
                         if ostype == "NONE:NONE":
-                            ostype = "EXTRACTION"
-                        ostype = eo["group"] +":"+ ostype
+                            ostype = eo["name"]+":EXTRACTION"
+                        else:
+                            ostype = eo["group"] +":"+ ostype
                         lep = self.get_ep_with_priority(eo["endpoints"], 0)
                         s_id= istype+":"+ostype
                         if lep:
@@ -260,25 +262,35 @@ class ProcessGraph(object):
                 n2_routes = []
                 n2_name = None
                 n1_name = None
-                if n1 in self.tagroute.keys() and "TRACE" not in n1:
+                #if n1 in self.tagroute.keys() and "TRACE" not in n1:
+                if n1 in self.tagroute.keys():
                     n1_routes = self.tagroute[n1][0]["endpoints"]
                     n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
-                if n2 in self.tagroute.keys() and "TRACE" not in n2:
+                #if n2 in self.tagroute.keys() and "TRACE" not in n2:
+                if n2 in self.tagroute.keys():
                     n2_routes = self.tagroute[n2][0]["endpoints"]
                     n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
 
-
-
-                for n1s in n1_routes:
-                    for n2s in n2_routes:
-
+                if "TRACE" in n1:
+                    for n1s in n1_routes:
                         E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
+
+                if "TRACE" in n2:
+                    for n2s in n2_routes:
                         E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
 
-                        e_id = n1s["ep"]+":"+n2s["ep"]
-                        E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
-                        f_id = n1_name+":"+n2_name
-                        F.add_edge(n1_name, n2_name, id=f_id)
+
+                if "TRACE" not in n1 and "TRACE" not in n2:
+                    for n1s in n1_routes:
+                        for n2s in n2_routes:
+
+                            E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
+                            E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
+
+                            e_id = n1s["ep"]+":"+n2s["ep"]
+                            E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
+                            f_id = n1_name+":"+n2_name
+                            F.add_edge(n1_name, n2_name, id=f_id)
 
 
                 self.dump_ep_graph_to_file("eps.json")
