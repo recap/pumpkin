@@ -408,7 +408,7 @@ graph1 = null;
 graph2 = null;
 graph3 = null;
 
-function render(graph, data, pdata, div_name, acolor){
+function render(graph, data, pdata, div_name, acolor, dangling){
 	if (graph == null){
 		//console.log("NULL");
       		graph = new myGraph(div_name, acolor);
@@ -476,7 +476,14 @@ function render(graph, data, pdata, div_name, acolor){
 		pdata = data;
 		
 	}
-	graph.removeAnyNodeWithNoLinks();
+	if(dangling == false){
+		graph.removeAnyNodeWithNoLinks();
+	}else{
+	     for(var k in data.nodes){
+		nk = data.nodes[k];
+		graph.addNode(nk["id"]);
+	     }	
+	}
 	return[graph, pdata];
      }
 
@@ -489,7 +496,7 @@ var worker = new Worker(window.URL.createObjectURL(blob));
       //console.log("DATA: "+e.data);
       if (e.data != null){
       	data = JSON.parse(e.data);
-	ret = render(graph1,data,pdata1,"tabs-1","blue");
+	ret = render(graph1,data,pdata1,"tabs-1","blue",false);
 	graph1 = ret[0];
 	pdata1 = ret[1];
     	}
@@ -506,7 +513,7 @@ var worker_funcs = new Worker(window.URL.createObjectURL(blob));
       //console.log("DATA: "+e.data);
       if (e.data != null){
       	data_funcs = JSON.parse(e.data);
-	ret = render(graph2,data_funcs,pdata2,"tabs-2", "blue");
+	ret = render(graph2,data_funcs,pdata2,"tabs-2", "blue",false);
 	graph2 = ret[0];
 	pdata2 = ret[1];
     	}
@@ -521,7 +528,7 @@ var worker_eps = new Worker(window.URL.createObjectURL(blob));
       //console.log("DATA: "+e.data);
       if (e.data != null){
       	data_eps = JSON.parse(e.data);
-	ret = render(graph3,data_eps,pdata3,"tabs-3","blue");
+	ret = render(graph3,data_eps,pdata3,"tabs-3","blue",true);
 	graph3 = ret[0];
 	pdata3 = ret[1];
     	}
