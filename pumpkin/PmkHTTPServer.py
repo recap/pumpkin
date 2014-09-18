@@ -410,10 +410,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             #rep = context.getProcGraph().stopSeed(func_name)
             rep = "{"
             for fname in PmkSeed.iplugins.keys():
-                context.getProcGraph().stopSeed(fname)
-                klass = PmkSeed.iplugins[fname]
-                klass.disable()
-                rep += fname+","
+                if "tracer" not in fname:
+                    context.getProcGraph().stopSeed(fname)
+                    klass = PmkSeed.iplugins[fname]
+                    klass.disable()
+                    rep += fname+","
             rep = rep[:-1]
             rep += "}"
             s.wfile.write(rep)
