@@ -195,9 +195,9 @@ class ExternalDispatch(SThread):
                                     else:
                                         pep_ar = self.ep_sched.pick_route(r)
 
-                        else:
-                            print "HERE4"
-                            pep_ar = self.ep_sched.pick_route(r)
+                    else:
+                        print "HERE4"
+                        pep_ar = self.ep_sched.pick_route(r)
 
                         if len(pep_ar) == 0:
                             logging.debug("No Route...")
