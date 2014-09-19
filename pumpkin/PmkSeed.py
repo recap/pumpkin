@@ -165,7 +165,7 @@ class Seed(object):
         return str(uuid.uuid4())[:8]
 
     def rawrun(self):
-        #self.run(self.__rawpacket())
+        self.run(self.__rawpacket())
         pass
 
     def get_cont_id(self,pkt):
