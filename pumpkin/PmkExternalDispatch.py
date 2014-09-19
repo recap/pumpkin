@@ -157,12 +157,13 @@ class ExternalDispatch(SThread):
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling up
 
-                    if self.context.is_speedy():
-                        break
+                    #if self.context.is_speedy():
+                    #    break
                     logging.debug("No Route: "+str(otag))
                     time.sleep(5)
 
             if routes:
+
                 for r in routes:
 
                     if not self.context.is_speedy():
@@ -234,6 +235,7 @@ class ExternalDispatch(SThread):
                                 else:
                                     disp = None
                                     if entry["mode"] == "zmq.PULL":
+                                        print "Dispatch: PULL"
                                         disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
                                         #disp = ZMQPacketDispatch(self.context)
                                         #disp = self.gdisp
