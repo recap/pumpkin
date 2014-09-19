@@ -167,13 +167,15 @@ class ExternalDispatch(SThread):
 
                 for r in routes:
                     print "HERE3"
+
+
+                    if len(routes) > 1:
+                        dcpkt = copy.copy(pkt)
+                    else:
+                        dcpkt = pkt
+
                     if not self.context.is_speedy():
                         print "HERE3.1"
-                        if len(routes) > 1:
-                            dcpkt = copy.copy(pkt)
-                        else:
-                            dcpkt = pkt
-
                         header = dcpkt[0]
                         rtag = r["otype"]+":"+r["ostate"]
                         if (ntag and ntag == rtag) or not ntag:
