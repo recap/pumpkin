@@ -165,31 +165,35 @@ class ExternalDispatch(SThread):
             if routes:
                 for r in routes:
 
-                    if len(routes) > 1:
-                        dcpkt = copy.copy(pkt)
-                    else:
-                        dcpkt = pkt
+                    if not self.context.is_speedy():
 
-                    header = dcpkt[0]
-                    rtag = r["otype"]+":"+r["ostate"]
-                    if (ntag and ntag == rtag) or not ntag:
-
-                        pep_ar = []
-
-                        if state == "REDISPATCH":
-                            last = dcpkt[len(pkt) -1]
-                            #ex_eps = last["ep"].split("|,|")
-                            pep_ar, lstate = self.ep_sched.pick_route_exc(r, last["traces"])
-                            dcpkt[0]["state"] = lstate
+                        if len(routes) > 1:
+                            dcpkt = copy.copy(pkt)
                         else:
-                            aux = 0
-                            if "aux" in header.keys():
-                                aux = header["aux"]
-                                if aux & BROADCAST_BIT:
-                                    pep_ar = r["endpoints"]
-                                    header["aux"] = aux & (~BROADCAST_BIT)
-                                else:
-                                    pep_ar = self.ep_sched.pick_route(r)
+                            dcpkt = pkt
+
+                        header = dcpkt[0]
+                        rtag = r["otype"]+":"+r["ostate"]
+                        if (ntag and ntag == rtag) or not ntag:
+
+                            pep_ar = []
+
+                            if state == "REDISPATCH":
+                                last = dcpkt[len(pkt) -1]
+                                #ex_eps = last["ep"].split("|,|")
+                                pep_ar, lstate = self.ep_sched.pick_route_exc(r, last["traces"])
+                                dcpkt[0]["state"] = lstate
+                            else:
+                                aux = 0
+                                if "aux" in header.keys():
+                                    aux = header["aux"]
+                                    if aux & BROADCAST_BIT:
+                                        pep_ar = r["endpoints"]
+                                        header["aux"] = aux & (~BROADCAST_BIT)
+                                    else:
+                                        pep_ar = self.ep_sched.pick_route(r)
+                        else:
+                            pep_ar = self.ep_sched.pick_route(r)
 
                         if len(pep_ar) == 0:
                             logging.debug("No Route...")
