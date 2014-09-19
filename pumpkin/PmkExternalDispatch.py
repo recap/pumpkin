@@ -192,6 +192,7 @@ class ExternalDispatch(SThread):
                                         header["aux"] = aux & (~BROADCAST_BIT)
                                     else:
                                         pep_ar = self.ep_sched.pick_route(r)
+
                         else:
                             pep_ar = self.ep_sched.pick_route(r)
 
@@ -441,6 +442,9 @@ class ZMQPacketDispatch(Dispatch):
 
         #except zmq.ZMQError as e:
         #    raise
+
+        print "SENDING MSG: "+json.dumps(pkt)
+
         message = zlib.compress(json.dumps(pkt))
         self.soc.send(message)
 
