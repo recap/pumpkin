@@ -153,6 +153,7 @@ class ExternalDispatch(SThread):
                 routes = self.graph.getRoutes(otag)
                 if routes:
                      logging.debug("Found Routes: "+json.dumps(routes))
+                     print "HERE1"
                      break
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling up
@@ -161,11 +162,11 @@ class ExternalDispatch(SThread):
                     #    break
                     logging.debug("No Route: "+str(otag))
                     time.sleep(5)
-
+            print "HERE2"
             if routes:
 
                 for r in routes:
-
+                    print "HERE3"
                     if not self.context.is_speedy():
 
                         if len(routes) > 1:
@@ -195,6 +196,7 @@ class ExternalDispatch(SThread):
                                         pep_ar = self.ep_sched.pick_route(r)
 
                         else:
+                            print "HERE4"
                             pep_ar = self.ep_sched.pick_route(r)
 
                         if len(pep_ar) == 0:
@@ -203,6 +205,7 @@ class ExternalDispatch(SThread):
                             continue
 
                         for pep in pep_ar:
+                            print "HERE5"
                             #if len(pep_ar) > 1:
                             dcpkt2 = copy.deepcopy(dcpkt)
 
@@ -225,8 +228,9 @@ class ExternalDispatch(SThread):
                                     next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
                                     dcpkt2.append(next_hop)
 
-
+                                print "HERE6"
                                 if ep in self.dispatchers.keys():
+                                    print "HERE7"
                                     disp = self.dispatchers[ep]
                                     disp.dispatch(dcpkt2)
                                     #disp.dispatch(json.dumps(dcpkt))
