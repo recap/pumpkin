@@ -168,7 +168,7 @@ class ExternalDispatch(SThread):
                 for r in routes:
                     print "HERE3"
                     if not self.context.is_speedy():
-
+                        print "HERE3.1"
                         if len(routes) > 1:
                             dcpkt = copy.copy(pkt)
                         else:
