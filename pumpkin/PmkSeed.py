@@ -89,6 +89,7 @@ class Seed(object):
         self._state_counter = {}
         self._complexity = {}
         self._complexity_record = True
+        self._forecast_lock = threading.Lock()
         self._forecast = {}
         self._forecast["npkts"] = 0
         self._forecast["msize"] = 0
@@ -494,8 +495,10 @@ class Seed(object):
         return w
 
     def look_ahead(self, pkt):
+        self._forecast_lock.acquire()
         w = self.regression()
         if w[0] == 0:
+            self._forecast_lock.release()
             return
         forecast = self._forecast
         qpkts = forecast["npkts"]
@@ -519,19 +522,23 @@ class Seed(object):
         pkt[0]["aux"] = pkt[0]["aux"] | TIMING_BIT
         pkt[0]["pexec"] = pred_time
         pkt[0]["dsize"] = data_len
-
+        self._forecast_lock.release()
         pass
 
     def get_forecast(self):
+        self._forecast_lock.acquire()
         forecast = self._forecast
         qpkts = forecast["npkts"]
         msize = forecast["msize"]
         pexec = forecast["pexec"]
+        self._forecast_lock.release()
         return (qpkts, msize, pexec)
 
     def adj_forecast(self, pkt):
+
         if "aux" in pkt[0].keys():
             if pkt[0]["aux"] & TIMING_BIT:
+                self._forecast_lock.acquire()
                 ptime = pkt[0]["pexec"]
                 dsize = pkt[0]["dsize"]
 
@@ -539,6 +546,7 @@ class Seed(object):
                 forecast["pexec"] -= ptime
                 #forecast["msize"] = (forecast["msize"] - dsize) / 2
                 forecast["npkts"] -= 1
+                self._forecast_lock.release()
 
 
     def _stage_run_express(self,pkt, *args):
@@ -653,8 +661,8 @@ class Seed(object):
 
     def pre_load(self, jconf):
         self.conf = jconf
-        if not "enabled" in self.conf.keys():
-            self.conf["enabled"] = True
+        #if not "enabled" in self.conf.keys():
+        self.conf["enabled"] = True
 
         if len(self.conf["parameters"]) > 0:
             for p in self.conf["parameters"]:

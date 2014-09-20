@@ -157,8 +157,8 @@ class ExternalDispatch(SThread):
                      break
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling
-                    #if self.context.is_speedy():
-                    #    break
+                    if self.context.is_speedy():
+                        break
 
                     logging.debug("No Route: "+str(otag))
                     time.sleep(5)
@@ -191,80 +191,80 @@ class ExternalDispatch(SThread):
                                 aux = 0
                                 if "aux" in header.keys():
                                     aux = header["aux"]
-                                    if aux & BROADCAST_BIT:
-                                        pep_ar = r["endpoints"]
-                                        header["aux"] = aux & (~BROADCAST_BIT)
-                                    else:
-                                        pep_ar = self.ep_sched.pick_route(r)
+
+                                if aux & BROADCAST_BIT:
+                                    pep_ar = r["endpoints"]
+                                    header["aux"] = aux & (~BROADCAST_BIT)
+                                else:
+                                    pep_ar = self.ep_sched.pick_route(r)
 
                     else:
-                        #print "HERE4"
+                        # speedy gonzales
                         pep_ar = self.ep_sched.pick_route(r)
 
-                        if len(pep_ar) == 0:
-                            logging.debug("No Route...")
-                            found = False
-                            continue
+                    if len(pep_ar) == 0:
+                        logging.debug("No Route...")
+                        found = False
+                        continue
 
-                        for pep in pep_ar:
-                            #print "HERE5"
-                            #if len(pep_ar) > 1:
+                    for pep in pep_ar:
+                        #print "HERE5"
+                        if len(pep_ar) > 1:
                             dcpkt2 = copy.deepcopy(dcpkt)
+                        else:
+                            dcpkt2 = dcpkt
 
+                        oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
+                        dcpkt2[0]["last_contact"] = oep[0]
 
-                            #print json.dumps(dcpkt2)
+                        if pep:
+                            found = True
+                            entry = pep
+                            ep = pep["ep"]
 
-                            oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
-                            dcpkt2[0]["last_contact"] = oep[0]
+                            if state == "REDISPATCH":
+                                last = dcpkt2[len(dcpkt2) -1]
+                                last["ep"] = ep
+                                pass
+                            else:
+                                next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
+                                dcpkt2.append(next_hop)
 
-                            if pep:
-                                found = True
-                                entry = pep
-                                ep = pep["ep"]
+                            #print "HERE6"
+                            if ep in self.dispatchers.keys():
+                                #print "HERE7"
+                                disp = self.dispatchers[ep]
+                                disp.dispatch(dcpkt2)
+                                #disp.dispatch(json.dumps(dcpkt))
+                                #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
-                                if state == "REDISPATCH":
-                                    last = dcpkt2[len(dcpkt2) -1]
-                                    last["ep"] = ep
+                            else:
+                                disp = None
+                                if entry["mode"] == "zmq.PULL":
+                                    disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                    #disp = ZMQPacketDispatch(self.context)
+                                    #disp = self.gdisp
+
+                                if entry["mode"] == "amqp.PUSH":
+                                    disp = RabbitMQDispatch(self.context)
                                     pass
-                                else:
-                                    next_hop = {"func" : r["name"], "stag" : otag, "exstate" : 0000, "ep" : pep["ep"] }
-                                    dcpkt2.append(next_hop)
 
-                                #print "HERE6"
-                                if ep in self.dispatchers.keys():
-                                    #print "HERE7"
-                                    disp = self.dispatchers[ep]
+                                if entry["mode"] == "raw.Q":
+                                    disp = InternalRxQueue(self.context)
+                                    pass
+
+                                if not disp == None:
+                                    self.dispatchers[ep] = disp
+                                    disp.connect(ep)
                                     disp.dispatch(dcpkt2)
                                     #disp.dispatch(json.dumps(dcpkt))
                                     #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                                 else:
-                                    disp = None
-                                    if entry["mode"] == "zmq.PULL":
-                                        disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                                        #disp = ZMQPacketDispatch(self.context)
-                                        #disp = self.gdisp
+                                    logging.error("No dispatchers found for: "+ep)
 
-                                    if entry["mode"] == "amqp.PUSH":
-                                        disp = RabbitMQDispatch(self.context)
-                                        pass
-
-                                    if entry["mode"] == "raw.Q":
-                                        disp = InternalRxQueue(self.context)
-                                        pass
-
-                                    if not disp == None:
-                                        self.dispatchers[ep] = disp
-                                        disp.connect(ep)
-                                        disp.dispatch(dcpkt2)
-                                        #disp.dispatch(json.dumps(dcpkt))
-                                        #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                                    else:
-                                        logging.error("No dispatchers found for: "+ep)
-
-                                if state == "REDISPATCH" and found == True:
-                                    break
+                            if state == "REDISPATCH" and found == True:
+                                break
         pass
 
     def __loop_body(self):

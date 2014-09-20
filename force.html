@@ -412,7 +412,7 @@ var graph;
 	    force.charge(function(d,i){
 		//console.log(JSON.stringify(d))
 		if (nodeHasLinks(d) == true){
-			return -800;
+			return -1500;
 		}else{
 			return -50;
 		}
@@ -423,7 +423,7 @@ var graph;
                     //.charge(-800)
                     //.friction(0)
 		    .theta(1)
-                    .linkDistance([130])
+                    .linkDistance([150])
                     //.linkDistance( function(d) { return d.value * 10 } )
                     .size([w, h])
                     .start();

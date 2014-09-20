@@ -274,11 +274,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             rep = rep + '{"total_in":'+str(total_in)+',"total_out":'+str(total_out)+'}'
             rep += ","
 
-            #rx_size = context.get_rx_size()
+            rx_size = context.get_rx_size()
             tx_size = context.get_tx_size()
 
             rep += '\n'
-            rep += '{"rx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
+            rep += '{"rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
 
             rep += "]"
 
@@ -529,16 +529,21 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     s.wfile.write(e.message)
                     pass
 
+        if "goall" in s.path:
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
 
+            rep = "{"
+            for fname in PmkSeed.iplugins.keys():
+                context.getProcGraph().startSeed(fname)
+                klass = PmkSeed.iplugins[fname]
+                klass.enable()
+                rep += fname+","
 
-
-
-
-
-            #if rep:
-            #    s.wfile.write("OK")
-            #else:
-            #    s.wfile.write("ERROR")
+            rep = rep[:-1]
+            rep += "}"
+            s.wfile.write(rep)
 
         if "start" in s.path:
             s.send_response(200)
