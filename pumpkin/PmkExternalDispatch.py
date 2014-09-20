@@ -156,10 +156,10 @@ class ExternalDispatch(SThread):
                      #print "HERE1"
                      break
                 else:
-                    # dump non routable packets as this will lead to deadlock from tx queue filling up
+                    # dump non routable packets as this will lead to deadlock from tx queue filling
+                    #if self.context.is_speedy():
+                    #    break
 
-                    if self.context.is_speedy():
-                        break
                     logging.debug("No Route: "+str(otag))
                     time.sleep(5)
             #print "HERE2"
