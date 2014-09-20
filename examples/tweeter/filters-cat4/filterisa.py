@@ -22,7 +22,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "ISA|RUBBISH"
+##                      "state" : "ISA|NOTISA"
 ##                  }
 ##
 ##          ] }
@@ -51,6 +51,7 @@ class filterisa(PmkSeed.Seed):
         if m:
             tw = m.group(2)
             if not self.is_a(tw):
+                self.dispatch(pkt, tweet, "NOTISA")
                 pass
             else:
                 self.dispatch(pkt, self.is_a(tw), "ISA")
