@@ -558,6 +558,8 @@ class Seed(object):
             dlen = len(args[0])
             msg = args[0]
             nargs.append(msg)
+        else:
+            nargs.append("Empty")
             #for msg in args[0].split('|,|'):
             #    nargs.append(msg)
 
