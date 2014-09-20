@@ -174,7 +174,7 @@ var graph;
 	    remove = false;
             for (var k in nodes){
 		n = nodes[k];
-		//console.log("NODE: "+n["id"]);
+		//console.log("NODE: "+JSON.stringify(n));
 	    	found = false;
             	for (var i = 0; i  < links.length;i++) {
                 	if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
@@ -191,6 +191,18 @@ var graph;
 	    	}
 	     }
 		}
+        };
+
+        var nodeHasLinks = function (node) {
+		n = node;
+	    	found = false;
+            	for (var i = 0; i  < links.length;i++) {
+                	if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    		found = true;
+				return found;
+                	}
+            	}
+		return found;
         };
 
 
@@ -245,7 +257,7 @@ var graph;
     		y = w.innerHeight|| e.clientHeight|| g.clientHeight;
         var w = x - 50;
         var h = y - 150;
-	var r = 19;
+	var r = 15;
 
         var color = d3.scale.category20c();
 
@@ -297,7 +309,7 @@ var graph;
                     .call(force.drag);
 
             nodeEnter.append("svg:circle")
-                    .attr("r", 19)
+                    .attr("r", r)
 		    .attr("opacity", 1)
                     .attr("id", function (d) {
                         return "Node;" + d.id;
@@ -317,26 +329,59 @@ var graph;
 	    vis.append('defs').append('marker')
         		.attr({'id':'arrowhead',
                		'viewBox':'-0 -5 10 10',
-               		'refX':20,
+               		'refX':r+7,
                		'refY':0,
                		'orient':'auto',
-               		'markerWidth':10,
-               		'markerHeight':10,
+               		'markerWidth':7,
+               		'markerHeight':7,
                		'xoverflow':'visible'})
         	.append('svg:path')
             		.attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-            		.attr('fill', '#ccc')
-            		.attr('stroke','#ccc');
+            		.attr('fill', 'black')
+            		.attr('stroke','black');
 
 
             node.exit().remove();
 
 
-            force.on("tick", function () {
+            force.on("tick", function (e) {
 
                 //node.attr("transform", function (d) {
                 //    return "translate(" + d.x + "," + d.y + ")";
                 //});
+		var k = e.alpha * .1;
+		//console.log(k)
+		
+  		nodes.forEach(function(node) {
+			var n = node;
+	    		var found = false;
+			var mw = w/2;
+			var mh = h/2;
+			var corner = {'x': 10, 'y': 10};
+    			var center = {'x':mw,'y':mh}; 
+            		/*for (var i = 0; i  < links.length;i++) {
+                		if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    		found = true;
+				//console.log("FOUND: "+n["id"])
+		    		break;
+                		}
+            		}
+	    		if (found == false){
+    				node.x += (corner.x - node.x) * k;
+    				node.y += (corner.y - node.y) * k;
+	    		}else{
+    				node.x += (center.x - node.x) * k;
+    				node.y += (center.y - node.y) * k;
+			}*/
+			
+			if (nodeHasLinks(node) == false){
+    				node.x += (corner.x - node.x) * k;
+    				node.y += (corner.y - node.y) * k;
+			}else{
+    				node.x += (center.x - node.x) * k;
+    				node.y += (center.y - node.y) * k;
+			}
+  		});
 
 		d3.selectAll("circle").attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
                     "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
@@ -364,14 +409,21 @@ var graph;
 
 
 
-
+	    force.charge(function(d,i){
+		//console.log(JSON.stringify(d))
+		if (nodeHasLinks(d) == true){
+			return -800;
+		}else{
+			return -50;
+		}
+	    });
             // Restart the force layout.
             force
                     .gravity(0.05)
-                    .charge(-1500)
+                    //.charge(-800)
                     //.friction(0)
 		    .theta(1)
-                    .linkDistance([200])
+                    .linkDistance([130])
                     //.linkDistance( function(d) { return d.value * 10 } )
                     .size([w, h])
                     .start();
@@ -498,6 +550,7 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 	     }
 	}
 	pdata = data;
+	keepNodesOnTop();
 	return[graph, pdata];
      }
 
