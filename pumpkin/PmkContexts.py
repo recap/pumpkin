@@ -403,8 +403,12 @@ class MainContext(object):
 
 
         def log_to_file(self):
-            #fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
-            #logging.addHandler(fh)
+            logger = logging.getLogger()
+            fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
+            fh.setLevel(logging.DEBUG)
+            formatter = logging.Formatter("%(levelname)s - %(message)s")
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
             pass
 
 
