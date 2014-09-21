@@ -22,7 +22,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "HASA|RUBBISH"
+##                      "state" : "HASA|NO_HASA"
 ##                  }
 ##
 ##          ] }

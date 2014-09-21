@@ -1,6 +1,6 @@
 ###START-CONF
 ##{
-##"object_name": "collector",
+##"object_name": "sentiment_collector",
 ##"object_poi": "qpwo-2345",
 ##"auto-load": true,
 ##"remoting" : false,
@@ -23,7 +23,7 @@
 import re, datetime
 from pumpkin import PmkSeed
 
-class collector(PmkSeed.Seed):
+class sentiment_collector(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)

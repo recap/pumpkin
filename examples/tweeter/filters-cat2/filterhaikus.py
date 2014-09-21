@@ -22,7 +22,7 @@ __author__ = 'reggie'
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "HAIKU|RUBBISH"
+##                      "state" : "HAIKU|NO_HAIKU"
 ##                  }
 ##
 ##          ] }

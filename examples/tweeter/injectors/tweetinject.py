@@ -65,7 +65,7 @@ class tweetinject(PmkSeed.Seed):
                                 line =""
                             else:
                                 tweet = tweet + line
-                                self.dispatch(pkt, tweet, "RAW")
+                                self.fork_dispatch(pkt, tweet, "RAW")
                                 del line
                                 del tweet
 
