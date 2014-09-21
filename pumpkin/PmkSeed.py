@@ -512,7 +512,9 @@ class Seed(object):
         pred_time = data_len*w[0] + w[1]
 
         pexec += pred_time
-        msize = (float(msize)*qpkts + float(data_len)) / (qpkts+1)
+        if(qpkts == 0):
+            qpkts += 1
+        msize = (float(msize)*qpkts + float(data_len)) / (qpkts)
         qpkts += 1
 
         forecast["npkts"] = qpkts

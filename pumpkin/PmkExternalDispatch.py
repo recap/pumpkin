@@ -158,6 +158,7 @@ class ExternalDispatch(SThread):
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling
                     if self.context.is_speedy():
+                        found = True
                         break
 
                     logging.debug("No Route: "+str(otag))
