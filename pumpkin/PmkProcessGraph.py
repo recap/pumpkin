@@ -261,16 +261,21 @@ class ProcessGraph(object):
 
                 n1_routes = []
                 n2_routes = []
+                n1_trans = []
+                n2_trans = []
                 n2_name = None
                 n1_name = None
                 #if n1 in self.tagroute.keys() and "TRACE" not in n1:
                 if n1 in self.tagroute.keys():
                     n1_routes = self.tagroute[n1][0]["endpoints"]
                     n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
+                    n1_trans = self.tagroute[n1]
+
                 #if n2 in self.tagroute.keys() and "TRACE" not in n2:
                 if n2 in self.tagroute.keys():
-                    n2_routes = self.tagroute[n2][0]["endpoints"]
-                    n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
+                    #n2_routes = self.tagroute[n2][0]["endpoints"]
+                    #n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
+                    n2_trans = self.tagroute[n2]
 
                 if "TRACE" in n1:
                     for n1s in n1_routes:
@@ -282,16 +287,23 @@ class ProcessGraph(object):
 
 
                 if "TRACE" not in n1 and "TRACE" not in n2:
-                    for n1s in n1_routes:
-                        for n2s in n2_routes:
+                    for tr1 in n1_trans:
+                        n1_routes = tr1["endpoints"]
+                        n1_name = tr1["name"].split(":")[1]+"()"
+                        for tr2 in n2_trans:
+                            n2_routes = tr2["endpoints"]
+                            n2_name = tr2["name"].split(":")[1]+"()"
 
-                            E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
-                            E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
+                            for n1s in n1_routes:
+                                for n2s in n2_routes:
 
-                            e_id = n1s["ep"]+":"+n2s["ep"]
-                            E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
-                            f_id = n1_name+":"+n2_name
-                            F.add_edge(n1_name, n2_name, id=f_id)
+                                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
+                                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
+
+                                    e_id = n1s["ep"]+":"+n2s["ep"]
+                                    E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
+                                    f_id = n1_name+":"+n2_name
+                                    F.add_edge(n1_name, n2_name, id=f_id)
 
 
                 self.dump_ep_graph_to_file("eps.json")
