@@ -451,7 +451,7 @@ class ZMQPacketDispatch(Dispatch):
         #except zmq.ZMQError as e:
         #    raise
 
-        print "SENDING MSG: "+json.dumps(pkt)
+        logging.debug("Sending message: "+json.dumps(pkt))
 
         message = zlib.compress(json.dumps(pkt))
         self.soc.send(message)
