@@ -27,7 +27,7 @@
 ##          ] }
 ##END-CONF
 
-import re, os
+import re, os, time
 import urllib2
 from random import randint
 from pumpkin import PmkSeed
@@ -57,25 +57,35 @@ class sentiment_analyses(PmkSeed.Seed):
 
     def get_net_file(self, url, file_name):
         #file_name = url.split('/')[-1]
-        u = urllib2.urlopen(url)
-        f = open(file_name, 'wb')
-        meta = u.info()
-        file_size = int(meta.getheaders("Content-Length")[0])
-        self.logger.info ("Downloading: %s Bytes: %s" % (file_name, file_size))
+        downloaded = False
+        while not downloaded:
+            try:
+                u = urllib2.urlopen(url)
+                f = open(file_name, 'wb')
+                meta = u.info()
+                file_size = int(meta.getheaders("Content-Length")[0])
+                self.logger.info ("Downloading: %s Bytes: %s" % (file_name, file_size))
 
-        file_size_dl = 0
-        block_sz = 8192
-        while True:
-            buffer = u.read(block_sz)
-            if not buffer:
-                break
+                file_size_dl = 0
+                block_sz = 8192
+                while True:
+                    buffer = u.read(block_sz)
+                    if not buffer:
+                        break
 
-            file_size_dl += len(buffer)
-            f.write(buffer)
-            #status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
-            #status = status + chr(8)*(len(status)+1)
-            #print status,
-        f.close()
+                    file_size_dl += len(buffer)
+                    f.write(buffer)
+                    #status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+                    #status = status + chr(8)*(len(status)+1)
+                    #print status,
+                f.close()
+                downloaded = True
+            except Exception as e:
+                self.logger.error("Error downloading, trying again....")
+                time.sleep(5)
+                pass
+
+
 
     def some_check(self, tweet):
         x = randint(0,1)
