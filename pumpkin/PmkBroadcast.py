@@ -98,15 +98,16 @@ def get_llan_ip():
 
 def get_lan_ip():
 
-    #pip = get_public_ip()
-    #if is_amazon(pip):
-    #    print "AMAZON IP: " + str(pip)
-    #    return pip
-
     #FIXME get_cloud_ip() is a hack for SC should be removed
     ip = get_cloud_ip()
 
     if not ip:
+
+        pip = get_public_ip()
+        if is_amazon(pip):
+            #if it is an amazon Public IP return it else get interface IP
+            return pip
+
         interfaces = [
             "eth0",
             "eth1",
