@@ -112,7 +112,7 @@ class PacketFileMonitor(SThread):
                     seed_fp = os.path.join(event.path, event.name)
                     self.load_seed(seed_fp)
                 except Exception as e:
-                    logging.error("Loading paket: "+seed_fp)
+                    logging.error("Loading Seed: "+seed_fp+" "+str(e.message))
                     pass
 
             def process_IN_CLOSE_WRITE(self, event):
