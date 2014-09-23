@@ -453,7 +453,12 @@ class ZMQPacketDispatch(Dispatch):
         logging.debug("Sending message: "+json.dumps(pkt))
 
         message = zlib.compress(json.dumps(pkt))
-        self.soc.send(message)
+        try:
+            self.soc.send(message)
+        except Exception as e:
+            logging.error("Failed to connect to: "+self.ep)
+            time.sleep(1)
+            return
 
     def close(self):
         self.soc.close()
