@@ -268,21 +268,25 @@ class ProcessGraph(object):
                 #if n1 in self.tagroute.keys() and "TRACE" not in n1:
                 if n1 in self.tagroute.keys():
                     n1_routes = self.tagroute[n1][0]["endpoints"]
-                    n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
+                    #n1_name = self.tagroute[n1][0]["name"].split(":")[1]+"()"
                     n1_trans = self.tagroute[n1]
 
                 #if n2 in self.tagroute.keys() and "TRACE" not in n2:
                 if n2 in self.tagroute.keys():
-                    #n2_routes = self.tagroute[n2][0]["endpoints"]
+                    n2_routes = self.tagroute[n2][0]["endpoints"]
                     #n2_name = self.tagroute[n2][0]["name"].split(":")[1]+"()"
                     n2_trans = self.tagroute[n2]
 
                 if "TRACE" in n1:
                     for n1s in n1_routes:
+                        if not "cpu" in n1s.keys():
+                            n1s["cpu"] = "0"
                         E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
 
                 if "TRACE" in n2:
                     for n2s in n2_routes:
+                        if not "cpu" in n2s.keys():
+                            n2s["cpu"] = "0"
                         E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
 
@@ -297,8 +301,18 @@ class ProcessGraph(object):
                             for n1s in n1_routes:
                                 for n2s in n2_routes:
 
-                                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
-                                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
+
+                                    if n1s["ep"] in E:
+                                        nt1 = E[n1s["ep"]]
+                                        nt1["cpu"] = n1s["cpu"]
+                                    else:
+                                        E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+
+                                    if n2s["ep"] in E:
+                                        nt2 = E[n2s["ep"]]
+                                        nt2["cpu"] = n2s["cpu"]
+                                    else:
+                                        E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
                                     e_id = n1s["ep"]+":"+n2s["ep"]
                                     E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
