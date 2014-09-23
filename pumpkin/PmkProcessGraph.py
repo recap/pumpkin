@@ -389,8 +389,7 @@ class ProcessGraph(object):
         cpu_load = get_cpu_util()
         for r in ne.keys():
             eps = ne[r]["endpoints"]
-            for ep_key in eps.keys():
-                ep = eps[ep_key]
+            for ep in eps:
                 ep["cpu"] = str(cpu_load)
 
 
