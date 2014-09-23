@@ -297,8 +297,6 @@ class ProcessGraph(object):
                             for n1s in n1_routes:
                                 for n2s in n2_routes:
 
-
-
                                     E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
                                     E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
