@@ -103,10 +103,10 @@ def get_lan_ip():
 
     if not ip:
 
-        #pip = get_public_ip()
-        #if is_amazon(pip):
+        pip = get_public_ip()
+        if is_amazon(pip):
             #if it is an amazon Public IP return it else get interface IP
-        #    return pip
+            return pip
 
         interfaces = [
             "eth0",
