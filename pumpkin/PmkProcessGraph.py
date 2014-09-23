@@ -297,8 +297,10 @@ class ProcessGraph(object):
                             for n1s in n1_routes:
                                 for n2s in n2_routes:
 
-                                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"])
-                                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"])
+
+
+                                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+                                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
                                     e_id = n1s["ep"]+":"+n2s["ep"]
                                     E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
@@ -383,6 +385,13 @@ class ProcessGraph(object):
 
         for rk in tmp_keys:
             del ne[rk]
+
+        cpu_load = get_cpu_util()
+        for r in ne.keys():
+            eps = ne[r]["endpoints"]
+            for ep_key in eps.keys():
+                ep = eps[ep_key]
+                ep["cpu"] = str(cpu_load)
 
 
         d = json.dumps(ne)

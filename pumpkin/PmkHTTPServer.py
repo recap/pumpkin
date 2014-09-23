@@ -14,6 +14,7 @@ import time
 import datetime
 import base64
 
+
 from PmkShared import *
 
 
@@ -70,6 +71,7 @@ class HttpServer(SThread):
         logging.info("Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER))
 
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
 
     def do_HEAD(s):
         s.send_response(200)
@@ -278,7 +280,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             tx_size = context.get_tx_size()
 
             rep += '\n'
-            rep += '{"rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
+            rep += '{"cpu" : "'+str(get_cpu_util())+'", "rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
 
             rep += "]"
 
