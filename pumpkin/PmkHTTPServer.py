@@ -280,8 +280,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             tx_size = context.get_tx_size()
 
             rep += '\n'
-            rep += '{"cpu" : "'+str(get_cpu_util())+'", "rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
-            #rep += '{"rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
+            #rep += '{"cpu" : "'+str(get_cpu_util())+'", "rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
+            rep += '{"rx_size"  : "'+str(rx_size)+'", "fx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
 
             rep += "]"
 
