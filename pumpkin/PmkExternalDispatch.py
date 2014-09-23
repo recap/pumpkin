@@ -441,15 +441,14 @@ class ZMQPacketDispatch(Dispatch):
 
     def dispatch(self, pkt):
 
-        #try:
-            #if not self.__check_ep(self.ep):
-            #    raise Exception("Endpoint closed")
-            #logging.debug("SENDING")
-            #self.soc.send(pkt, zmq.NOBLOCK)
+        try:
+            if not self.__check_ep(self.ep):
+                raise Exception("Endpoint closed")
 
+        except Exception as e:
+            logging.error("Failed to connect to: "+self.ep)
+            return
 
-        #except zmq.ZMQError as e:
-        #    raise
 
         logging.debug("Sending message: "+json.dumps(pkt))
 
