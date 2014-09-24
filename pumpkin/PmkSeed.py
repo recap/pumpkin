@@ -130,6 +130,19 @@ class Seed(object):
         threading.Timer(self._pkt_counter_interval, self.__routine_checks_t).start()
 
 
+    def _blankpacket(self):
+        pkt = []
+        ship_id = self.context.getExecContext()
+        cont_id =  str(uuid.uuid4())[:8]
+        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : 0, "state": "NEW", \
+                    "c_tag" : "NONE:NONE", "ttl" : 'D', "aux": 0, "t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
+                    "last_contact" : "None", "last_func" : "None", "last_timestamp" : 0})
+
+        g = {}
+
+        pkt.append(g)
+
+        return pkt
 
     def __rawpacket(self):
         pkt = []
