@@ -86,14 +86,14 @@ class tweetinject(PmkSeed.Seed):
             self.get_net_file(url,output_file)
 
 
-        self.connection, self.channel = self.__open_rabbitmq_channel()
+        #self.connection, self.channel = self.__open_rabbitmq_channel()
 
-    def __open_rabbitmq_channel(self):
-        host, port, username, password, vhost = self.context.get_rabbitmq_cred()
-        credentials = pika.PlainCredentials(username, password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
-        channel = connection.channel()
-        return (connection, channel)
+    # def __open_rabbitmq_channel(self):
+    #     host, port, username, password, vhost = self.context.get_rabbitmq_cred()
+    #     credentials = pika.PlainCredentials(username, password)
+    #     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+    #     channel = connection.channel()
+    #     return (connection, channel)
 
 
     def run(self, pkt):
@@ -118,8 +118,8 @@ class tweetinject(PmkSeed.Seed):
                                 del line
                                 del tweet
 
-    def publish(self, data, queue):
-        self.channel.basic_publish(exchange='',
-                              routing_key=queue,
-                              body=str(data))
+    # def publish(self, data, queue):
+    #     self.channel.basic_publish(exchange='',
+    #                           routing_key=queue,
+    #                           body=str(data))
 
