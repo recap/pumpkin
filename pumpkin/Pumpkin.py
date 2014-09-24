@@ -423,6 +423,13 @@ def main():
 
 
     ###################TEST###############################3
+    #try:
+    #    import eggyyy
+    #except ImportError:
+    #    pass
+
+    #import psutil
+    #x = psutil.cpu_percent()
 
     #x = get_cpu_util()
     #print str(x)

@@ -10,6 +10,13 @@ from socket import *
 
 from threading import *
 
+try:
+    import psutil
+    CPU = True
+except ImportError:
+    CPU = False
+    pass
+
 LOG_LEVEL = logging.NOTSET
 UDP_BROADCAST_PORT = 7700
 TFTP_FILE_SERVER_PORT = 7800
@@ -51,9 +58,12 @@ SUPERNODES = [ "127.0.0.1"]
 ##logging.setLevel(logging.INFO)
 
 def get_cpu_util():
-     x=0
-     #x = sp.Popen("ps -eo pcpu | sort -r -k1 | head -n 2 | tail -n 1 | tr -d '[:space:]'", stdout= sp.PIPE, shell=True).stdout.read().split("/")[0]
-     return float(x)
+    x = 0
+    if CPU:
+        x = psutil.cpu_percent()
+    #else:
+    #    x = sp.Popen("ps -eo pcpu | sort -r -k1 | head -n 2 | tail -n 1 | tr -d '[:space:]'", stdout= sp.PIPE, shell=True).stdout.read().split("/")[0]
+    return x
 
 def initialize_logger(output_dir, console=True):
     logger = logging.getLogger()
