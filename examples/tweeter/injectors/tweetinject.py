@@ -25,6 +25,8 @@
 from os import listdir
 from os.path import isfile, join
 import pika
+import urllib2
+
 from os.path import expanduser
 from pumpkin import *
 
@@ -35,8 +37,55 @@ class tweetinject(PmkSeed.Seed):
         self.connection = None
         self.channel = None
 
+    def get_net_file(self, url, file_name):
+        #file_name = url.split('/')[-1]
+        downloaded = False
+        while not downloaded:
+            try:
+                u = urllib2.urlopen(url)
+                f = open(file_name, 'wb')
+                meta = u.info()
+                file_size = int(meta.getheaders("Content-Length")[0])
+                self.logger.info ("Downloading: %s Bytes: %s" % (file_name, file_size))
+
+                file_size_dl = 0
+                block_sz = 8192
+                while True:
+                    buffer = u.read(block_sz)
+                    if not buffer:
+                        break
+
+                    file_size_dl += len(buffer)
+                    f.write(buffer)
+                    #status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+                    #status = status + chr(8)*(len(status)+1)
+                    #print status,
+                f.close()
+                downloaded = True
+            except Exception as e:
+                self.logger.error("Error downloading, trying again....")
+                time.sleep(5)
+                pass
+
     def on_load(self):
         print "Loading: " + self.__class__.__name__
+        ok = False
+        url = "http://elab.lab.uvalight.net/gzs/tweets2009-06-brg.txt"
+        dir = expanduser("~")+"/tweets/"
+        output_file = dir+"tweets2009-06-brg.txt"
+        self._ensure_dir(dir)
+        onlyfiles = [ f for f in listdir(dir) if isfile(join(dir,f)) ]
+
+        for fl in onlyfiles:
+            fullpath = dir+fl
+            if( fl[-3:] == "txt"):
+                ok = True
+                break
+
+        if not ok:
+            self.get_net_file(url,output_file)
+
+
         self.connection, self.channel = self.__open_rabbitmq_channel()
 
     def __open_rabbitmq_channel(self):
