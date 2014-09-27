@@ -207,7 +207,10 @@ class RabbitMQBroadcaster(SThread):
                 else:
                     time.sleep(self.context.get_broadcast_rate())
 
-                dataz = zlib.compress(data)
+                if self.context.is_with_nocompress():
+                    dataz = data
+                else:
+                    dataz = zlib.compress(data)
 
                 if self.connection.is_closed:
                     self._connect()
@@ -231,6 +234,10 @@ class RabbitMQBroadcaster(SThread):
                 #     else:
                 #         data = "{"+cmd_str+"}"
 
+
+                #if self.context.is_with_nocompress():
+                #    dataz = data
+                #else:
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()
 
@@ -269,7 +276,13 @@ class RabbitMQBroadcastSubscriber(SThread):
                 if (method.NAME == 'Basic.GetEmpty'):
                     time.sleep(1)
                 else:
-                    data = zlib.decompress(dataz)
+
+                    if self.context.is_with_nocompress():
+                        data = dataz
+                    else:
+                        data = zlib.decompress(dataz)
+
+
                     logging.debug("Incomming data from ["+self.queue+"]: "+data)
                     d = json.loads(data)
                     for k in d.keys():

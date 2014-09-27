@@ -278,6 +278,12 @@ class MainContext(object):
         def get_group(self):
             return self.__attrs.group
 
+        def is_with_nocompress(self):
+            if self.__attrs.nocompress:
+                return True
+            else:
+                return False
+
         def hasRx(self):
             return self.__attrs.rxdir
 

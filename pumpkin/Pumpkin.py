@@ -504,6 +504,9 @@ def main():
     parser.add_argument('--buffer_size', action='store', dest="bsize", default=100000,
                        help='queue size for rx/tx buffers in number of messages')
 
+    parser.add_argument('--nocompress', action='store_true',
+                       help='do not compress messages.')
+
 
 
 
