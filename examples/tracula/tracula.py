@@ -184,7 +184,7 @@ class tracula(PmkSeed.Seed):
 
             print "RESULT: "+message
 
-            self.finalize(pkt)
+            self.finalize(pkt, message=message)
 
             #self.dispatch(pkt, message, "DTI_FIBER")
         pass

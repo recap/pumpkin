@@ -346,7 +346,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             for pkt in context.get_pkt_from_shelve2(pkt_id):
                 pkt_s = len(pkt)
                 header = pkt[0]
-                llast = pkt[pkt_s - 2]
+                llast = pkt[pkt_s - 1]
                 last = pkt[pkt_s - 1]
                 stag = None
 
@@ -363,11 +363,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 else:
                     stag = header["c_tag"]
                     state = header["state"]
-                    data = llast["data"].split("|,|")
-                    val = {}
-                    val["state"] = state
-                    val["data"] = data
-                    res[stag] = val
+                    if "data" in llast.keys():
+                        data = llast["data"].split("|,|")
+                        val = {}
+                        val["state"] = state
+                        val["data"] = data
+                        res[stag] = val
                     pass
 
                 #rep += json.dumps(pkt)+","
