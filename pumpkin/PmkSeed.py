@@ -1081,7 +1081,7 @@ class Seed(object):
                 pkt_id = self.get_pkt_id(lpkt)
                 self._lock_in_fpkts.acquire()
                 shelve = self.context.get_pkt_shelve()
-                shelve[str(pkt_id)] = pkt
+                shelve[str(pkt_id)] = lpkt
                 self._lock_in_fpkts.release()
 
             #Eats up memory due to queueing
