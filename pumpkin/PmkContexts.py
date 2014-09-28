@@ -166,7 +166,30 @@ class MainContext(object):
         def put_pkt_in_shelve2(self, pkt):
             shlf = self.pkt_shelve_2
             pkt_id = str(self.getPktId(pkt))
-            shlf[pkt_id] = pkt
+            s_pkt_id = pkt_id.split(":")[0] +":"
+            pkt_arr = None
+            pkt_s = json.dumps(pkt)
+            if s_pkt_id in shlf.keys():
+
+                pkt_arr = shlf[s_pkt_id]
+                pkt_arr.append(pkt)
+                shlf[s_pkt_id] = pkt_arr
+            else:
+
+                pkt_arr = []
+                pkt_arr.append(pkt)
+                shlf[s_pkt_id] = pkt_arr
+
+            #shlf.sync()
+            #for kk in self.pkt_shelve_2.keys():
+            #    print "KEYS: "+kk+" VALUE: "+json.dumps(self.pkt_shelve_2[kk])
+            #    for p in self.pkt_shelve_2[kk]:
+            #        print "...................VALUES: "+json.dumps(p)
+            #pkt_arr.append(pkt)
+
+            #print "SHLV2_: "+json.dumps(self.pkt_shelve_2)
+
+            #shlf[pkt_id] = pkt
 
         def get_pkt_from_shelve(self,pkt_id):
             pkt_id = str(pkt_id)
@@ -187,14 +210,16 @@ class MainContext(object):
             pkt_id = str(pkt_id)
             pkt_id_parts = pkt_id.split(':')
             ret = []
+            #print "SHLV2: "+json.dumps(self.pkt_shelve_2)
+
             if len(pkt_id_parts) < 4:
                 for k in self.pkt_shelve_2.keys():
                     if pkt_id in k:
-                        ret.append(self.pkt_shelve_2[k])
+                        ret.extend(self.pkt_shelve_2[k])
             else:
                 if pkt_id in self.pkt_shelve_2.keys():
                     spkt = self.pkt_shelve_2[pkt_id]
-                    ret.append(spkt)
+                    ret.extend(spkt)
 
             return ret
 

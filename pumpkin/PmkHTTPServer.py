@@ -340,6 +340,9 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     pass
 
                 #rep += json.dumps(pkt)+","
+            rrr = context.get_pkt_from_shelve2(pkt_id)
+            print "STAT: "+json.dumps(rrr)
+
             for pkt in context.get_pkt_from_shelve2(pkt_id):
                 pkt_s = len(pkt)
                 header = pkt[0]

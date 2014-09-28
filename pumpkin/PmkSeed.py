@@ -413,11 +413,11 @@ class Seed(object):
                 tstag = "IN:"+self.__class__.__name__+":"+pkt[0]["c_tag"]
                 pkt[0]["state"] = "PROCESSING"
 
-                if self.context.with_shelve():
-                    self._lock_in_fpkts.acquire()
-                    shelve = self.context.get_pkt_shelve()
-                    shelve[str(pkt_id)] = pkt
-                    self._lock_in_fpkts.release()
+                #if self.context.with_shelve():
+                #    self._lock_in_fpkts.acquire()
+                #    shelve = self.context.get_pkt_shelve()
+                #    shelve[str(pkt_id)] = pkt
+                #    self._lock_in_fpkts.release()
 
                 if self.context.with_acks():
                     self._lock_in_fpkts.acquire()
