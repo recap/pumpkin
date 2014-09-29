@@ -335,8 +335,15 @@ var graph;
                         return "Node;" + d.id;
                     })
                     .attr("class", "nodeStrokeClass")
-                    .attr("fill", function(d) {  return color(d.cpu); });
-                    //.attr("fill", acolor);
+                    .attr("fill", function(d) {
+			var c = Math.round((255*parseInt(d.cpu)) / 100);
+			var nc = Math.round(255- c);
+			var s = "rgb("+c.toString()+",0,"+nc.toString()+")";
+			console.log(s+" "+d.cpu+" "+d.id);
+			return s;  
+			//return color(d.cpu); 
+			});
+                    //.attr("fill", "rgb(255,0,0)");
 
             nodeEnter.append("svg:text")
                     .attr("class", "textClass")
