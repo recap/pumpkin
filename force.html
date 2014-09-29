@@ -335,8 +335,8 @@ var graph;
                         return "Node;" + d.id;
                     })
                     .attr("class", "nodeStrokeClass")
-                    //.attr("fill", function(d) { return color(d.id); });
-                    .attr("fill", acolor);
+                    .attr("fill", function(d) {  return color(d.cpu); });
+                    //.attr("fill", acolor);
 
             nodeEnter.append("svg:text")
                     .attr("class", "textClass")
@@ -575,7 +575,7 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 		pn = pdata.nodes[y];
 		var n = graph.findNodep(pn["id"])
 		if (n != null){
-			console.log(n);
+			//console.log(n);
 			
 			//n.attr("fill", "red");
 		}
