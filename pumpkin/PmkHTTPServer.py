@@ -364,7 +364,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     stag = header["c_tag"]
                     state = header["state"]
                     if "data" in llast.keys():
-                        data = llast["data"].split("|,|")
+
+                        data = llast["data"]
+                        if data:
+                            data = data.split("|,|")
                         val = {}
                         val["state"] = state
                         val["data"] = data
