@@ -281,10 +281,10 @@ class ProcessGraph(object):
                     for n1s in n1_routes:
                         if not "cpu" in n1s.keys():
                             n1s["cpu"] = "0"
-                        else:
-                            if n1s["ep"] in E:
-                                nt1 = E[n1s["ep"]]
-                                nt1["cpu"] = n1s["cpu"]
+                        #else:
+                        #    if E.has_node(n1s["ep"]):
+                        #        nt1 = E[n1s["ep"]]
+                        #        nt1["cpu"] = n1s["cpu"]
 
                         E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
 
@@ -292,10 +292,10 @@ class ProcessGraph(object):
                     for n2s in n2_routes:
                         if not "cpu" in n2s.keys():
                             n2s["cpu"] = "0"
-                        else:
-                            if n2s["ep"] in E:
-                                nt2 = E[n2s["ep"]]
-                                nt2["cpu"] = n2s["cpu"]
+                        #else:
+                        #    if n2s["ep"] in E:
+                        #        nt2 = E[n2s["ep"]]
+                        #        nt2["cpu"] = n2s["cpu"]
 
                         E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
@@ -312,20 +312,20 @@ class ProcessGraph(object):
                                 for n2s in n2_routes:
 
 
-                                    if n1s["ep"] in E:
-                                        nt1 = E[n1s["ep"]]
-                                        nt1["cpu"] = n1s["cpu"]
-                                        nt1["cpu"] = 666
+                                    #if n1s["ep"] in E:
+                                    #    nt1 = E[n1s["ep"]]
+                                    #    nt1["cpu"] = n1s["cpu"]
+                                    #    nt1["cpu"] = 666
                                     #else:
                                     if not "cpu" in n1s.keys():
                                         n1s["cpu"] = 0
 
                                     E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
 
-                                    if n2s["ep"] in E:
-                                        nt2 = E[n2s["ep"]]
-                                        nt2["cpu"] = n2s["cpu"]
-                                        nt2["cpu"] = 777
+                                    #if n2s["ep"] in E:
+                                    #    nt2 = E[n2s["ep"]]
+                                    #    nt2["cpu"] = n2s["cpu"]
+                                    #    nt2["cpu"] = 777
                                     #else:
                                     if not "cpu" in n2s.keys():
                                         n2s["cpu"] = 0
