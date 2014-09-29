@@ -132,10 +132,21 @@ var graph;
     function myGraph(div_name, acolor){
 
         // Add and remove elements on the graph object
-        this.addNode = function (id) {
+        //this.addNode = function (id) {
+	//    n = findNode(id);
+	//    if (n == null){
+        //    	nodes.push({"id": id});
+        //    	update();
+	//    }
+        //};
+        
+	this.addNode = function (id, cpu) {
+	    if(cpu == null){
+		cpu = 0;
+	    }
 	    n = findNode(id);
 	    if (n == null){
-            	nodes.push({"id": id});
+            	nodes.push({"id": id, "cpu": cpu});
             	update();
 	    }
         };
@@ -152,6 +163,11 @@ var graph;
             nodes.splice(findNodeIndex(id), 1);
             update();
         };
+	
+	this.findNodep = function(id) {
+		var n = findNode(id);
+		return n;
+	};
 
         this.removeNodeWithNoLinks = function (id) {
             var i = 0;
@@ -234,6 +250,7 @@ var graph;
             links.push({"source": findNode(source), "target": findNode(target), "value": value});
             update();
         };
+
 
         var findNode = function (id) {
             for (var i in nodes) {
@@ -476,8 +493,8 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 			t = l["target"];
 			ns = data.nodes[s];
 			nt = data.nodes[t];
-			graph.addNode(ns["id"]);
-			graph.addNode(nt["id"]);
+			graph.addNode(ns["id"],ns["cpu"]);
+			graph.addNode(nt["id"],nt["cpu"]);
 			graph.addLink(ns["id"],nt["id"],'20');
 		}
 	
@@ -500,8 +517,8 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 				ns = data.nodes[s];
 				nt = data.nodes[t];
 				
-				graph.addNode(ns["id"]);
-				graph.addNode(nt["id"]);
+				graph.addNode(ns["id"],ns["cpu"]);
+				graph.addNode(nt["id"],nt["cpu"]);
 				graph.addLink(ns["id"],nt["id"],'20');
 				
 			}
@@ -535,7 +552,7 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 	}else{
 	     for(var k in data.nodes){
 		nk = data.nodes[k];
-		graph.addNode(nk["id"]);
+		graph.addNode(nk["id"],nk["cpu"]);
 	     }	
 	     for(var b in pdata.nodes){
 		nb = pdata.nodes[b];
@@ -552,7 +569,17 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 		}
 	     }
 	}
+
 	pdata = data;
+	for (var y in pdata.nodes){
+		pn = pdata.nodes[y];
+		var n = graph.findNodep(pn["id"])
+		if (n != null){
+			console.log(n);
+			
+			//n.attr("fill", "red");
+		}
+	}
 	keepNodesOnTop();
 	return[graph, pdata];
      }

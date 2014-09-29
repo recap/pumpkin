@@ -6,12 +6,13 @@ import zmq
 import time
 import pika
 import zlib
-
+import base64
 import PmkSeed
 import PmkBroadcast
 import PmkShared
 from PmkShared import *
 from Queue import *
+
 
 class rx(Queue):
     def __init__(self, maxsize=0):
@@ -57,11 +58,19 @@ class InternalDispatch(SThread):
             aux = 0
             if "aux" in pkt[0].keys():
                 aux = pkt[0]["aux"]
+
             if aux & TRACER_BIT:
                 #stat = self.context.get_stat()
                 #print stat
                 #continue
                 pass
+            if "code" in pkt[0].keys():
+                seed = base64.decodestring(pkt[0]["code"])
+                #print "SEED: "+seed
+                func = self.context.load_seed_from_string(seed)
+                l = len(pkt)
+                pkt[l-1]["func"] = func
+                del pkt[0]["code"]
 
             #logging.debug("Packet received: \n"+pkts)
             #pkt = json.loads(pkts)

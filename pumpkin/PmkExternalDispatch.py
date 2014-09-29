@@ -134,6 +134,7 @@ class ExternalDispatch(SThread):
     def send_express(self, otag, pkt):
         ntag = None
         state = pkt[0]["state"]
+        header = pkt[0]
 
         if pkt[1] and not self.context.is_speedy():
             #TODO: some nodes complain that loads does not exist
@@ -159,6 +160,13 @@ class ExternalDispatch(SThread):
                     # dump non routable packets as this will lead to deadlock from tx queue filling
                     if self.context.is_speedy():
                         found = True
+                        break
+
+                    if "code" in header.keys():
+                        tracer_tag = self.context.get_group()+":Internal:TRACE"
+                        routes = self.graph.getRoutes(tracer_tag)
+
+                    if routes:
                         break
 
                     logging.debug("No Route: "+str(otag))

@@ -138,6 +138,35 @@ class MainContext(object):
 
             return modname
 
+        def load_seed_from_string(self, seed):
+
+            modname = None
+            file = "/tmp/"
+            fhd = seed
+            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+
+            if m:
+                conf = m.group(1).replace("##","")
+                if conf:
+                    d = json.loads(conf)
+                    modname = d["object_name"]
+                    file = file + modname +".py"
+                    fh = open(file, "w")
+                    fh.write(seed)
+                    fh.close()
+                    if not "auto-load" in d.keys() or d["auto-load"] == True:
+                        imp.load_source(modname,file)
+
+                        klass = PmkSeed.hplugins[modname](self)
+                        PmkSeed.iplugins[modname] = klass
+                        klass.pre_load(d)
+                        klass.on_load()
+                        klass.post_load()
+                        js = klass.getConfEntry()
+                        self.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+
+            return modname
+
         def startPktShelve(self, filename):
             self.pkt_shelve = shelve.open(self.working_dir+"/"+filename)
             pass

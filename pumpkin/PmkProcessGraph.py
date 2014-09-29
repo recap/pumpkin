@@ -302,18 +302,18 @@ class ProcessGraph(object):
                                 for n2s in n2_routes:
 
 
-                                    #if n1s["ep"] in E:
-                                    #    nt1 = E[n1s["ep"]]
-                                    #    nt1["cpu"] = n1s["cpu"]
+                                    if n1s["ep"] in E:
+                                        nt1 = E[n1s["ep"]]
+                                        nt1["cpu"] = n1s["cpu"]
                                     #else:
                                     if not "cpu" in n1s.keys():
                                         n1s["cpu"] = 0
 
                                     E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
 
-                                    #if n2s["ep"] in E:
-                                    #    nt2 = E[n2s["ep"]]
-                                    #    nt2["cpu"] = n2s["cpu"]
+                                    if n2s["ep"] in E:
+                                        nt2 = E[n2s["ep"]]
+                                        nt2["cpu"] = n2s["cpu"]
                                     #else:
                                     if not "cpu" in n2s.keys():
                                         n2s["cpu"] = 0
