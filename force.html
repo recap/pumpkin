@@ -185,6 +185,13 @@ var graph;
 	    }
         };
 
+	this.updateColor = function(id, color){
+		var tid = "Node;"+id;
+		var x=document.getElementById(tid);
+		//console.log(x);
+                 x.setAttribute("fill", color);
+	}
+
         this.removeAnyNodeWithNoLinks = function () {
 	    remove = true;
 	    while(remove == true){
@@ -339,7 +346,7 @@ var graph;
 			var c = Math.round((255*parseInt(d.cpu)) / 100);
 			var nc = Math.round(255- c);
 			var s = "rgb("+c.toString()+",0,"+nc.toString()+")";
-			console.log(s+" "+d.cpu+" "+d.id);
+			//console.log(s+" "+d.cpu+" "+d.id);
 			return s;  
 			//return color(d.cpu); 
 			});
@@ -585,6 +592,12 @@ function render(graph, data, pdata, div_name, acolor, dangling){
 			//console.log(n);
 			
 			//n.attr("fill", "red");
+		        if ("cpu" in pn){	
+				var c = Math.round((255*parseInt(pn["cpu"])) / 100);
+				var nc = Math.round(255- c);
+				var s = "rgb("+c.toString()+",0,"+nc.toString()+")";
+				graph.updateColor(pn["id"],s);
+			}
 		}
 	}
 	keepNodesOnTop();
