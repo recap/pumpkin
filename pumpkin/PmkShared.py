@@ -5,6 +5,7 @@ import threading
 import os
 import socket
 import subprocess as sp
+import time
 
 from socket import *
 
@@ -60,7 +61,11 @@ SUPERNODES = [ "127.0.0.1"]
 def get_cpu_util():
     x = 0
     if CPU:
-        x = psutil.cpu_percent()
+        x1 = psutil.cpu_percent()
+        time.sleep(0.1)
+        x2 = psutil.cpu_percent()
+        x = (x1+x2) / 2
+
     #else:
     #    x = sp.Popen("ps -eo pcpu | sort -r -k1 | head -n 2 | tail -n 1 | tr -d '[:space:]'", stdout= sp.PIPE, shell=True).stdout.read().split("/")[0]
     return x

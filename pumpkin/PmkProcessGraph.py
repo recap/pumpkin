@@ -404,11 +404,7 @@ class ProcessGraph(object):
         for rk in tmp_keys:
             del ne[rk]
 
-        cpu_load1 = get_cpu_util()
-        time.sleep(0.01)
-        cpu_load2 = get_cpu_util()
-
-        cpu_load = (cpu_load1+cpu_load2) / 2
+        cpu_load = get_cpu_util()
 
         for r in ne.keys():
             eps = ne[r]["endpoints"]
