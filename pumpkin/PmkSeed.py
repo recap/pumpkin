@@ -519,7 +519,13 @@ class Seed(object):
         pexec = forecast["pexec"]
 
         l = len(pkt)
-        data = pkt[l-2]["data"]
+
+        data = None
+        if "data" in pkt[l-2].keys():
+            data = pkt[l-2]["data"]
+        else:
+            data = ""
+
         data_len = len(data)
 
         pred_time = data_len*w[0] + w[1]
