@@ -323,7 +323,7 @@ class EndpointPicker(object):
             rtable[route_id] = {}
         for ep in route["endpoints"]:
             cuid = ep["cuid"]
-            priority = ep["priority"]
+            priority = str(ep["priority"])
 
             if cuid not in rtable[route_id]:
                 rtable[route_id][cuid] = {}
