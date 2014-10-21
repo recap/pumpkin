@@ -328,6 +328,12 @@ class MainContext(object):
                 return True
             return False
 
+        def isTCPEndpoint(self, entry):
+            e = str(entry[0])
+            if "tcp" in e.lower():
+                return True
+            return False
+
         def getEndpoints(self):
             return self.endpoints
 

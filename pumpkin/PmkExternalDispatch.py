@@ -402,7 +402,7 @@ class EndpointPicker(object):
 
 
     def _check_conn_ep(self, epl):
-        return False
+
         mode = epl["mode"]
         ep = epl["ep"]
 
@@ -442,7 +442,7 @@ class EndpointPicker(object):
 
         s_idx = self.route_index[route_id]
         #for cuid in rtable[first]:
-        while 1:
+        while not found:
             p=0
             s_idx += 1
             s_idx = s_idx % no_entries

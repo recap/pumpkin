@@ -347,7 +347,8 @@ class ZMQPacketMonitor(SThread):
         soc.setsockopt(zmq.RCVBUF, 2000)
         #soc.setsockopt(zmq.HWM, 100)
         try:
-            soc.bind(self.bind_to)
+            bind_to = "tcp://*:"+str(PmkShared.ZMQ_ENDPOINT_PORT)
+            soc.bind(bind_to)
         except zmq.ZMQError as e:
             nip = PmkBroadcast.get_llan_ip()
             self.bind_to = "tcp://"+str(nip)+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)

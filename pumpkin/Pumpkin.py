@@ -342,12 +342,21 @@ class Pumpkin(Daemon):
 
 
         if not context.isWithNoPlugins():# and not context.isSupernode():
+            tcp_ep = False
             for ep in context.getEndpoints():
                 if context.isZMQEndpoint(ep):
                     #ep[0] = PmkShared._get_nextport(ep[0], "TCP")
-                    tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
-                    tcpm.start()
-                    context.addThread(tcpm)
+                    if context.isTCPEndpoint(ep) and not tcp_ep:
+                        tcp_ep = True
+                        tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
+                        tcpm.start()
+                        context.addThread(tcpm)
+
+                    if not context.isTCPEndpoint(ep):
+                        tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
+                        tcpm.start()
+                        context.addThread(tcpm)
+
 
 
             for sn in get_zmq_supernodes(PmkShared.SUPERNODES):
