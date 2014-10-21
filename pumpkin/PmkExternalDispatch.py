@@ -438,16 +438,16 @@ class EndpointPicker(object):
         no_entries = len([rtable[first]])
 
         if not route_id in self.route_index.keys():
-                self.route_index[route_id] = -1
+                self.route_index[route_id] = 0
 
         s_idx = self.route_index[route_id]
         #for cuid in rtable[first]:
         while not found:
             p=0
-            s_idx += 1
+
             s_idx = s_idx % no_entries
             cuid = rtable[first].keys()[s_idx]
-
+            s_idx += 1
             while not found:
                 p, eps = self._get_priority_eps(rtable, cuid, p)
                 if eps:
