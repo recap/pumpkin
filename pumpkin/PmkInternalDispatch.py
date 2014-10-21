@@ -70,6 +70,7 @@ class InternalDispatch(SThread):
         keys = PmkSeed.iplugins.keys
         iplugins = PmkSeed.iplugins
         speedy = self.context.is_speedy()
+        x = 0
         while 1:
             #already in json format
             pkt = rx.get(True)
@@ -82,14 +83,22 @@ class InternalDispatch(SThread):
                 #print stat
                 #continue
                 pass
+
             if "seeds" in pkt[0].keys():
+                #if x == 0:
+                #    x = 1
+                #    self._dispatch(pkt)
+                #    continue
+
                 seed_arr = pkt[0]["seeds"]
                 for seed in seed_arr:
                     seed_code = base64.decodestring(seed)
-                    func = self.context.load_seed_from_string(seed_code)
+                    self.context.load_seed_from_string(seed_code)
 
-                #l = len(pkt)
-                #pkt[l-1]["func"] = func
+                l = len(pkt)
+                if "tracer" in pkt[l-1]["func"]:
+                    pkt.pop()
+
                 del pkt[0]["seeds"]
 
             #logging.debug("Packet received: \n"+pkts)

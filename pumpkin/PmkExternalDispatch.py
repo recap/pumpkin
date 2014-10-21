@@ -205,7 +205,10 @@ class ExternalDispatch(SThread):
                                     pep_ar = r["endpoints"]
                                     header["aux"] = aux & (~BROADCAST_BIT)
                                 else:
-                                    pep_ar = self.ep_sched.pick_route(r)
+                                    if "seeds" in header.keys():
+                                        pep_ar = self.ep_sched.pick_route(r, False)
+                                    else:
+                                        pep_ar = self.ep_sched.pick_route(r, True)
 
                     else:
                         # speedy gonzales
@@ -429,7 +432,7 @@ class EndpointPicker(object):
 
 
 
-    def pick_route(self, route):
+    def pick_route(self, route, local=True):
         route_id = route["name"]
         ret_peps = []
         found = False
@@ -452,6 +455,10 @@ class EndpointPicker(object):
             if s_idx >= no_entries:
                 s_idx = s_idx % no_entries
             cuid = rtable[first].keys()[s_idx]
+
+            if not local:
+                if cuid == self.context.getUuid():
+                    continue
 
             while not found:
                 p, eps = self._get_priority_eps(rtable, cuid, p)
