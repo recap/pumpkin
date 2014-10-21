@@ -122,7 +122,7 @@ class ProcessGraph(object):
 
                 if not found:
                     if loc == "remote":
-                        eep["priority"] = 10
+                        eep["priority"] -= 5
                         self.__reset_ep_ttl(e["name"], eep["ep"])
                     d["endpoints"].append(eep)
                     logging.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
@@ -132,7 +132,7 @@ class ProcessGraph(object):
             logging.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
             if loc == "remote":
                 for ep in e["endpoints"]:
-                    ep["priority"] = 10
+                    ep["priority"] -= 5
                     self.__reset_ep_ttl(e["name"], ep["ep"])
 
             registry[e["name"]] = e
