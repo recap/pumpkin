@@ -45,6 +45,24 @@ class InternalDispatch(SThread):
         pass
 
 
+    def _dispatch(self, pkt):
+        pktdj = pkt
+        pkt_len = len(pktdj)
+
+        stag_p = pktdj[pkt_len - 1]["stag"].split(":")
+
+
+        if len(stag_p) < 3:
+            group = "public"
+            type = stag_p[0]
+            tag = stag_p[1]
+        else:
+            group = stag_p[0]
+            type = stag_p[1]
+            tag = stag_p[2]
+
+        self.context.getTx().put((group, tag,type,pktdj))
+
 
     def run(self):
         rx = self.context.getRx()
@@ -64,13 +82,15 @@ class InternalDispatch(SThread):
                 #print stat
                 #continue
                 pass
-            if "code" in pkt[0].keys():
-                seed = base64.decodestring(pkt[0]["code"])
-                #print "SEED: "+seed
-                func = self.context.load_seed_from_string(seed)
-                l = len(pkt)
-                pkt[l-1]["func"] = func
-                del pkt[0]["code"]
+            if "seeds" in pkt[0].keys():
+                seed_arr = pkt[0]["seeds"]
+                for seed in seed_arr:
+                    seed_code = base64.decodestring(seed)
+                    func = self.context.load_seed_from_string(seed_code)
+
+                #l = len(pkt)
+                #pkt[l-1]["func"] = func
+                del pkt[0]["seeds"]
 
             #logging.debug("Packet received: \n"+pkts)
             #pkt = json.loads(pkts)
@@ -105,8 +125,11 @@ class InternalDispatch(SThread):
             #print json.dumps(pkt)
             l = len(pkt)
             func = pkt[l-1]["func"]
-            data = pkt[l-2]["data"]
-
+            if "data" in pkt[l-2]:
+                data = pkt[l-2]["data"]
+            else:
+                self._dispatch(pkt)
+                continue
 
 
             if ":" in func:
@@ -125,6 +148,11 @@ class InternalDispatch(SThread):
                     rt = klass._stage_run_express(pkt, data)
                 else:
                     rt = klass._stage_run(pkt, data)
+            else:
+                #put on TX
+                self._dispatch(pkt)
+                continue
+
 
 
 

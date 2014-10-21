@@ -162,7 +162,7 @@ class ExternalDispatch(SThread):
                         found = True
                         break
 
-                    if "code" in header.keys():
+                    if "seeds" in header.keys():
                         tracer_tag = self.context.get_group()+":Internal:TRACE"
                         routes = self.graph.getRoutes(tracer_tag)
 
@@ -435,19 +435,24 @@ class EndpointPicker(object):
         found = False
         rtable = self._restructure_table(route)
         first = rtable.keys()[0]
-        no_entries = len([rtable[first]])
+        no_entries = len(rtable[first])
 
         if not route_id in self.route_index.keys():
-                self.route_index[route_id] = 0
+                self.route_index[route_id] = -1
 
         s_idx = self.route_index[route_id]
         #for cuid in rtable[first]:
         while not found:
             p=0
+            if no_entries == 1:
+                s_idx = 0
+            else:
+                s_idx += 1
 
-            s_idx = s_idx % no_entries
+            if s_idx >= no_entries:
+                s_idx = s_idx % no_entries
             cuid = rtable[first].keys()[s_idx]
-            s_idx += 1
+
             while not found:
                 p, eps = self._get_priority_eps(rtable, cuid, p)
                 if eps:

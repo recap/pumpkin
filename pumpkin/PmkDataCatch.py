@@ -40,6 +40,10 @@ class PacketFileMonitor(SThread):
                 if( pktf[-3:] == "pkt"):
                     pktd =  open (pktf, "r").read()
                     pktdj = json.loads(pktd)
+                    ################
+                    self.context.getRx().put(pktdj)
+                    return
+                    ################
                     pkt_len = len(pktdj)
 
                     stag_p = pktdj[pkt_len - 1]["stag"].split(":")
