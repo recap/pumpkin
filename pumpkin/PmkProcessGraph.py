@@ -287,18 +287,17 @@ class ProcessGraph(object):
                     for n1s in n1_routes:
                         if not "cpu" in n1s.keys():
                             n1s["cpu"] = "0"
-                        E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
-                        #logging.info("Added node: "+n1s["ep"]+" cpu: "+n1s["cpu"])
-                        #for n,d in E.nodes_iter(data=True):
-                        #    if n == n1s["ep"]:
-                        #        print str(d)
+                        #E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+                        E.add_node(n1s["cuid"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+
 
                 if "TRACE" in n2:
                     for n2s in n2_routes:
                         if not "cpu" in n2s.keys():
                             n2s["cpu"] = "0"
 
-                        E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
+                        #E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
+                        E.add_node(n2s["cuid"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
 
 
@@ -314,14 +313,20 @@ class ProcessGraph(object):
                                 for n2s in n2_routes:
                                     if not "cpu" in n1s.keys():
                                         n1s["cpu"] = 0
-                                    E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+                                    #E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+                                    E.add_node(n1s["cuid"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
 
                                     if not "cpu" in n2s.keys():
                                         n2s["cpu"] = 0
-                                    E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
+                                    #E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
+                                    E.add_node(n2s["cuid"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
 
-                                    e_id = n1s["ep"]+":"+n2s["ep"]
-                                    E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
+                                    #e_id = n1s["ep"]+":"+n2s["ep"]
+                                    #E.add_edge(n1s["ep"],n2s["ep"], id=e_id)
+
+                                    e_id = n1s["cuid"]+":"+n2s["cuid"]
+                                    E.add_edge(n1s["cuid"],n2s["cuid"], id=e_id)
+
                                     f_id = n1_name+":"+n2_name
                                     F.add_edge(n1_name, n2_name, id=f_id)
 
