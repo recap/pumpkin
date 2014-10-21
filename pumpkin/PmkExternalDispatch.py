@@ -308,14 +308,73 @@ class EndpointPicker(object):
     def __init__(self, context):
         self.context = context
         self.route_index = {}
+        self.r_table = {}
+        self.ep_checks = {}
 
     def is_local_ext_ep(self, ep):
         if (int(ep["priority"]) >= 5) and (ep["cuid"] == self.context.getUuid()):
             return True
         return False
 
+    def _restructure_table(self, route):
+        rtable = {}
+        route_id = route["name"]
+        if not route_id in rtable:
+            rtable[route_id] = {}
+        for ep in route["endpoints"]:
+            cuid = ep["cuid"]
+            priority = ep["priority"]
+
+            if cuid not in rtable[route_id]:
+                rtable[route_id][cuid] = {}
+            if priority not in rtable[route_id][cuid]:
+                rtable[route_id][cuid][priority] = []
+
+            rtable[route_id][cuid][priority].append(ep)
+        #print json.dumps(rtable)
+        return rtable
+
+    def _get_priority_eps(self, rtable, cuid, p=0):
+        first = rtable.keys()[0]
+        proutes = rtable[first][cuid]
+
+        cp = 1000000
+        found = False
+        for ep_key in proutes.keys():
+            if (int(ep_key) < cp) and (int(ep_key) > p):
+                cp = int(ep_key)
+                found = True
+
+        if found:
+            return (cp, proutes[str(cp)])
+        else:
+            return (0, None)
+
+    # def getProtoFromEP(self, ep):
+    #     ep_a = ep.split("://")
+    #     return ep_a[0]
+    #
+    # def get_mode_from_ep(self, ep):
+    #     prot = self.getProtoFromEP(ep)
+    #     mode = None
+    #     if prot == "tcp":
+    #         mode = "zmq.PULL"
+    #         pass
+    #     if prot == "inqueue":
+    #         mode = "raw.Q"
+    #         pass
+    #     if prot == "amqp":
+    #         mode = "amqp.PUSH"
+    #         pass
+    #
+    #     return mode
+
+
+
+
     def pick_route_exc(self, route, traces):
         ex_eps = traces.keys()
+        rtable = self._restructure_table(route)
 
         rep = []
         found = True
@@ -342,8 +401,74 @@ class EndpointPicker(object):
             return  (rep, "NOROUTE")
 
 
+    def _check_conn_ep(self, epl):
+        return False
+        mode = epl["mode"]
+        ep = epl["ep"]
+
+        if ep in self.ep_checks.keys():
+            return self.ep_checks[ep]
+        else:
+            disp = None
+            if mode == "zmq.PULL":
+                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+
+            if mode == "amqp.PUSH":
+                disp = RabbitMQDispatch(self.context)
+                pass
+
+            if mode == "raw.Q":
+                disp = InternalRxQueue(self.context)
+                pass
+
+            if not disp == None:
+                self.ep_checks[ep] = disp.test(ep)
+                return self.ep_checks[ep]
+
+        return False
+
+
+
     def pick_route(self, route):
         route_id = route["name"]
+        ret_peps = []
+        found = False
+        rtable = self._restructure_table(route)
+        first = rtable.keys()[0]
+        no_entries = len([rtable[first]])
+
+        if not route_id in self.route_index.keys():
+                self.route_index[route_id] = -1
+
+        s_idx = self.route_index[route_id]
+        #for cuid in rtable[first]:
+        while 1:
+            p=0
+            s_idx += 1
+            s_idx = s_idx % no_entries
+            cuid = rtable[first].keys()[s_idx]
+
+            while not found:
+                p, eps = self._get_priority_eps(rtable, cuid, p)
+                if eps:
+                    for ep in eps:
+                        if self._check_conn_ep(ep):
+                            self.route_index[route_id] = s_idx
+                            ret_peps.append(ep)
+                            found = True
+                            break
+                else:
+                    break
+
+        return ret_peps
+
+
+
+    def pick_route_old(self, route):
+        route_id = route["name"]
+
+
+        #print json.dumps(route)
         no_entries = len(route["endpoints"])
         ret_peps = []
         try:
@@ -400,6 +525,7 @@ class ZMQPacketPublish(Dispatch):
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUB)
         self.soc.bind(connect_to)
+        return True
 
     def dispatch(self, pkt):
             message = zlib.compress(json.dumps(pkt))
@@ -423,7 +549,7 @@ class ZMQPacketDispatch(Dispatch):
         else:
             self.zmq_cntx = zmqcontext
 
-    def __check_ep(self, ep):
+    def test(self, ep):
         parts = re.split('://|:', ep)
 
         if str(parts[0]).lower() == "tcp":
@@ -437,15 +563,20 @@ class ZMQPacketDispatch(Dispatch):
                 logging.debug("ep closed: "+ep)
                 logging.warn("Detected closed ep: "+ep)
                 return False
-        return True
+        return False
 
     def connect(self, connect_to):
-        self.soc = self.zmq_cntx.socket(zmq.PUSH)
-        self.ep = connect_to
-        #self.soc.setsockopt(zmq.HWM, 1)
-        #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
-        logging.debug("ZMQ connecting to :"+str(connect_to))
-        self.soc.connect(connect_to)
+        try:
+            self.soc = self.zmq_cntx.socket(zmq.PUSH)
+            self.ep = connect_to
+            #self.soc.setsockopt(zmq.HWM, 1)
+            #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
+            logging.debug("ZMQ connecting to :"+str(connect_to))
+            self.soc.connect(connect_to)
+            return True
+        except Exception as e:
+            return False
+
 
     def dispatch(self, pkt):
 
@@ -487,6 +618,9 @@ class ZMQPacketVentilate(Dispatch):
         self.sender = self.zmq_cntx.socket(zmq.PUSH)
         self.sender.bind("ipc://127.0.0.1:7777")
 
+    def test(self, ep):
+        return False
+
 
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
@@ -515,11 +649,15 @@ class InternalRxQueue(Dispatch):
         pass
 
     def connect(self, queue):
+        return True
         pass
 
     def dispatch(self, pkt):
         self.queue.put(pkt)
         pass
+
+    def test(self, ep):
+        return True
 
     def close(self):
         pass
@@ -548,6 +686,10 @@ class RabbitMQDispatch(Dispatch):
         self.channel = self.connection.channel()
         #self.channel.exchange_declare(exchange=str(self.queue), type='fanout')
         #self.channel.queue_declare(queue=str(self.queue), durable=False)
+        return True
+
+    def test(self, ep):
+        return True
 
     def dispatch(self, pkt):
         send = False
@@ -580,38 +722,3 @@ class RabbitMQDispatch(Dispatch):
 
 
 
-#class ExternalDispatch2(Thread):
-#    def __init__(self, context):
-#        Thread.__init__(self)
-#        self.context = context
-#        pass
-#
-#    def run(self):
-#        tx = self.context.getTx()
-#        logging.debug("HERE 3")
-#        d = tx.get(True)
-#        logging.debug("HERE 4")
-#        foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
-#        foutnames = d["container-id"]+d["box-id"]+".pkt"
-#        for fc in d["invoke"]:
-#            state = fc["state"]
-#            if not ((int(state) & DRPackets.READY_STATE) == 1):
-#                func = fc["func"]
-#                logging.debug("Function "+func)
-#                peer = self.context.getMePeer().getPeerForFunc(func)
-#                if not peer == None:
-#                    comm = peer.getTftpComm()
-#                    logging.debug("Got comm")
-#                    if not comm == None:
-#                        logging.debug("Comm to "+comm.host+" "+str(comm.port))
-#                        client = tftpy.TftpClient(str(comm.host), int(comm.port))
-#                        logging.debug("Files: "+foutnames+" "+foutname)
-#                        tmpf = open(foutname, "r")
-#                        fstr = tmpf.read()
-#                        logging.debug("File: "+fstr)
-#                        tmpf.close()
-#                        client.upload(foutnames.encode('utf-8'),foutname.encode('utf-8'))
-#                        #client.upload("test.pkt","./tx/test.pkt")
-#                        break
-#                else:
-#                    logging.warn("No peer found for function "+func)

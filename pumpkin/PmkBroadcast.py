@@ -16,7 +16,8 @@ import tftpy
 import zlib
 import stun
 import netaddr
-#import netifaces
+import netifaces as ni
+
 
 #from Queue import *
 
@@ -29,6 +30,7 @@ import PmkShared
 from PmkShared import *
 
 AMAZON_IPS = [ '72.44.32.0/19','67.202.0.0/18','75.101.128.0/17','174.129.0.0/16','204.236.192.0/18','184.73.0.0/16','184.72.128.0/17','184.72.64.0/18','50.16.0.0/15','50.19.0.0/16','107.20.0.0/14','23.20.0.0/14','54.242.0.0/15','54.234.0.0/15','54.236.0.0/15','54.224.0.0/15','54.226.0.0/15','54.208.0.0/15','54.210.0.0/15','54.221.0.0/16','54.204.0.0/15','54.196.0.0/15','54.198.0.0/16','54.80.0.0/13','54.88.0.0/14','54.92.0.0/16','54.92.128.0/17','54.160.0.0/13','54.172.0.0/15','50.112.0.0/16','54.245.0.0/16','54.244.0.0/16','54.214.0.0/16','54.212.0.0/15','54.218.0.0/16','54.200.0.0/15','54.202.0.0/15','54.184.0.0/13','54.68.0.0/14','204.236.128.0/18','184.72.0.0/18','50.18.0.0/16','184.169.128.0/17','54.241.0.0/16','54.215.0.0/16','54.219.0.0/16','54.193.0.0/16','54.176.0.0/15','54.183.0.0/16','54.67.0.0/16','79.125.0.0/17','46.51.128.0/18','46.51.192.0/20','46.137.0.0/17','46.137.128.0/18','176.34.128.0/17','176.34.64.0/18','54.247.0.0/16','54.246.0.0/16','54.228.0.0/16','54.216.0.0/15','54.229.0.0/16','54.220.0.0/16','54.194.0.0/15','54.72.0.0/14','54.76.0.0/15','54.78.0.0/16','54.74.0.0/15','185.48.120.0/22','54.170.0.0/15','175.41.128.0/18','122.248.192.0/18','46.137.192.0/18','46.51.216.0/21','54.251.0.0/16','54.254.0.0/16','54.255.0.0/16','54.179.0.0/16','54.169.0.0/16','54.252.0.0/16','54.253.0.0/16','54.206.0.0/16','54.79.0.0/16','54.66.0.0/16','175.41.192.0/18','46.51.224.0/19','176.32.64.0/19','103.4.8.0/21','176.34.0.0/18','54.248.0.0/15','54.250.0.0/16','54.238.0.0/16','54.199.0.0/16','54.178.0.0/16','54.95.0.0/16','54.92.0.0/17','54.168.0.0/16','54.64.0.0/15','177.71.128.0/17','54.232.0.0/16','54.233.0.0/18','54.207.0.0/16','54.94.0.0/16','54.223.0.0/16','96.127.0.0/18','96.127.64.0/18' ]
+EX_INTERFACES = ['vnet', 'docker', 'lxcbr', 'lo']
 
 class cmd(Queue.Queue):
     def __init__(self):
@@ -45,37 +47,40 @@ def get_interface_ip(ifname):
                                 ifname[:15]))[20:24])
     pass
 
-#def get_interface_ip6(ifname):
-#    #addrs = netifaces.ifaddresses(ifname)
-#    #return addrs[netifaces.AF_INET6][0]['addr']
-#    pass
-#
-#def get_lan_ip6():
-#    interfaces = [
-#            "lo0"
-#            "eth0",
-#            "eth1",
-#            "eth2",
-#            "wlan0",
-#            "wlan1",
-#            "wifi0",
-#            "ath0",
-#            "ath1",
-#            "ppp0",
-#            ]
-#    for ifname in interfaces:
-#            try:
-#                ip = get_interface_ip6(ifname)
-#                s = json.dumps(ip)
-#                print str(s)
-#                break
-#            except:
-#                pass
-#    return ip
+def get_interface_ip6(ifname):
+    addrs = ni.ifaddresses(ifname)
+    return addrs[ni.AF_INET6][0]['addr']
+
+def get_interface_ip4(ifname):
+    addrs = ni.ifaddresses(ifname)
+    return addrs[ni.AF_INET][0]['addr']
+
+
+def get_local_ip_list():
+    ins = ni.interfaces()
+    ips = []
+
+    for ifname in ins:
+        if ifname not in EX_INTERFACES:
+            try:
+                ip = get_interface_ip6(ifname)
+                if not netaddr.IPAddress(ip).is_private():
+                    ips.append(ip)
+            except:
+                pass
+
+            try:
+                ip = get_interface_ip4(ifname)
+                ips.append(ip)
+            except:
+                pass
+
+
+    return ips
+
 
 def get_llan_ip():
     ip = get_cloud_ip()
-
     if not ip:
         interfaces = [
             "eth0",
@@ -90,7 +95,7 @@ def get_llan_ip():
             ]
         for ifname in interfaces:
             try:
-                ip = get_interface_ip(ifname)
+                ip = get_interface_ip4(ifname)
                 break
             except:
                 pass
@@ -110,6 +115,7 @@ def get_lan_ip():
 
         interfaces = [
             "eth0",
+            "teredo",
             "eth1",
             "eth2",
             "wlan0",
@@ -121,7 +127,7 @@ def get_lan_ip():
             ]
         for ifname in interfaces:
             try:
-                ip = get_interface_ip(ifname)
+                ip = get_interface_ip6(ifname)
                 break
             except:
                 pass
@@ -147,6 +153,7 @@ def is_amazon(ip):
 
     for anet in AMAZON_IPS:
         if ipa in netaddr.IPNetwork(anet):
+
             return True
 
     return False

@@ -65,8 +65,15 @@ class Pumpkin(Daemon):
         self.context = MainContext(uid)
         self.context.setExecContext(ex_cntx)
         self.context.setSupernodeList(SUPERNODES)
-        self.context.set_local_ip(get_lan_ip())
-        self.context.set_public_ip(get_public_ip())
+
+        ips = get_local_ip_list()
+        pip = get_public_ip()
+        ips.append(pip)
+        self.context.ips = ips
+
+        self.context.set_local_ip(ips[0])
+
+        self.context.set_public_ip(pip)
         self.context.__pumpkin = self
 
         self.zmq_context = zmq.Context()
@@ -435,6 +442,8 @@ def main():
     #print str(x)
     #exit(0)
 
+    #get_local_ip_list()
+    #exit(0)
 
     ######################################################3
 

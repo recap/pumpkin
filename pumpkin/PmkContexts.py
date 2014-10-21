@@ -56,6 +56,7 @@ class MainContext(object):
             self.cmd = cmd()
             self.registry = {}
             self.__ip = "127.0.0.1"
+            self.ips = []
             self.endpoints = []
             self.__reg_update = False
             self.rlock = threading.RLock()
@@ -67,6 +68,7 @@ class MainContext(object):
             self.external_dispatch = None
             self.openfiles = []
             self.peers = {}
+
 
             self.__rabbitmq = None
             self.__rabbitmq_cred = ()
@@ -347,8 +349,12 @@ class MainContext(object):
         def get_local_ip(self):
             return self.__ip
 
+        def get_ip_list(self):
+            return self.ips
+
         def set_public_ip(self, pip):
             self.__pip = pip
+
 
         def get_public_ip(self):
             return self.__pip
@@ -419,7 +425,7 @@ class MainContext(object):
                         s = "amqp://"+self.getUuid()
                     else:
                         s = ep
-                    self.endpoints.append( (s, "amqp.PUSH", "amqp.PUSH", 15) )
+                    self.endpoints.append( (s, "amqp.PUSH", "amqp.PUSH", 16) )
                     logging.debug("Added endpoint: "+s)
 
                 elif prot == "ipc:":
@@ -431,16 +437,29 @@ class MainContext(object):
                     self.endpoints.append( (s, "zmq.IPC", "zmq.PULL", 4) )
                     logging.debug("Added endpoint: "+s)
 
-                elif prot == "tcp:":
+                # elif prot == "tcp:":
+                #     addr = prts[1].split(":")
+                #     if addr[0] == "*":
+                #         addr[0] = self.__ip
+                #     if addr[1] == "*":
+                #         addr[1] = str(PmkShared.ZMQ_ENDPOINT_PORT)
+                #
+                #     s = "tcp://"+addr[0]+":"+addr[1]
+                #     self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
+                #     logging.debug("Added endpoint: "+s)
+                #
+                elif prot =="tcp:":
                     addr = prts[1].split(":")
                     if addr[0] == "*":
-                        addr[0] = self.__ip
-                    if addr[1] == "*":
-                        addr[1] = str(PmkShared.ZMQ_ENDPOINT_PORT)
+                        for ip in self.ips:
+                            s = "tcp://"+ip+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)
+                            if len(ip) > 15:
+                                #ipv6
+                                self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
+                            else:
+                                self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 14) )
 
-                    s = "tcp://"+addr[0]+":"+addr[1]
-                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
-                    logging.debug("Added endpoint: "+s)
+                            logging.debug("Added endpoint: "+s)
 
                 #TODO uncomment once tftp is integrated
                 #elif prot == "tftp:":
