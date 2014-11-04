@@ -85,10 +85,10 @@ class InternalDispatch(SThread):
                 pass
 
             if "seeds" in pkt[0].keys():
-                if x == 0:
-                   x = 1
-                   self._dispatch(pkt)
-                   continue
+                #if x == 0:
+                #   x = 1
+                #   self._dispatch(pkt)
+                #   continue
 
                 seed_arr = pkt[0]["seeds"]
                 for seed in seed_arr:
