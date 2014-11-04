@@ -8,7 +8,7 @@ required_version = (2, 3)
 if sys.version_info < required_version:
     raise ImportError, "Requires at least Python 2.3"
 
-VERSION = "0.3.1"
+VERSION = "kakai-beta"
 
 from pumpkin.PmkDataCatch import *
 from pumpkin.PmkBroadcast import *  
