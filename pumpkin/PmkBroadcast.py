@@ -449,7 +449,7 @@ class BroadcastListener(Thread):
         while 1:
             try:
                 data, wherefrom = sok.recvfrom(4096, 0)
-
+                self.handle(data,wherefrom)
             except(timeout):
                 #logging.debug("Timeout")
                 if self.stopped():
@@ -457,16 +457,8 @@ class BroadcastListener(Thread):
                     break
                 else:
                     continue
-            logging.debug("Broadcast received from: "+repr(wherefrom))
-            logging.debug("Broadcast data: "+data)
-            #datam = hashlib.md5(data).hexdigest()
-            #logging.debug("MD5 data: "+datam)
-            self.handle(data,wherefrom)
 
-            #reply = self.__context.dumpRegistry()
-            #sok.sendto(reply, wherefrom)
-            #if not ( wherefrom[0] in self.tested):
-            #    self.handle(data,wherefrom)
+
 
     def handle(self, data, wherefrom):
         context = self.context
@@ -478,6 +470,8 @@ class BroadcastListener(Thread):
 
             for ep in d:
                 if not ep["host"] == self.context.getUuid() and not ep["ep"] in self.context.peers.keys():
+                    logging.debug("Broadcast received from: "+repr(wherefrom)+ " Data: "+data)
+
                     zmqsub = ZMQBroadcastSubscriber(context, zmq_context, ep["ep"])
                     zmqsub.start()
                     context.peers[ep["ep"]] = ep["host"]
@@ -536,7 +530,7 @@ class Broadcaster(SThread):
             for private_ip in self.context.get_ip_list(type="ips4_private"):
                 ep = "tcp://"+private_ip+":"+str(PmkShared.ZMQ_PUB_PORT)
                 data = '[{"host" : "'+self.context.getUuid()+'", "ep" : "'+ep+'"}]'
-                self.announce(data, self.__port)
+                self.announce(data, self.__port, private_ip)
             time.sleep(self.__rate)
 
             #sok.sendto(data, ('<broadcast>', UDP_BROADCAST_PORT))
@@ -561,10 +555,9 @@ class Broadcaster(SThread):
             else:
                 continue
 
-    def announce(self, msg, port=UDP_BROADCAST_PORT):
+    def announce(self, msg, port=UDP_BROADCAST_PORT, bind='0.0.0.0'):
         sok = socket(AF_INET, SOCK_DGRAM)
-        sok.bind(('0.0.0.0', 0))
-        #sok.bind(('172.17.42.1', 0))
+        sok.bind((bind, 0))
         if self.context.getAttributeValue().broadcast:
             sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
             sok.sendto(msg, ('<broadcast>', port))
@@ -605,116 +598,3 @@ class FileServer(Thread):
         return self.__stop.isSet()
 
 
-
-#class RendezvousServer(Thread):
-#
-#
-#    def __init__(self, context, port):
-#        Thread.__init__(self)
-#        self.__stop = Event()
-#        self.__port = port
-#        self.__context = context
-#        self.poolqueue = {}
-#
-#    def run(self):
-#        logging.info("Starting Rendezvous server on port "+str(self.__port))
-#        sok = socket(AF_INET, SOCK_DGRAM)
-#        sok.bind(('', self.__port))
-#        sok.settimeout(5)
-#        while 1:
-#            try:
-#                data, addr = sok.recvfrom(32)
-#            except timeout:
-#                logging.debug("RendezvousServer Timeout")
-#                if self.stopped():
-#                    logging.debug("Exiting RendezvousServer thread")
-#                    break
-#                else:
-#                    continue
-#
-#            logging.info("Connection from %s:%d" % addr)
-#            pool = data.strip()
-#            sok.sendto( "ok "+pool, addr )
-#            data, addr = sok.recvfrom(2)
-#            if data != "ok":
-#                continue
-#            logging.info("Request received for pool: ", pool)
-#            try:
-#                a, b = self.poolqueue[pool], addr
-#                sok.sendto( self.addr2bytes(a), b )
-#                sok.sendto( self.addr2bytes(b), a )
-#                logging.info("Linked", pool)
-#                del self.poolqueue[pool]
-#            except KeyError:
-#                self.poolqueue[pool] = addr
-#
-#    def addr2bytes( self, addr ):
-#
-#        """Convert an address pair to a hash."""
-#        host, port = addr
-#        try:
-#            host = socket.gethostbyname( host )
-#        except (socket.gaierror, socket.error):
-#            raise ValueError, "Invalid host"
-#        try:
-#            port = int(port)
-#        except ValueError:
-#            raise ValueError, "Invalid port"
-#        bytes  = socket.inet_aton( host )
-#        bytes += struct.pack( "H", port )
-#        return bytes
-#
-#    def stop(self):
-#        self.__stop.set()
-#
-#    def stopped(self):
-#        return self.__stop.isSet()
-#
-#
-#class HoleComm(Thread):
-#
-#    def __init__(self, context, server, port, link):
-#        Thread.__init__(self)
-#        self.__stop = Event()
-#        self.__port = port
-#        self.__context = context
-#        self.__server = server
-#        self.__link = link
-#
-#    def run(self):
-#
-#        master = (self.__server, int(self.__port))
-#
-#        sockfd = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-#        sockfd.sendto( self.__link, master )
-#        data, addr = sockfd.recvfrom( len(self.__link)+3 )
-#        if data != "ok "+self.__link:
-#            print >>sys.stderr, "unable to request!"
-#            sys.exit(1)
-#        sockfd.sendto( "ok", master )
-#        print >>sys.stderr, "request sent, waiting for parkner in pool '%s'..." % self.__link
-#        data, addr = sockfd.recvfrom( 6 )
-#
-#        target = self.bytes2addr(data)
-#        print >>sys.stderr, "connected to %s:%d" % target
-#
-#        while True:
-#            rfds,_,_ = select( [0, sockfd], [], [] )
-#            if 0 in rfds:
-#                data = sys.stdin.readline()
-#                if not data:
-#                    break
-#                sockfd.sendto( data, target )
-#            elif sockfd in rfds:
-#                data, addr = sockfd.recvfrom( 1024 )
-#                sys.stdout.write( data )
-#
-#        sockfd.close()
-#
-#    def bytes2addr(self, bytes ):
-#        """Convert a hash to an address pair."""
-#        if len(bytes) != 6:
-#            raise ValueError, "invalid bytes"
-#        host = socket.inet_ntoa( bytes[:4] )
-#        port, = struct.unpack( "H", bytes[-2:] )
-#        return host, port

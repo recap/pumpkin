@@ -467,15 +467,16 @@ class MainContext(object):
                 elif prot =="tcp:":
                     addr = prts[1].split(":")
                     if addr[0] == "*":
-                        for ip in self.ips:
-                            s = "tcp://"+ip+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)
-                            if len(ip) > 15:
-                                #ipv6
-                                self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
-                            else:
-                                self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 14) )
+                        for ip_type in self.ips.keys():
+                            for ip in self.ips[ip_type]:
+                                s = "tcp://"+ip+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)
+                                if len(ip) > 15:
+                                    #ipv6
+                                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
+                                else:
+                                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 14) )
 
-                            logging.debug("Added endpoint: "+s)
+                                logging.debug("Added endpoint: "+s)
 
                 #TODO uncomment once tftp is integrated
                 #elif prot == "tftp:":
