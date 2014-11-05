@@ -34,12 +34,6 @@ ZMQ_ENDPOINT_PORT = 7900
 ZMQ_PUB_PORT = 7901
 
 
-TIMING_BIT =            0b1         #1
-TRACK_BIT =             0b10        #2
-ACK_BIT =               0b100       #4
-TRACER_BIT =            0b1000      #8
-BROADCAST_BIT =         0b10000     #16
-FORCE_BIT =             0b100000    #32
 
 
 #SUPERNODES = ["127.0.0.1", "flightcees.lab.uvalight.net", "mike.lab.uvalight.net", "elab.lab.uvalight.net"]

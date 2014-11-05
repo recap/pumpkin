@@ -20,6 +20,7 @@ from numpy import arange,array,ones,linalg
 import PmkShared
 
 from PmkShared import *
+from PmkPacket import *
 from PmkBroadcast import *
 from PmkExternalDispatch import ExternalDispatch
 from networkx.readwrite import json_graph
@@ -144,31 +145,37 @@ class Seed(object):
 
         return pkt
 
+    # def __rawpacket(self):
+    #     pkt = []
+    #     ship_id = self.context.getExecContext()
+    #     cont_id =  str(uuid.uuid4())[:8]
+    #     pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : 0, "state": "NEW", \
+    #                 "c_tag" : "NONE:NONE", "ttl" : 'D', "aux": 0, "t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
+    #                 "last_contact" : "None", "las"
+    #                                          "t_func" : "None", "last_timestamp" : 0})
+    #     #Place holder for data automaton
+    #     g = nx.DiGraph()
+    #     in_tags = self.get_in_tag_list()
+    #     out_tags = self.get_out_tag_list()
+    #
+    #     for it in in_tags:
+    #         for ot in out_tags:
+    #             g.add_edge(it,ot,function=self.get_name())
+    #
+    #     #g.add_edge("DataString:RAW", "DataString:PROCESSED", function="processor")
+    #
+    #     d =  json_graph.node_link_data(g)
+    #     ds = json.dumps(d)
+    #
+    #     pkt.append( ds )
+    #     pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
+    #
+    #     return pkt
+
     def __rawpacket(self):
-        pkt = []
         ship_id = self.context.getExecContext()
         cont_id =  str(uuid.uuid4())[:8]
-        pkt.append({"ship" : ship_id, "container" : cont_id, "box" : '0', "fragment" : '0', "e" : 0, "state": "NEW", \
-                    "c_tag" : "NONE:NONE", "ttl" : 'D', "aux": 0, "t_state":"None", "t_otype" : "None" ,"stop_func": "None",\
-                    "last_contact" : "None", "las"
-                                             "t_func" : "None", "last_timestamp" : 0})
-        #Place holder for data automaton
-        g = nx.DiGraph()
-        in_tags = self.get_in_tag_list()
-        out_tags = self.get_out_tag_list()
-
-        for it in in_tags:
-            for ot in out_tags:
-                g.add_edge(it,ot,function=self.get_name())
-
-        #g.add_edge("DataString:RAW", "DataString:PROCESSED", function="processor")
-
-        d =  json_graph.node_link_data(g)
-        ds = json.dumps(d)
-
-        pkt.append( ds )
-        pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
-
+        pkt = Packet.new_empty_packet(ship_id, cont_id)
         return pkt
 
     def get_new_box(self):
@@ -349,9 +356,9 @@ class Seed(object):
         aux = 0
         if "aux" in pkt[0].keys():
             aux = int(pkt[0]["aux"])
-            if aux & FORCE_BIT:
+            if aux & Packet.FORCE_BIT:
                 return False
-            if aux & TRACER_BIT:
+            if aux & Packet.TRACER_BIT:
                 return False
 
         pkt_id = self.get_pkt_id(pkt)
@@ -540,7 +547,7 @@ class Seed(object):
         forecast["msize"] = msize
         forecast["pexec"] = pexec
 
-        pkt[0]["aux"] = pkt[0]["aux"] | TIMING_BIT
+        pkt[0]["aux"] = pkt[0]["aux"] | Packet.TIMING_BIT
         pkt[0]["pexec"] = pred_time
         pkt[0]["dsize"] = data_len
         self._forecast_lock.release()
@@ -558,7 +565,7 @@ class Seed(object):
     def adj_forecast(self, pkt):
 
         if "aux" in pkt[0].keys():
-            if pkt[0]["aux"] & TIMING_BIT:
+            if pkt[0]["aux"] & Packet.TIMING_BIT:
                 self._forecast_lock.acquire()
                 ptime = pkt[0]["pexec"]
                 dsize = pkt[0]["dsize"]
@@ -832,7 +839,7 @@ class Seed(object):
         aux = 0
         if "aux" in pkt[0].keys():
             aux = pkt[0]["aux"]
-        aux = aux | BROADCAST_BIT
+        aux = aux | Packet.BROADCAST_BIT
 
         self.fork_dispatch(pkt, msg, state)
         pass
@@ -979,7 +986,7 @@ class Seed(object):
         if "aux" in lpkt[0].keys():
             aux = lpkt[0]["aux"]
 
-        if aux & TRACK_BIT:
+        if aux & Packet.TRACK_BIT:
             d = {}
             d["ship_id"] = self.get_ship_id(lpkt)
             d["stag"] = tag
@@ -1190,7 +1197,7 @@ class Seed(object):
         if "aux" in lpkt[0].keys():
             aux = lpkt[0]["aux"]
 
-        if aux & TRACK_BIT:
+        if aux & Packet.TRACK_BIT:
             d = {}
             d["ship_id"] = self.get_ship_id(lpkt)
             d["stag"] = tag

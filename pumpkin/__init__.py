@@ -13,13 +13,12 @@ VERSION = "kakai-beta-1"
 from pumpkin.PmkDataCatch import *
 from pumpkin.PmkBroadcast import *  
 from pumpkin.PmkExternalDispatch import *  
-from pumpkin.PmkInternalDispatch import *  
-from pumpkin.PmkPeers import *         
+from pumpkin.PmkInternalDispatch import *
 from pumpkin.PmkSeed import *    
 from pumpkin.PmkShell import *
 from pumpkin.PmkContexts import *   
 from pumpkin.PmkHTTPServer import *        
-from pumpkin.PmkPackets import *           
+from pumpkin.PmkPacket import *
 from pumpkin.PmkProcessGraph import *
 from pumpkin.PmkShared import *
 from pumpkin.Pumpkin import *

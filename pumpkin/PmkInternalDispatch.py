@@ -11,6 +11,7 @@ import PmkSeed
 import PmkBroadcast
 import PmkShared
 from PmkShared import *
+from PmkPacket import *
 from Queue import *
 
 
@@ -21,21 +22,24 @@ class rx(Queue):
 
     def dig(self, pkt):
         #print "DIG: "+json.dumps(pkt)
-        if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
-            iplugins = PmkSeed.iplugins
-            keys = PmkSeed.iplugins.keys
-            l = len(pkt)
-            func = pkt[l-1]["func"]
-            #data = pkt[l-2]["data"]
+        header = pkt[0]
+        if header["aux"] & Packet.LOAD_BIT:
 
-            if ":" in func:
-                func = func.split(":")[1]
+            if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
+                iplugins = PmkSeed.iplugins
+                keys = PmkSeed.iplugins.keys
+                l = len(pkt)
+                func = pkt[l-1]["func"]
+                #data = pkt[l-2]["data"]
 
-            if func in keys():
-                klass = iplugins[func]
-                klass.look_ahead(pkt)
+                if ":" in func:
+                    func = func.split(":")[1]
 
-            pass
+                if func in keys():
+                    klass = iplugins[func]
+                    klass.look_ahead(pkt)
+
+                pass
 
 class InternalDispatch(SThread):
     _packed_pkts = 0
@@ -78,7 +82,7 @@ class InternalDispatch(SThread):
             if "aux" in pkt[0].keys():
                 aux = pkt[0]["aux"]
 
-            if aux & TRACER_BIT:
+            if aux & Packet.TRACER_BIT:
                 #stat = self.context.get_stat()
                 #print stat
                 #continue

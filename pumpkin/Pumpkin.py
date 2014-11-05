@@ -226,14 +226,14 @@ class Pumpkin(Daemon):
 
         if context.with_broadcast():
             #Listen for UDP broadcasts on LAN
-            #udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
-            #udplisten.start()
-            #context.addThread(udplisten)
+            udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
+            udplisten.start()
+            context.addThread(udplisten)
 
 
-            #udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
-            #udpbc.start()
-            #context.addThread(udpbc)
+            udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
+            udpbc.start()
+            context.addThread(udpbc)
             pass
 
         #Local stuff to exploit multi-cores still needs testing
