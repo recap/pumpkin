@@ -56,7 +56,7 @@ class MainContext(object):
             self.cmd = cmd()
             self.registry = {}
             self.__ip = "127.0.0.1"
-            self.ips = []
+            self.ips = {}
             self.endpoints = []
             self.__reg_update = False
             self.rlock = threading.RLock()
@@ -76,6 +76,12 @@ class MainContext(object):
             self.pkt_shelve_2 = None
 
             pass
+
+        def set_ips(self, ips4_private, ips4_public, ips6_private, ips6_public):
+            self.ips["ips4_private"]    = ips4_private
+            self.ips["ips4_public"]     = ips4_public
+            self.ips["ips6_private"]    = ips6_private
+            self.ips["ips6_public"]     = ips6_public
 
         def fallback_rabbitmq(self):
             if self.__attrs.rabbitmq_fallback:
@@ -352,18 +358,22 @@ class MainContext(object):
         def singleSeed(self):
             return self.__attrs.singleseed
 
-        def get_local_ip(self):
-            return self.__ip
-
-        def get_ip_list(self):
-            return self.ips
-
-        def set_public_ip(self, pip):
-            self.__pip = pip
-
-
+        def get_ip_list(self, type="ips4_private"):
+            if type == "ips4_private":
+                return self.ips["ips4_private"]
+            else:
+                return []
         def get_public_ip(self):
-            return self.__pip
+            if len(self.ips["ips4_public"]) > 0:
+                return self.ips["ips4_public"][0]
+            else:
+                return "127.0.0.1"
+
+        def get_local_ip(self):
+            if len(self.ips["ips4_private"]) > 0:
+                return self.ips["ips4_private"][0]
+            else:
+                return "127.0.0.1"
 
         def getProcGraph(self):
             return self.proc_graph

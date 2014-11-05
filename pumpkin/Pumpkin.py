@@ -66,14 +66,13 @@ class Pumpkin(Daemon):
         self.context.setExecContext(ex_cntx)
         self.context.setSupernodeList(SUPERNODES)
 
-        ips = get_local_ip_list()
-        pip = get_public_ip()
-        ips.append(pip)
-        self.context.ips = ips
+        ips4_private, ips4_public, ips6_private, ips6_public = get_ip_list()
+        if len(ips4_public) == 0:
+            pip = get_public_ip()
+            ips4_public.append(pip)
 
-        self.context.set_local_ip(ips[0])
+        self.context.set_ips(ips4_private, ips4_public, ips6_private, ips6_public)
 
-        self.context.set_public_ip(pip)
         self.context.__pumpkin = self
 
         self.zmq_context = zmq.Context()
@@ -188,7 +187,7 @@ class Pumpkin(Daemon):
         context = self.context
         logging.info("Node assigned UID: "+context.getUuid())
         logging.info("Exec context: "+context.getExecContext())
-        logging.info("Node bound to IP: "+context.get_local_ip())
+        #logging.info("Node bound to IP: "+context.get_local_ip())
         home = expanduser("~")
         wd = home+"/.pumpkin/"+context.getUuid()+"/"
         context.working_dir = wd
