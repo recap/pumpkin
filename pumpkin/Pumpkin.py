@@ -235,7 +235,7 @@ class Pumpkin(Daemon):
             context.addThread(udpbc)
 
             zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
-            zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            #zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
             zmqbc.start()
             context.addThread(zmqbc)
 

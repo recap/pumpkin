@@ -330,7 +330,7 @@ class ZMQBroadcaster(SThread):
         logging.info("Starting thread: "+self.__class__.__name__)
         sock = self.zmq_cntx.socket(zmq.PUB)
         try:
-            #sock.bind("tcp://*:"+str(self.port))
+            #sock.bind("tcp://*:"+str(7901))
             sock.bind(self.sn)
 
         except Exception as er:
