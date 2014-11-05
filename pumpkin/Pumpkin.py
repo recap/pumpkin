@@ -233,6 +233,12 @@ class Pumpkin(Daemon):
             udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
             udpbc.start()
             context.addThread(udpbc)
+
+            zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
+            zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            zmqbc.start()
+            context.addThread(zmqbc)
+
             pass
 
         #Local stuff to exploit multi-cores still needs testing

@@ -563,7 +563,8 @@ class Broadcaster(SThread):
 
     def announce(self, msg, port=UDP_BROADCAST_PORT):
         sok = socket(AF_INET, SOCK_DGRAM)
-        sok.bind(('', 0))
+        sok.bind(('0.0.0.0', 0))
+        #sok.bind(('172.17.42.1', 0))
         if self.context.getAttributeValue().broadcast:
             sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
             sok.sendto(msg, ('<broadcast>', port))
