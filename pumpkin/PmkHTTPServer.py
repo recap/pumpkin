@@ -453,9 +453,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if func_name in PmkSeed.iplugins.keys():
                 klass = PmkSeed.iplugins[func_name]
                 #klass.stop_recording()
-                forecast = klass.get_forecast()
-
-                rep = '{"npkts" : "'+str(forecast[0])+'", "msize" : "'+str(forecast[1])+'", "pexec" : "'+str(forecast[2])+'"}'
+                #forecast = klass.get_forecast()
+                queue_prediction = klass.queue_prediction()
+                rep = "{:.12f}".format(queue_prediction)
+                #rep = '{"npkts" : "'+str(forecast[0])+'", "msize" : "'+str(forecast[1])+'", "pexec" : "'+str(forecast[2])+'"}'
                 s.wfile.write(rep)
 
         if "complexity" in s.path:

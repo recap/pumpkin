@@ -95,6 +95,7 @@ class Seed(object):
         self._forecast["npkts"] = 0
         self._forecast["msize"] = 0
         self._forecast["pexec"] = 0
+        self._q_in_data = 0
 
         self._in_and_list = []
         self._in_all_list = []
@@ -511,72 +512,96 @@ class Seed(object):
             x_len = xi.__len__()
             y_len = y.__len__()
 
+            #w = (m, c)
+            #y = mx + c
             w = linalg.lstsq(A.T,y)[0]
         else:
             w = (0, 0)
         return w
 
     def look_ahead(self, pkt):
-        self._forecast_lock.acquire()
-        w = self.regression()
-        if w[0] == 0:
-            self._forecast_lock.release()
-            return
-        forecast = self._forecast
-        qpkts = forecast["npkts"]
-        msize = forecast["msize"]
-        pexec = forecast["pexec"]
-
+        header = pkt[0]
         l = len(pkt)
+        if header["aux"] & Packet.TIMING_BIT:
+            if "data" in pkt[l-2].keys():
+                 data = pkt[l-2]["data"]
+            else:
+                 data = ""
+            data_len = sys.getsizeof(data)
+            self._q_in_data += data_len
+            header["c_size"] = data_len
 
-        data = None
-        if "data" in pkt[l-2].keys():
-            data = pkt[l-2]["data"]
-        else:
-            data = ""
-
-        data_len = sys.getsizeof(data)
-
-        pred_time = data_len*w[0] + w[1]
-
-        pexec += pred_time
-        if(qpkts == 0):
-            qpkts += 1
-        msize = (float(msize)*qpkts + float(data_len)) / (qpkts)
-        qpkts += 1
-
-        forecast["npkts"] = qpkts
-        forecast["msize"] = msize
-        forecast["pexec"] = pexec
-
-        pkt[0]["aux"] = pkt[0]["aux"] | Packet.TIMING_BIT
-        pkt[0]["pexec"] = pred_time
-        pkt[0]["dsize"] = data_len
-        self._forecast_lock.release()
+        # self._forecast_lock.acquire()
+        # w = self.regression()
+        # if w[0] == 0:
+        #     self._forecast_lock.release()
+        #     return
+        # forecast = self._forecast
+        # qpkts = forecast["npkts"]
+        # msize = forecast["msize"]
+        # pexec = forecast["pexec"]
+        #
+        # l = len(pkt)
+        #
+        # data = None
+        # if "data" in pkt[l-2].keys():
+        #     data = pkt[l-2]["data"]
+        # else:
+        #     data = ""
+        #
+        # data_len = sys.getsizeof(data)
+        #
+        # pred_time = data_len*w[0] + w[1]
+        #
+        # pexec += pred_time
+        # if(qpkts == 0):
+        #     qpkts += 1
+        # msize = (float(msize)*qpkts + float(data_len)) / (qpkts)
+        # qpkts += 1
+        #
+        # forecast["npkts"] = qpkts
+        # forecast["msize"] = msize
+        # forecast["pexec"] = pexec
+        #
+        # pkt[0]["aux"] = pkt[0]["aux"] | Packet.TIMING_BIT
+        # pkt[0]["pexec"] = pred_time
+        # pkt[0]["dsize"] = data_len
+        # self._forecast_lock.release()
         pass
 
+    def queue_prediction(self, model="linear"):
+        if model == "linear":
+            m,c = self.regression()
+            y = m*float(self._q_in_data) + c
+
+            return y
+
+
     def get_forecast(self):
-        self._forecast_lock.acquire()
-        forecast = self._forecast
-        qpkts = forecast["npkts"]
-        msize = forecast["msize"]
-        pexec = forecast["pexec"]
-        self._forecast_lock.release()
-        return (qpkts, msize, pexec)
+        # self._forecast_lock.acquire()
+        # forecast = self._forecast
+        # qpkts = forecast["npkts"]
+        # msize = forecast["msize"]
+        # pexec = forecast["pexec"]
+        # self._forecast_lock.release()
+        # return (qpkts, msize, pexec)
+
+        pass
 
     def adj_forecast(self, pkt):
 
-        if "aux" in pkt[0].keys():
-            if pkt[0]["aux"] & Packet.TIMING_BIT:
-                self._forecast_lock.acquire()
-                ptime = pkt[0]["pexec"]
-                dsize = pkt[0]["dsize"]
-
-                forecast = self._forecast
-                forecast["pexec"] -= ptime
-                #forecast["msize"] = (forecast["msize"] - dsize) / 2
-                forecast["npkts"] -= 1
-                self._forecast_lock.release()
+        # if "aux" in pkt[0].keys():
+        #     if pkt[0]["aux"] & Packet.TIMING_BIT:
+        #         self._forecast_lock.acquire()
+        #         ptime = pkt[0]["pexec"]
+        #         dsize = pkt[0]["dsize"]
+        #
+        #         forecast = self._forecast
+        #         forecast["pexec"] -= ptime
+        #         #forecast["msize"] = (forecast["msize"] - dsize) / 2
+        #         forecast["npkts"] -= 1
+        #         self._forecast_lock.release()
+        pass
 
     def _pkt_start_timing(self, pkt):
         header = pkt[0]
@@ -589,9 +614,8 @@ class Seed(object):
             else:
                 data = ""
             data_len = sys.getsizeof(data)
+            self._q_in_data -= data_len
             header["c_size"] = data_len
-            print "TIMING222222222222"
-        print "TIMING1111111111111"
 
     def _pkt_reset_timing(self,pkt):
         header = pkt[0]
@@ -603,7 +627,7 @@ class Seed(object):
 
     def _pkt_end_timing(self, pkt):
         header = pkt[0]
-        if header["aux"] & Packet.TIMING_BIT:
+        if (header["aux"] & Packet.TIMING_BIT) and (header["last_timestamp"] != 0):
             #reset timing bit
             header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
             htime = time.time()
@@ -620,8 +644,8 @@ class Seed(object):
             else:
                 complexity[data_len] = [etime,1]
 
-            str_etime = "{:.12f}".format(etime)
-            print "Time: "+str(data_len)+" "+str_etime
+            #str_etime = "{:.12f}".format(etime)
+            #print "Time: "+str(data_len)+" "+str_etime
 
 
     def _stage_run_express(self,pkt, *args):
@@ -670,6 +694,11 @@ class Seed(object):
     def set_pkt_aux_bit(self, pkt, bit):
         header = pkt[0]
         header["aux"] = header["aux"] | bit
+        return pkt
+
+    def reset_pkt_aux_bit(self, pkt, bit):
+        header = pkt[0]
+        header["aux"] = header["aux"] & (~bit)
         return pkt
 
     def stop_recording(self):
