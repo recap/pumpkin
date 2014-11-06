@@ -57,7 +57,7 @@ class Packet(object):
         return pkt
 
     @staticmethod
-    def get_ip_from_rp(ep):
+    def get_ip_from_ep(ep):
         parts = re.split(r'[//:\s]*',ep)
         if len(parts) > 2:
             return parts[1]

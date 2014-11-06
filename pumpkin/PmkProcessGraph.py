@@ -94,6 +94,19 @@ class ProcessGraph(object):
     def dumpRoutingTable(self):
         return json.dumps(self.tagroute)
 
+    def __remove_same_public_ep(self, eps):
+        rk = -1
+        for x in range(0, len(eps)):
+            ep = eps[x]
+            ip = Packet.get_ip_from_ep(ep["ep"])
+            if ip == self.context.get_public_ip():
+               rk = x
+
+        if rk >= 0:
+            del eps[rk]
+
+        return eps
+
     def updateRegistry(self, entry, loc="remote"):
 
         registry = self.registry
@@ -102,6 +115,8 @@ class ProcessGraph(object):
         a = []
         tep = []
         self.rlock.acquire()
+        if loc == "remote":
+            self.__remove_same_public_ep(e["endpoints"])
         if e["name"] in registry.keys():
             logging.debug("Updating peer: "+e["name"])
             #d is local registry
@@ -123,6 +138,7 @@ class ProcessGraph(object):
 
                 if not found:
                     if loc == "remote":
+
                         eep["priority"] = int(eep["priority"]) - 5
                         self.__reset_ep_ttl(e["name"], eep["ep"])
                     d["endpoints"].append(eep)
@@ -134,18 +150,7 @@ class ProcessGraph(object):
 
             if loc == "remote":
                 #remove public ip from internal docker nodes
-                ep_del = "tcp://"+str(self.context.get_public_ip())+":7900"
-                if ep_del in e["endpoints"]:
-                    e["endpoints"]["ep"].remove(ep_del)
-
-                rk = -1
-                for x in range(9, len(e["endpoints"])):
-                    ip = Packet.get_ip_from_ep(ep["ep"])
-                    if ip == self.context.get_public_ip():
-                       rk = x
-
-                if rk >= 0:
-                    del e["endpoints"][rk]
+                #self.__remove_same_public_ep(e["endpoints"])
 
                 for ep in e["endpoints"]:
                     logging.info("Discovered new seed: "+e["name"]+" at "+ep["ep"])
