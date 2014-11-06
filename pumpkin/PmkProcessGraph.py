@@ -136,14 +136,22 @@ class ProcessGraph(object):
                 #remove public ip from internal docker nodes
                 ep_del = "tcp://"+str(self.context.get_public_ip())+":7900"
                 if ep_del in e["endpoints"]:
-                    e["endpoints"].remove(ep_del)
+                    e["endpoints"]["ep"].remove(ep_del)
+
+                rk = -1
+                for x in range(9, len(e["endpoints"])):
+                    ip = Packet.get_ip_from_ep(ep["ep"])
+                    if ip == self.context.get_public_ip():
+                       rk = x
+
+                if rk >= 0:
+                    del e["endpoints"][rk]
+
                 for ep in e["endpoints"]:
-                    #logging.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
                     logging.info("Discovered new seed: "+e["name"]+" at "+ep["ep"])
                     ep["priority"] =  int(ep["priority"]) - 5
                     self.__reset_ep_ttl(e["name"], ep["ep"])
-                    #ip = Packet.get_ip_from_ep(ep)
-                    #if ip == self.context.get_public_ip():
+
             else:
                 for ep in e["endpoints"]:
                     logging.info("Discovered local seed: "+e["name"]+" at "+ep["ep"])
