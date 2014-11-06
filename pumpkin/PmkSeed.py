@@ -533,7 +533,7 @@ class Seed(object):
         else:
             data = ""
 
-        data_len = len(data)
+        data_len = sys.getsizeof(data)
 
         pred_time = data_len*w[0] + w[1]
 
@@ -576,22 +576,57 @@ class Seed(object):
                 forecast["npkts"] -= 1
                 self._forecast_lock.release()
 
+    def _pkt_start_timing(self, pkt):
+        header = pkt[0]
+        if header["aux"] & Packet.TIMING_BIT:
+            header["last_timestamp"] = time.time()
+            data = None
+            if "data" in pkt[l-2].keys():
+                data = pkt[l-2]["data"]
+            else:
+                data = ""
+            data_len = sys.getsizeof(data)
+            header["c_size"] = data_len
+
+
+    def _pkt_reset_timing(self,pkt):
+        header = pkt[0]
+        if header["aux"] & Packet.TIMING_BIT:
+            #reset timing bit
+            header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
+            header["c_size"] = 0
+            header["last_timestamp"] = 0
+
+    def _pkt_end_timing(self, pkt):
+        header = pkt[0]
+        if header["aux"] & Packet.TIMING_BIT:
+            #reset timing bit
+            header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
+            htime = time.time()
+            stime = header["last_timestamp"]
+            etime = htime - stime
+            data_len = header["c_size"]
+            complexity = self._complexity
+            if data_len in complexity.keys():
+                t = complexity[data_len][0]
+                n = complexity[data_len][1]
+                avg = (etime + t*n) / (n+1)
+                complexity[data_len][0] = avg
+                complexity[data_len][1] = n+1
+            else:
+                complexity[data_len] = [etime,1]
+
 
     def _stage_run_express(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
-        pstate =  pkt[0]["state"]
-        dlen = 0
-        stime = None
-        htime = None
-        hin = time.time
-        complexity = self._complexity
+        header = pkt[0]
+        pstate =  header["state"]
 
-        tstag = "IN:"+self.name+":"+pkt[0]["c_tag"]
-        pkt[0]["state"] = "PROCESSING"
+        tstag = "IN:"+self.name+":"+header["c_tag"]
+        header["state"] = "PROCESSING"
 
         nargs = []
         if(args[0]):
-            dlen = len(args[0])
             msg = args[0]
             nargs.append(msg)
         else:
@@ -601,25 +636,30 @@ class Seed(object):
 
         self.inc_state_counter(tstag)
 
-        if self._complexity_record:
-            stime = hin()
-            self.run(pkt,*nargs)
-            htime = hin()
+        self._pkt_start_timing(pkt)
+        self.run(pkt,*nargs)
+        self._pkt_stop_timing(pkt)
 
-            etime = htime - stime
-
-            if dlen in complexity.keys():
-                t = complexity[dlen][0]
-                n = complexity[dlen][1]
-                avg = (etime + t*n) / (n+1)
-                complexity[dlen][0] = avg
-                complexity[dlen][1] = n+1
-            else:
-                complexity[dlen] = [etime,1]
-
-        self.adj_forecast(pkt)
+        # if self._complexity_record:
+        #     stime = hin()
+        #     self.run(pkt,*nargs)
+        #     htime = hin()
+        #
+        #     etime = htime - stime
+        #
+        #     if dlen in complexity.keys():
+        #         t = complexity[dlen][0]
+        #         n = complexity[dlen][1]
+        #         avg = (etime + t*n) / (n+1)
+        #         complexity[dlen][0] = avg
+        #         complexity[dlen][1] = n+1
+        #     else:
+        #         complexity[dlen] = [etime,1]
+        #
+        # self.adj_forecast(pkt)
 
         pass
+
     def stop_recording(self):
         self._complexity_record = False
 
@@ -979,6 +1019,8 @@ class Seed(object):
 
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
+        self._pkt_end_timing(dpkt)
+
         pkt = dpkt
         lpkt = dpkt
         caller = "run"
@@ -1106,6 +1148,9 @@ class Seed(object):
         return lpkt
 
     def re_dispatch(self,pkt):
+
+        self._pkt_reset_timing(pkt)
+
         pkt_l = len(pkt)
         pkt[0]["state"] = "REDISPATCH"
         last = pkt[pkt_l - 1]
@@ -1141,6 +1186,8 @@ class Seed(object):
 
 
     def error(self,pkt, msg=None, type="ERROR", tag="ERROR"):
+
+        self._pkt_reset_timing(pkt)
 
         lpkt = pkt
         caller = "run"
@@ -1188,6 +1235,7 @@ class Seed(object):
 
     def finalize(self,pkt, msg=None, type="END", tag="END"):
 
+        self._pkt_end_timing(pkt)
 
         lpkt = pkt
         caller = "run"

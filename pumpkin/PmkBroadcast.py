@@ -5,6 +5,7 @@ import socket, os
 import time
 
 import ujson as json
+import sys
 import hashlib
 import struct
 import fcntl
@@ -359,6 +360,7 @@ class ZMQBroadcaster(SThread):
                     else:
                         data = "{"+cmd_str+"}"
                 dataz = zlib.compress(data)
+                #logging.debug("Size: "+str(sys.getsizeof(data))+" "+str(sys.getsizeof(dataz)))
                 sock.send(dataz)
                 if self.stopped():
                     logging.debug("Exiting thread: "+self.__class__.__name__)

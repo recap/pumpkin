@@ -11,7 +11,8 @@ class Packet(object):
     TRACER_BIT              = 0b1000      #8
     BROADCAST_BIT           = 0b10000     #16
     FORCE_BIT               = 0b100000    #32
-    LOAD_BIT               = 0b1000000    #32
+    LOAD_BIT                = 0b1000000
+    CODE_BIT                = 0b10000000
 
     PKT_STATE_NEW           = "NEW"
     PKT_TAG_NONE            = "NONE:NONE"
@@ -44,7 +45,6 @@ class Packet(object):
         header["last_contact"]  = None
         header["last_func"]     = None
         header["last_timestamp"]= 0
-
 
 
         pkt.append(header)

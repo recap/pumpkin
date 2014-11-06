@@ -23,6 +23,9 @@ class rx(Queue):
     def dig(self, pkt):
         #print "DIG: "+json.dumps(pkt)
         header = pkt[0]
+        if header["aux"] & Packet.CODE_BIT:
+            # accept or forward
+            pass
         if header["aux"] & Packet.LOAD_BIT:
 
             if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
@@ -88,7 +91,7 @@ class InternalDispatch(SThread):
                 #continue
                 pass
 
-            if "seeds" in pkt[0].keys():
+            if aux & Packet.CODE_BIT:
                 #if x == 0:
                 #   x = 1
                 #   self._dispatch(pkt)
