@@ -2,6 +2,7 @@ __author__="reggie"
 
 
 import uuid
+import re
 
 class Packet(object):
     NULL_BITS               = 0b0
@@ -54,3 +55,9 @@ class Packet(object):
         pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
 
         return pkt
+
+    @staticmethod
+    def get_ip_from_rp(ep):
+        parts = re.split(r'[//:\s]*',ep)
+        if len(parts) > 2:
+            return parts[1]

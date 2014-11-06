@@ -910,9 +910,9 @@ class Seed(object):
     def get_pkt_id(self, pkt):
         id = None
         if pkt[0]["state"] == "MERGE":
-            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]+":M"
+            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+str(pkt[0]["box"])+":"+str(pkt[0]["fragment"])+":M"
         else:
-            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+str(pkt[0]["box"])+":"+str(pkt[0]["fragment"])
 
         return id
 

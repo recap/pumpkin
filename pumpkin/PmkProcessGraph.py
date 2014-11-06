@@ -11,6 +11,7 @@ import re
 from networkx.readwrite import json_graph
 
 from PmkShared import *
+from PmkPacket import *
 
 
 class ProcessGraph(object):
@@ -129,11 +130,21 @@ class ProcessGraph(object):
                     self.__reg_update = True
                     self.__display_graph = True
         else:
-            logging.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
+
+
             if loc == "remote":
+                #remove public ip from internal docker nodes
+                ep_del = "tcp://"+str(self.context.get_public_ip())+":7901"
+                e["endpoints"].remove(ep_del)
                 for ep in e["endpoints"]:
+                    #logging.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
+                    logging.info("Discovered new seed: "+e["name"]+" at "+ep)
                     ep["priority"] =  int(ep["priority"]) - 5
                     self.__reset_ep_ttl(e["name"], ep["ep"])
+                    #ip = Packet.get_ip_from_ep(ep)
+                    #if ip == self.context.get_public_ip():
+
+
 
             registry[e["name"]] = e
             self.__reg_update = True
