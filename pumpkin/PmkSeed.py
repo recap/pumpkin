@@ -638,7 +638,7 @@ class Seed(object):
 
         self._pkt_start_timing(pkt)
         self.run(pkt,*nargs)
-        self._pkt_stop_timing(pkt)
+        self._pkt_end_timing(pkt)
 
         # if self._complexity_record:
         #     stime = hin()
