@@ -938,6 +938,7 @@ class Seed(object):
         cont = self.get_new_container()
         header = lpkt[0]
         header["container"] = cont
+        header["aux"] = pkt[0]["aux"]
         return lpkt
 
 
