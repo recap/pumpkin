@@ -574,7 +574,7 @@ class Seed(object):
             m,c = self.regression()
             y = m*float(self._q_in_data) + c
 
-            return y
+            return (y, self._q_in_data)
 
 
     def get_forecast(self):
