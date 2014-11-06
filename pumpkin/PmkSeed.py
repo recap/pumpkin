@@ -669,7 +669,7 @@ class Seed(object):
 
     def set_pkt_aux_bit(self, pkt, bit):
         header = pkt[0]
-        header["aux"] = header["aux"] & bit
+        header["aux"] = header["aux"] | bit
         return pkt
 
     def stop_recording(self):
