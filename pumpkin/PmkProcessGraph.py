@@ -134,16 +134,19 @@ class ProcessGraph(object):
 
             if loc == "remote":
                 #remove public ip from internal docker nodes
-                ep_del = "tcp://"+str(self.context.get_public_ip())+":7901"
-                e["endpoints"].remove(ep_del)
+                ep_del = "tcp://"+str(self.context.get_public_ip())+":7900"
+                if ep_del in e["endpoints"]:
+                    e["endpoints"].remove(ep_del)
                 for ep in e["endpoints"]:
                     #logging.info("Discovered new seed: "+e["name"]+" at "+e["endpoints"][0]["ep"])
-                    logging.info("Discovered new seed: "+e["name"]+" at "+ep)
+                    logging.info("Discovered new seed: "+e["name"]+" at "+ep["ep"])
                     ep["priority"] =  int(ep["priority"]) - 5
                     self.__reset_ep_ttl(e["name"], ep["ep"])
                     #ip = Packet.get_ip_from_ep(ep)
                     #if ip == self.context.get_public_ip():
-
+            else:
+                for ep in e["endpoints"]:
+                    logging.info("Discovered local seed: "+e["name"]+" at "+ep["ep"])
 
 
             registry[e["name"]] = e
