@@ -590,7 +590,8 @@ class Seed(object):
                 data = ""
             data_len = sys.getsizeof(data)
             header["c_size"] = data_len
-
+            print "TIMING222222222222"
+        print "TIMING1111111111111"
 
     def _pkt_reset_timing(self,pkt):
         header = pkt[0]
