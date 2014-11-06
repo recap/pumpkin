@@ -20,6 +20,7 @@ from networkx.readwrite import json_graph
 
 from Queue import *
 from PmkShared import *
+from PmkPacket import *
 
 
 class tx(Queue):
@@ -201,9 +202,9 @@ class ExternalDispatch(SThread):
                                 if "aux" in header.keys():
                                     aux = header["aux"]
 
-                                if aux & BROADCAST_BIT:
+                                if aux & Packet.BROADCAST_BIT:
                                     pep_ar = r["endpoints"]
-                                    header["aux"] = aux & (~BROADCAST_BIT)
+                                    header["aux"] = aux & (~Packet.BROADCAST_BIT)
                                 else:
                                     if "seeds" in header.keys():
                                         pep_ar = self.ep_sched.pick_route(r, False)

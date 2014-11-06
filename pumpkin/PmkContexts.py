@@ -185,7 +185,7 @@ class MainContext(object):
 
 
         def getPktId(self, pkt):
-            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+str(pkt[0]["box"])+":"+str(pkt[0]["fragment"])
             return id
 
         def pktReady(self, pkt):
