@@ -462,6 +462,7 @@ class Seed(object):
                         self.merge(pkt,nargs)
                         return
                     else:
+                        self._pkt_start_timing(pkt)
                         if self.is_fragment(pkt):
                             self.inc_state_counter(tstag)
                             self.run(pkt,nargs)
@@ -469,6 +470,7 @@ class Seed(object):
                             if not self.split(pkt, nargs):
                                 self.inc_state_counter(tstag)
                                 self.run(pkt,nargs)
+                        self._pkt_end_timing(pkt)
                         return
 
 
@@ -578,6 +580,7 @@ class Seed(object):
 
     def _pkt_start_timing(self, pkt):
         header = pkt[0]
+        l = len(pkt)
         if header["aux"] & Packet.TIMING_BIT:
             header["last_timestamp"] = time.time()
             data = None
@@ -615,6 +618,9 @@ class Seed(object):
                 complexity[data_len][1] = n+1
             else:
                 complexity[data_len] = [etime,1]
+
+            str_etime = "{:.12f}".format(etime)
+            print "Time: "+str(data_len)+" "+str_etime
 
 
     def _stage_run_express(self,pkt, *args):
@@ -659,6 +665,11 @@ class Seed(object):
         # self.adj_forecast(pkt)
 
         pass
+
+    def set_pkt_aux_bit(self, pkt, bit):
+        header = pkt[0]
+        header["aux"] = header["aux"] & bit
+        return pkt
 
     def stop_recording(self):
         self._complexity_record = False

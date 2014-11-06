@@ -40,7 +40,7 @@ class rx(Queue):
 
                 if func in keys():
                     klass = iplugins[func]
-                    klass.look_ahead(pkt)
+                    #klass.look_ahead(pkt)
 
                 pass
 
