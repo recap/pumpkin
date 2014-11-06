@@ -26,7 +26,7 @@ class rx(Queue):
         if header["aux"] & Packet.CODE_BIT:
             # accept or forward
             pass
-        if header["aux"] & Packet.LOAD_BIT:
+        if (header["aux"] & Packet.LOAD_BIT) or (header["aux"] & Packet.TIMING_BIT) :
 
             if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
                 iplugins = PmkSeed.iplugins
