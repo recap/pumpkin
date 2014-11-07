@@ -549,6 +549,7 @@ class Seed(object):
             q_pred = self.queue_prediction()
             if q_pred >= Seed.CODE_RED:
                 self._alert = Seed.CODE_RED
+                print "CODE RED"
 
 
 
