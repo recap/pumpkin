@@ -533,6 +533,13 @@ class Seed(object):
         return w
 
     def look_ahead(self, pkt):
+        if self._alert == Seed.CODE_RED:
+            q_pred = self.queue_prediction()
+            if q_pred >= Seed.CODE_RED:
+                return False
+            else:
+                self._alert = Seed.CODE_GREEN
+
         header = pkt[0]
         l = len(pkt)
         if header["aux"] & Packet.TIMING_BIT:
