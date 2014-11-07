@@ -111,6 +111,10 @@ class Seed(object):
         self._out_all_list = []
         self._out_and_list = []
 
+        #to delete
+        self.__tmp_counter = 0
+        ####
+
 
         self.__routine_checks_t()
         if self.context.with_acks():
@@ -1088,10 +1092,16 @@ class Seed(object):
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
         self._pkt_end_timing(dpkt)
-        r = random.randint(1,100)
+
+
+        r = random.randint(1,1000)
         if r == 10:
             self.set_pkt_aux_bit(dpkt, Packet.LOAD_BIT)
-            print "Set LOAD_BIT"
+            print "Set LOAD_BIT :"+str(self.__tmp_counter)
+            self.__tmp_counter = 0
+        else:
+            self.__tmp_counter += 1
+
 
         pkt = dpkt
         lpkt = dpkt
