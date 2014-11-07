@@ -550,8 +550,9 @@ class Seed(object):
             if q_pred >= Seed.CODE_RED:
                 self._alert = Seed.CODE_RED
                 print "CODE RED"
+                return False
 
-
+        return True
 
         # self._forecast_lock.acquire()
         # w = self.regression()

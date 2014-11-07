@@ -21,6 +21,7 @@ class rx(Queue):
         pass
 
     def dig(self, pkt):
+        ret = True
         #print "DIG: "+json.dumps(pkt)
         header = pkt[0]
         if header["aux"] & Packet.CODE_BIT:
@@ -40,9 +41,10 @@ class rx(Queue):
 
                 if func in keys():
                     klass = iplugins[func]
-                    klass.look_ahead(pkt)
+                    ret = klass.look_ahead(pkt)
 
-                pass
+
+        return ret
 
 class InternalDispatch(SThread):
     _packed_pkts = 0
@@ -413,8 +415,8 @@ class ZMQPacketMonitor(SThread):
                 d_msg = zlib.decompress(msg)
                 pkt = json.loads(d_msg)
 
-                dig(pkt)
-                queue_put(pkt)
+                if dig(pkt):
+                    queue_put(pkt)
                 #self.proccess_pkt(msg)
                 #del msg
 
