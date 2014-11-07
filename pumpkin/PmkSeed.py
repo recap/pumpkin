@@ -16,6 +16,7 @@ import logging
 import inspect
 import zmq
 from numpy import arange,array,ones,linalg
+import random
 
 import PmkShared
 
@@ -54,6 +55,12 @@ class Seed(object):
 
 
     _pkt_counter_interval = 10.0
+
+    code_threshold_check = 10000
+
+    CODE_GREEN  = 10    #seconds
+    CODE_ORANGE = 300   #seconds
+    CODE_RED    = 600   #seconds
 
 
     def __init__(self, context, poi="Unset"):
@@ -97,6 +104,7 @@ class Seed(object):
         self._forecast["pexec"] = 0
         self._q_in_data = 0
         self._q_in_pkts = 0
+        self._alert = Seed.CODE_GREEN
 
         self._in_and_list = []
         self._in_all_list = []
@@ -532,6 +540,13 @@ class Seed(object):
             self._q_in_data += data_len
             self._q_in_pkts += 1
             header["c_size"] = data_len
+
+        if header["aux"] & Packet.LOAD_BIT:
+            q_pred = self.queue_prediction()
+            if q_pred >= Seed.CODE_RED:
+                self._alert = Seed.CODE_RED
+
+
 
         # self._forecast_lock.acquire()
         # w = self.regression()
@@ -1073,6 +1088,10 @@ class Seed(object):
     def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
 
         self._pkt_end_timing(dpkt)
+        r = random.randint(1,100)
+        if r == 10:
+            self.set_pkt_aux_bit(dpkt, Packet.LOAD_BIT)
+            print "Set LOAD_BIT"
 
         pkt = dpkt
         lpkt = dpkt
@@ -1297,6 +1316,7 @@ class Seed(object):
 
         if "aux" in lpkt[0].keys():
             aux = lpkt[0]["aux"]
+
 
         if aux & Packet.TRACK_BIT:
             d = {}
