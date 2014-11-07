@@ -454,8 +454,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 klass = PmkSeed.iplugins[func_name]
                 #klass.stop_recording()
                 #forecast = klass.get_forecast()
-                queue_prediction, queue_len = klass.queue_prediction()
-                rep = "{:.12f}".format(queue_prediction) + " " + str(queue_len)
+                queue_prediction, queue_data_len, queue_pkt_len = klass.queue_prediction()
+                rep = "{:.12f}".format(queue_prediction) + " " + str(queue_data_len)+" "+str(queue_pkt_len)
                 #rep = '{"npkts" : "'+str(forecast[0])+'", "msize" : "'+str(forecast[1])+'", "pexec" : "'+str(forecast[2])+'"}'
                 s.wfile.write(rep)
 

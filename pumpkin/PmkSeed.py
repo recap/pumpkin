@@ -96,6 +96,7 @@ class Seed(object):
         self._forecast["msize"] = 0
         self._forecast["pexec"] = 0
         self._q_in_data = 0
+        self._q_in_pkts = 0
 
         self._in_and_list = []
         self._in_all_list = []
@@ -529,6 +530,7 @@ class Seed(object):
                  data = ""
             data_len = sys.getsizeof(data)
             self._q_in_data += data_len
+            self._q_in_pkts += 1
             header["c_size"] = data_len
 
         # self._forecast_lock.acquire()
@@ -571,10 +573,16 @@ class Seed(object):
 
     def queue_prediction(self, model="linear"):
         if model == "linear":
+            #y = mx + cn
+            #x = total queued bytes
+            #n = number of packets
             m,c = self.regression()
-            y = m*float(self._q_in_data) + c
+            n = float(self._q_in_pkts)
+            x = float(self._q_in_data)
 
-            return (y, self._q_in_data)
+            y = m*x + c*n
+
+            return (y, x, n)
 
 
     def get_forecast(self):
@@ -613,8 +621,11 @@ class Seed(object):
                 data = pkt[l-2]["data"]
             else:
                 data = ""
+
             data_len = sys.getsizeof(data)
             self._q_in_data -= data_len
+            self._q_in_pkts -= 1
+
             header["c_size"] = data_len
 
     def _pkt_reset_timing(self,pkt):
