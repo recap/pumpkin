@@ -64,7 +64,12 @@ class Packet(object):
             return parts[1]
 
     @staticmethod
-    def is_pkt_gonzales(self,pkt):
+    def get_proto_from_ep(ep):
+        ep_a = ep.split("://")
+        return ep_a[0]
+
+    @staticmethod
+    def is_pkt_gonzales(pkt):
         header = pkt[0]
         if header["aux"] & Packet.GONZALES_BIT:
             return True

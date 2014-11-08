@@ -30,11 +30,13 @@ class tx(Queue):
 
 class ExternalDispatch(SThread):
 
+
     def __init__(self, context):
         SThread.__init__(self)
         self.context = context
         self.dispatchers = {}
         self.redispatchers = {}
+        self.last_contacts = {}
         self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
         #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
 
@@ -112,7 +114,7 @@ class ExternalDispatch(SThread):
 
 
     def send_to_last(self, pkt):
-        ep = pkt[0]["last_contact"]
+        ep = pkt[0]["act"]
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
 
         if ep in self.redispatchers.keys():
@@ -227,7 +229,17 @@ class ExternalDispatch(SThread):
                         else:
                             dcpkt2 = dcpkt
 
-                        oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
+                        #dest_proto = Packet.get_proto_from_ep(pep["ep"])
+                        #if dest_proto == "tcp":
+                        #    dest_ip = Packet.get_ip_from_ep(pep["ep"])
+
+                        if pep["ep"] not in self.last_contacts.keys():
+                            oep = self.context.get_matching_endpoint(pep["ep"])
+                            self.last_contacts[pep["ep"]] = oep
+                        else:
+                            oep = self.last_contacts[pep["ep"]]
+
+                        #oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
                         dcpkt2[0]["last_contact"] = oep[0]
 
                         if pep:
