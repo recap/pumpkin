@@ -417,6 +417,12 @@ class ZMQPacketMonitor(SThread):
 
                 if dig(pkt):
                     queue_put(pkt)
+                else:
+                    #back pressure
+                    header = pkt[0]
+                    last_contact = header["last_contact"]
+                    print last_contact
+                    pass
                 #self.proccess_pkt(msg)
                 #del msg
 
