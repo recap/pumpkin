@@ -14,6 +14,7 @@ class Packet(object):
     FORCE_BIT               = 0b100000    #32
     LOAD_BIT                = 0b1000000
     CODE_BIT                = 0b10000000
+    GONZALES_BIT            = 0b100000000
 
     PKT_STATE_NEW           = "NEW"
     PKT_TAG_NONE            = "NONE:NONE"
@@ -61,3 +62,11 @@ class Packet(object):
         parts = re.split(r'[//:\s]*',ep)
         if len(parts) > 2:
             return parts[1]
+
+    @staticmethod
+    def is_pkt_gonzales(self,pkt):
+        header = pkt[0]
+        if header["aux"] & Packet.GONZALES_BIT:
+            return True
+        else:
+            return False

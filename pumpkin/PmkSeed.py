@@ -365,8 +365,12 @@ class Seed(object):
         pass
 
     def is_duplicate(self, pkt):
+        if Packet.is_pkt_gonzales(pkt):
+            return False
+
         if(self.context.is_speedy()):
             return False
+
         aux = 0
         if "aux" in pkt[0].keys():
             aux = int(pkt[0]["aux"])
@@ -535,8 +539,8 @@ class Seed(object):
     def look_ahead(self, pkt):
         if self._alert == Seed.CODE_RED:
             q_pred, _, _ = self.queue_prediction()
-            if q_pred >= Seed.CODE_RED:
-                print "READ: "+str(q_pred)
+            if q_pred >= Seed.CODE_ORANGE:
+                print "ORANGE: "+str(q_pred)
                 return False
             else:
                 print "GREEN: "+str(q_pred)
