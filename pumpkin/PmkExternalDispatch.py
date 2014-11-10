@@ -301,12 +301,15 @@ class ExternalDispatch(SThread):
 
     def __loop_body(self):
         if self.tx2.empty():
-            group, state, otype, pkt = self.tx.get(True)
-            otag = group+":"+otype+":"+state
-            self.send_express(otag, pkt)
+            try:
+                group, state, otype, pkt = self.tx.get(True, 5)
+                otag = group+":"+otype+":"+state
+                self.send_express(otag, pkt)
+            except:
+                return
         else:
             logging.debug("Packet on priority queue!")
-            group, state, otype, pkt = self.tx2.get(True)
+            group, state, otype, pkt = self.tx2.get(True, 1)
             header =  pkt[0]
             if header["aux"] & Packet.BCKPRESSURE_BIT:
                 self.send_to_last(pkt)
