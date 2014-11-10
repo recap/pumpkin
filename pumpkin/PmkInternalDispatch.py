@@ -419,7 +419,7 @@ class ZMQPacketMonitor(SThread):
                 if header["aux"] & Packet.BCKPRESSURE_BIT:
                     if header["aux"] & Packet.PRESSURETOGGLE_BIT:
                         last_host = header["last_host"]
-
+                        self.context.getProcGraph().disable_host_eps(last_contact)
 
                 if dig(pkt):
                     queue_put(pkt)
@@ -432,7 +432,7 @@ class ZMQPacketMonitor(SThread):
                     header["last_host"] = self.context.get_uuid()
                     self.context.get_tx(2).put((None,None,None,pkt))
 
-                    print last_contact
+                    #print last_contact
                     pass
                 #self.proccess_pkt(msg)
                 #del msg
