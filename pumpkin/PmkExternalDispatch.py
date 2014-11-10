@@ -305,7 +305,8 @@ class ExternalDispatch(SThread):
             otag = group+":"+otype+":"+state
             self.send_express(otag, pkt)
         else:
-            group, state, otype, pkt = self.tx.get(True)
+            logging.debug("Packet on priority queue!")
+            group, state, otype, pkt = self.tx2.get(True)
             header =  pkt[0]
             if header["aux"] & Packet.BCKPRESSURE_BIT:
                 self.send_to_last(pkt)
