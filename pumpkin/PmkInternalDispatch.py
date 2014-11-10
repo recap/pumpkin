@@ -414,13 +414,24 @@ class ZMQPacketMonitor(SThread):
                 #self.context.getRx().put(msg)
                 d_msg = zlib.decompress(msg)
                 pkt = json.loads(d_msg)
+                header = pkt[0]
+                #check for back ppressure packets
+                if header["aux"] & Packet.BCKPRESSURE_BIT:
+                    if header["aux"] & Packet.PRESSURETOGGLE_BIT:
+                        last_host = header["last_host"]
+
 
                 if dig(pkt):
                     queue_put(pkt)
                 else:
                     #back pressure
-                    header = pkt[0]
+
                     last_contact = header["last_contact"]
+                    header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+                    header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+                    header["last_host"] = self.context.get_uuid()
+                    self.context.get_tx(2).put((None,None,None,pkt))
+
                     print last_contact
                     pass
                 #self.proccess_pkt(msg)

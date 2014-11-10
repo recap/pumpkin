@@ -15,6 +15,8 @@ class Packet(object):
     LOAD_BIT                = 0b1000000
     CODE_BIT                = 0b10000000
     GONZALES_BIT            = 0b100000000
+    BCKPRESSURE_BIT         = 0b1000000000
+    PRESSURETOGGLE_BIT      = 0b10000000000
 
     PKT_STATE_NEW           = "NEW"
     PKT_TAG_NONE            = "NONE:NONE"
@@ -43,6 +45,7 @@ class Packet(object):
         header["t_state"]       = None
         header["t_otype"]       = None
         header["c_size"]        = 0
+        header["last_host"]     = None
         header["stop_func"]     = None
         header["last_contact"]  = None
         header["last_func"]     = None

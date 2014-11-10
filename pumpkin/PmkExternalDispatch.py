@@ -28,6 +28,7 @@ class tx(Queue):
         Queue.__init__(self, maxsize)
         pass
 
+
 class ExternalDispatch(SThread):
 
 
@@ -41,7 +42,8 @@ class ExternalDispatch(SThread):
         #self.gdisp = ZMQPacketVentilate(self.context, self.context.zmq_context)
 
         self.graph = self.context.getProcGraph()
-        self.tx = self.context.getTx()
+        self.tx = self.context.get_tx(1)
+        self.tx2 = self.context.get_tx(2)
         self.ep_sched = EndpointPicker(self.context)
 
         if self.context.fallback_rabbitmq():
@@ -114,7 +116,12 @@ class ExternalDispatch(SThread):
 
 
     def send_to_last(self, pkt):
-        ep = pkt[0]["act"]
+        header = pkt[0]
+        if "act" in header.keys():
+            ep = header["act"]
+        else:
+            ep = header["last_contact"]
+
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
 
         if ep in self.redispatchers.keys():
@@ -293,9 +300,18 @@ class ExternalDispatch(SThread):
         pass
 
     def __loop_body(self):
-        group, state, otype, pkt = self.tx.get(True)
-        otag = group+":"+otype+":"+state
-        self.send_express(otag, pkt)
+        if self.tx2.empty():
+            group, state, otype, pkt = self.tx.get(True)
+            otag = group+":"+otype+":"+state
+            self.send_express(otag, pkt)
+        else:
+            group, state, otype, pkt = self.tx.get(True)
+            header =  pkt[0]
+            if header["aux"] & Packet.BCKPRESSURE_BIT:
+                self.send_to_last(pkt)
+            else:
+                otag = group+":"+otype+":"+state
+                self.send_express(otag, pkt)
         pass
 
     def run(self):
@@ -339,6 +355,15 @@ class EndpointPicker(object):
             rtable[route_id] = {}
         for ep in route["endpoints"]:
             cuid = ep["cuid"]
+
+            if "enabled" in ep.keys():
+                enabled = ep["enabled"]
+            else:
+                enabled = True
+            if not enabled:
+                logging.debug("Disabling route for: "+cuid)
+                continue
+
             priority = str(ep["priority"])
 
             if cuid not in rtable[route_id]:
@@ -358,6 +383,7 @@ class EndpointPicker(object):
         found = False
         for ep_key in proutes.keys():
             if (int(ep_key) < cp) and (int(ep_key) > p):
+
                 cp = int(ep_key)
                 found = True
 

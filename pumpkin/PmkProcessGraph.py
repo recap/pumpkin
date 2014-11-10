@@ -29,6 +29,7 @@ class ProcessGraph(object):
         self.ep_graph = nx.DiGraph()
         self.func_graph = nx.DiGraph()
         self.tagroute = {}
+        self.hostroute = {}
         self.ttl = {}
         self.context = context
 
@@ -287,6 +288,16 @@ class ProcessGraph(object):
                         self.tagroute[istype] = []
                         self.tagroute[istype].append(eo)
 
+                    for ep in eo["endpoints"]:
+                        cuid = ep["cuid"]
+                        if cuid in self.hostroute.keys():
+                            if ep not in self.hostroute[cuid]:
+                                self.hostroute[cuid].append(ep)
+                        else:
+                            self.hostroute[cuid] = []
+                            self.hostroute[cuid].append(ep)
+
+
         if not self.context.is_speedy():
             for edge in G.edges(data=True):
                 n1 = edge[0]
@@ -364,6 +375,16 @@ class ProcessGraph(object):
 
 
         return G
+
+    def disable_host_eps(self, host):
+        if host in self.hostroute.keys():
+            for ep in self.hostroute[host]:
+                ep["enabled"] = False
+
+    def enable_host_eps(self, host):
+        if host in self.hostroute.keys():
+            for ep in self.hostroute[host]:
+                ep["enabled"] = True
 
     def showGraph(self):
         #import matplotlib.pyplot as plt

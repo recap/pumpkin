@@ -52,6 +52,7 @@ class MainContext(object):
             self.rx = None #rx(100000)
             self.tx = None #tx(100000)
             self.mx = None
+            self.txs = {}
 
             self.cmd = cmd()
             self.registry = {}
@@ -575,6 +576,9 @@ class MainContext(object):
         def getUuid(self):
             return self.__uuid
 
+        def get_uuid(self):
+            return self.__uuid
+
         def getPeer(self):
             return self.__peer
 
@@ -661,7 +665,10 @@ class MainContext(object):
             return self.rx
 
         def getTx(self):
-            return self.tx
+            return self.txs[1]
+
+        def get_tx(self, priority=1):
+            return self.txs[priority]
 
         def get_mx(self):
             return self.mx
@@ -694,7 +701,8 @@ class MainContext(object):
         def start_rxtx_buffer(self):
             logging.info("Setting buffer queue limit to: "+str(self.get_buffer_size()))
             self.rx = rx(self.get_buffer_size())
-            self.tx = tx(self.get_buffer_size())
+            self.txs[1] = tx(self.get_buffer_size())
+            self.txs[2] = tx(self.get_buffer_size())
             self.mx = mx()
             pass
 
