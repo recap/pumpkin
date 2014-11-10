@@ -126,14 +126,14 @@ class ExternalDispatch(SThread):
 
         if ep in self.redispatchers.keys():
             disp = self.redispatchers[ep]
-            disp.dispatch(json.dumps(pkt))
+            disp.dispatch(pkt)
         else:
             #disp = self.gdisp
             disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
             if not disp == None:
                 self.redispatchers[ep] = disp
                 disp.connect(ep)
-                disp.dispatch(json.dumps(pkt))
+                disp.dispatch(pkt)
                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
             else:
