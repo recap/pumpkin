@@ -180,7 +180,7 @@ class ProcessGraph(object):
 
     def getRoutes(self, tag):
         #logging.debug("Finding route for "+ tag)
-        if tag in self.tagroute:
+        if tag in self.tagroute.keys():
             return self.tagroute[tag]
 
     def getPriorityEndpoint(self, route):
@@ -288,14 +288,14 @@ class ProcessGraph(object):
                         self.tagroute[istype] = []
                         self.tagroute[istype].append(eo)
 
-                    for ep in eo["endpoints"]:
-                        cuid = ep["cuid"]
-                        if cuid in self.hostroute.keys():
-                            if ep not in self.hostroute[cuid]:
-                                self.hostroute[cuid].append(ep)
-                        else:
-                            self.hostroute[cuid] = []
-                            self.hostroute[cuid].append(ep)
+                    # for ep in eo["endpoints"]:
+                    #     cuid = ep["cuid"]
+                    #     if cuid in self.hostroute.keys():
+                    #         if ep not in self.hostroute[cuid]:
+                    #             self.hostroute[cuid].append(ep)
+                    #     else:
+                    #         self.hostroute[cuid] = []
+                    #         self.hostroute[cuid].append(ep)
 
 
         if not self.context.is_speedy():
