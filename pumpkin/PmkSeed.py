@@ -540,10 +540,10 @@ class Seed(object):
         if self._alert == Seed.CODE_RED:
             q_pred, _, _ = self.queue_prediction()
             if q_pred >= Seed.CODE_ORANGE:
-                print "ORANGE: "+str(q_pred)
+                #print "ORANGE: "+str(q_pred)
                 return False
             else:
-                print "GREEN: "+str(q_pred)
+                #print "GREEN: "+str(q_pred)
                 self._alert = Seed.CODE_GREEN
 
         header = pkt[0]
