@@ -419,7 +419,7 @@ class ZMQPacketMonitor(SThread):
                 if header["aux"] & Packet.BCKPRESSURE_BIT:
                     if header["aux"] & Packet.PRESSURETOGGLE_BIT:
                         last_host = header["last_host"]
-                        self.context.getProcGraph().disable_host_eps(last_contact)
+                        self.context.getProcGraph().disable_host_eps(last_host)
 
                 if dig(pkt):
                     queue_put(pkt)
@@ -448,17 +448,17 @@ class ZMQPacketMonitor(SThread):
                 #     #continue
                 #self.rx.put(msg)
                 #logging.debug("Message: "+str(msg))
-            except zmq.ZMQError as e:
-                if self.stopped():
-                    logging.debug("Exiting thread "+  self.__class__.__name__)
-                    soc.close()
-                    #zmq_cntx.destroy()
-                    #zmq_cntx.term()
-                    break
-                else:
-                    continue
-            # except Exception as e:
-            #     logging.error(str(e))
+            # except zmq.ZMQError as e:
+            #     if self.stopped():
+            #         logging.debug("Exiting thread "+  self.__class__.__name__)
+            #         soc.close()
+            #         #zmq_cntx.destroy()
+            #         #zmq_cntx.term()
+            #         break
+            #     else:
+            #         continue
+            except Exception as e:
+                 logging.error(str(e))
 
             #except MemoryError as e:
             #    logging.error(str(e))

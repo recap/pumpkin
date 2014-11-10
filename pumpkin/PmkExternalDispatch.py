@@ -163,7 +163,7 @@ class ExternalDispatch(SThread):
             while 1:
                 routes = self.graph.getRoutes(otag)
                 if routes:
-                     logging.debug("Found Routes: "+json.dumps(routes))
+                     #logging.debug("Found Routes: "+json.dumps(routes))
                      #print "HERE1"
                      break
                 else:
@@ -365,7 +365,7 @@ class EndpointPicker(object):
             else:
                 enabled = True
             if not enabled:
-                logging.debug("Disabling route for: "+cuid)
+                #logging.debug("Disabling route for: "+cuid)
                 continue
 
             priority = str(ep["priority"])
@@ -480,6 +480,8 @@ class EndpointPicker(object):
         ret_peps = []
         found = False
         rtable = self._restructure_table(route)
+        if len(rtable.keys()) == 0:
+            return []
         first = rtable.keys()[0]
         no_entries = len(rtable[first])
 
