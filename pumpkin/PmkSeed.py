@@ -59,8 +59,8 @@ class Seed(object):
     code_threshold_check = 10000
 
     CODE_GREEN  = 10    #seconds
-    CODE_ORANGE = 300   #seconds
-    CODE_RED    = 600   #seconds
+    CODE_ORANGE = 100   #seconds
+    CODE_RED    = 300   #seconds
 
 
     def __init__(self, context, poi="Unset"):

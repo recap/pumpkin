@@ -18,7 +18,10 @@ from Queue import *
 class rx(Queue):
     def __init__(self, maxsize=0):
         Queue.__init__(self, maxsize)
+        self.__state_switch = False
+        self.__green = True
         pass
+
 
     def dig(self, pkt):
         ret = True
@@ -42,7 +45,8 @@ class rx(Queue):
                 if func in keys():
                     klass = iplugins[func]
                     ret = klass.look_ahead(pkt)
-
+                    #if not ret == self.__green:
+                    #    self.__
 
         return ret
 
@@ -408,6 +412,7 @@ class ZMQPacketMonitor(SThread):
 
         queue_put = self.context.getRx().put
         dig = self.context.getRx().dig
+        p_dig = True
         while True:
             try:
                 msg = soc.recv()
@@ -424,10 +429,25 @@ class ZMQPacketMonitor(SThread):
                         pkt = Packet.clear_pkt_bit(pkt,Packet.BCKPRESSURE_BIT )
                         pkt = Packet.clear_pkt_bit(pkt, Packet.PRESSURETOGGLE_BIT)
                         self.context.get_tx(1).put_pkt(pkt)
+                    else:
+                        last_host = header["last_host"]
+                        logging.debug("Enabling Packet")
+                        self.context.getProcGraph().enable_host_eps(last_host)
 
                 if dig(pkt):
+                    if not p_dig:
+                        #release backpressure
+                        p_dig = True
+                        last_contact = header["last_contact"]
+                        header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+                        #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+                        header["last_host"] = self.context.get_uuid()
+                        self.context.get_tx(2).put((None,None,None,pkt))
+
                     queue_put(pkt)
+
                 else:
+                    p_dig = False
                     #back pressure
 
                     last_contact = header["last_contact"]
