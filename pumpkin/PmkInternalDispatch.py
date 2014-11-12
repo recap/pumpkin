@@ -435,14 +435,14 @@ class ZMQPacketMonitor(SThread):
                         self.context.getProcGraph().enable_host_eps(last_host)
 
                 if dig(pkt):
-                    if not p_dig:
-                        #release backpressure
-                        p_dig = True
-                        last_contact = header["last_contact"]
-                        header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
-                        #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
-                        header["last_host"] = self.context.get_uuid()
-                        self.context.get_tx(2).put((None,None,None,pkt))
+                    # if not p_dig:
+                    #     #release backpressure
+                    #     p_dig = True
+                    #     last_contact = header["last_contact"]
+                    #     header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+                    #     #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+                    #     header["last_host"] = self.context.get_uuid()
+                    #     self.context.get_tx(2).put((None,None,None,pkt))
 
                     queue_put(pkt)
 

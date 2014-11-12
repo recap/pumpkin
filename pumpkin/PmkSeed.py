@@ -536,6 +536,18 @@ class Seed(object):
             w = (0, 0)
         return w
 
+    def are_we_safe(self):
+        if self._alert == Seed.CODE_RED:
+            q_pred, _, _ = self.queue_prediction()
+            if q_pred >= Seed.CODE_ORANGE:
+                #print "ORANGE: "+str(q_pred)
+                return False
+            else:
+                #print "GREEN: "+str(q_pred)
+                self._alert = Seed.CODE_GREEN
+                return True
+        return False
+
     def look_ahead(self, pkt):
         if self._alert == Seed.CODE_RED:
             q_pred, _, _ = self.queue_prediction()
@@ -697,6 +709,13 @@ class Seed(object):
         pkt_id = self.get_pkt_id(pkt)
         header = pkt[0]
         pstate =  header["state"]
+
+        if self.are_we_safe():
+            #dpkt = copy.deepcopy(pkt)
+            last_contact = header["last_contact"]
+            header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+            header["last_host"] = self.context.get_uuid()
+            self.context.get_tx(2).put((None,None,None,pkt))
 
         tstag = "IN:"+self.name+":"+header["c_tag"]
         header["state"] = "PROCESSING"
