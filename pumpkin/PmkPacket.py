@@ -78,3 +78,9 @@ class Packet(object):
             return True
         else:
             return False
+
+    @staticmethod
+    def clear_pkt_bit(pkt, bit):
+        header = pkt[0]
+        header["aux"] = header["aux"] & (~bit)
+        return pkt

@@ -420,6 +420,10 @@ class ZMQPacketMonitor(SThread):
                     if header["aux"] & Packet.PRESSURETOGGLE_BIT:
                         last_host = header["last_host"]
                         self.context.getProcGraph().disable_host_eps(last_host)
+                        logging.debug("Requeueing packet")
+                        pkt = Packet.clear_pkt_bit(pkt,Packet.BCKPRESSURE_BIT )
+                        pkt = Packet.clear_pkt_bit(pkt, Packet.PRESSURETOGGLE_BIT)
+                        self.context.get_tx(1).put_pkt(pkt)
 
                 if dig(pkt):
                     queue_put(pkt)

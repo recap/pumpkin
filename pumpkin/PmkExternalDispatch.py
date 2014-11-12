@@ -28,6 +28,18 @@ class tx(Queue):
         Queue.__init__(self, maxsize)
         pass
 
+    def put_pkt(self,pkt):
+        header = pkt[0]
+        c_tag_p = header["c_tag"].split(":")
+        if len(c_tag_p) == 3:
+            group = c_tag_p[0]
+            otype = c_tag_p[1]
+            tag   = c_tag_p[2]
+            self.put((group, tag, otype, pkt))
+        else:
+            logging.warning("Ignored queueing TX packet: wrong c_tag")
+
+
 
 class ExternalDispatch(SThread):
 

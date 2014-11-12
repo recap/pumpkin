@@ -379,6 +379,7 @@ class ProcessGraph(object):
     def disable_host_eps(self, host):
         if host in self.hostroute.keys():
             for ep in self.hostroute[host]:
+                print "DISABLING"
                 ep["enabled"] = False
 
     def enable_host_eps(self, host):
