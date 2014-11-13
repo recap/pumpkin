@@ -228,13 +228,13 @@ class ExternalDispatch(SThread):
                                     header["aux"] = aux & (~Packet.BROADCAST_BIT)
                                 else:
                                     if "seeds" in header.keys():
-                                        pep_ar = self.ep_sched.pick_route(r, False)
+                                        pep_ar = self.ep_sched.pick_route(r, False, dcpkt)
                                     else:
-                                        pep_ar = self.ep_sched.pick_route(r, True)
+                                        pep_ar = self.ep_sched.pick_route(r, True, dcpkt)
 
                     else:
                         # speedy gonzales
-                        pep_ar = self.ep_sched.pick_route(r)
+                        pep_ar = self.ep_sched.pick_route(r,True,dcpkt)
 
                     if len(pep_ar) == 0:
                         logging.debug("No Route...")
@@ -530,7 +530,7 @@ class EndpointPicker(object):
 
                                 w -= et
                                 if w < 0:
-                                    w = 0
+                                    #w = 0
                                     pred = ep["c_pred"]
                                     m = pred[0]
                                     c = pred[1]

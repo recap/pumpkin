@@ -290,6 +290,8 @@ class ProcessGraph(object):
 
                     for ep in eo["endpoints"]:
                         cuid = ep["cuid"]
+                        if "wait" not in ep.keys():
+                            ep["wait"] = 0
                         if cuid in self.hostroute.keys():
                             if ep not in self.hostroute[cuid]:
                                 self.hostroute[cuid].append(ep)
@@ -394,7 +396,7 @@ class ProcessGraph(object):
                     if host in ep["cuid"]:
                         ep["c_pred"] = pred
                         ep["timestamp"] = time.time()
-                        ep["wait"] = 0
+
 
 
         pass
