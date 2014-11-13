@@ -487,7 +487,7 @@ class EndpointPicker(object):
 
 
 
-    def pick_route(self, route, local=True):
+    def pick_route(self, route, local=True, pkt=None):
         route_id = route["name"]
         ret_peps = []
         found = False
@@ -522,6 +522,26 @@ class EndpointPicker(object):
                 if eps:
                     for ep in eps:
                         if self._check_conn_ep(ep):
+                            if "c_pred" in ep.keys():
+                                t1 = time.time()
+                                t2 = ep["timestamp"]
+                                et = t1 - t2
+                                w = ep["wait"]
+
+                                w -= et
+                                if w < 0:
+                                    w = 0
+                                    pred = ep["c_pred"]
+                                    m = pred[0]
+                                    c = pred[1]
+                                    x = pkt[0]["c_size"]
+                                    y = m*x + c
+                                    ep["wait"] += y
+                                    ep["timestamp"] = time.time()
+                                else:
+                                    logging.debug("Waiting: "+str(w))
+                                    continue
+
                             self.route_index[route_id] = s_idx
                             ret_peps.append(ep)
                             found = True

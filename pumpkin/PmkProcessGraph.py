@@ -389,9 +389,13 @@ class ProcessGraph(object):
 
     def update_ep_prediction(self, pred, host, ctag):
         if ctag in self.tagroute.keys():
-            for ep in self.tagroute[ctag]["endpoints"]:
-                if host in ep["host"]:
-                    ep["c_pred"] = pred
+            for eps in self.tagroute[ctag]:
+                for ep in eps["endpoints"]:
+                    if host in ep["cuid"]:
+                        ep["c_pred"] = pred
+                        ep["timestamp"] = time.time()
+                        ep["wait"] = 0
+
 
         pass
 
