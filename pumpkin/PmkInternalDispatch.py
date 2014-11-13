@@ -434,6 +434,10 @@ class ZMQPacketMonitor(SThread):
                         logging.debug("Enabling Packet")
                         self.context.getProcGraph().enable_host_eps(last_host)
 
+                if header["aux"] & Packet.ACK_BIT:
+                    if header["aux"] & Packet.TRACER_BIT:
+                        print json.dumps(pkt)
+
                 if dig(pkt):
                     # if not p_dig:
                     #     #release backpressure
