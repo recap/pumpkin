@@ -713,7 +713,9 @@ class Seed(object):
             if (header["aux"] & Packet.TRACER_BIT):
                 #ack this packet
                 print "Sending ACK TRACER"
+                _, _, _, m,c = self.queue_prediction()
                 header["c_wtime"] = etime
+                header["c_pred"] = (m,c)
                 self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
