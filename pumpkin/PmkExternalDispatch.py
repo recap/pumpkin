@@ -526,6 +526,7 @@ class EndpointPicker(object):
                                 t1 = time.time()
                                 t2 = ep["timestamp"]
                                 et = t1 - t2
+
                                 w = ep["wait"]
 
                                 w -= et
@@ -536,10 +537,12 @@ class EndpointPicker(object):
                                     c = pred[1]
                                     x = pkt[0]["c_size"]
                                     y = m*x + c
-                                    ep["wait"] += y
-                                    ep["timestamp"] = time.time()
+                                    #print "Adding: "+str(y)
+                                    ep["wait"] = y
+                                    ep["timestamp"] = t1
+
                                 else:
-                                    logging.debug("Waiting: "+str(w))
+                                    #logging.debug("Waiting: "+str(w))
                                     continue
 
                             self.route_index[route_id] = s_idx
