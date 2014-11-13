@@ -709,7 +709,7 @@ class Seed(object):
             else:
                 complexity[data_len] = [etime,1]
 
-            if (header["aux"] & Packet.TIMING_BIT) and (header["aux"] & Packet.TRACER_BIT):
+            if (header["aux"] & Packet.TRACER_BIT):
                 #ack this packet
                 print "Sending ACK TRACER"
                 self.ack_pkt(pkt)
