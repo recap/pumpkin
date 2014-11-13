@@ -578,7 +578,7 @@ class Seed(object):
 
         if header["aux"] & Packet.LOAD_BIT:
             if not q_pred:
-                q_pred, _, _, _, _ = self.queue_prediction()
+                q_pred, _, _, m, c = self.queue_prediction()
                 header["c_pred"] = (m,c)
             if q_pred >= Seed.CODE_RED:
                 self._alert = Seed.CODE_RED
