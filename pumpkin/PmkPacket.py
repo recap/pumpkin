@@ -6,17 +6,18 @@ import re
 
 class Packet(object):
     NULL_BITS               = 0b0
-    TIMING_BIT              = 0b1         #1
-    TRACK_BIT               = 0b10        #2
-    ACK_BIT                 = 0b100       #4
-    TRACER_BIT              = 0b1000      #8
-    BROADCAST_BIT           = 0b10000     #16
-    FORCE_BIT               = 0b100000    #32
-    LOAD_BIT                = 0b1000000
-    CODE_BIT                = 0b10000000
-    GONZALES_BIT            = 0b100000000
-    BCKPRESSURE_BIT         = 0b1000000000
-    PRESSURETOGGLE_BIT      = 0b10000000000
+    TIMING_BIT              = 0b1                       #1
+    TRACK_BIT               = 0b10                      #2
+    ACK_BIT                 = 0b100                     #4
+    TRACER_BIT              = 0b1000                    #8
+    BROADCAST_BIT           = 0b10000                   #16
+    FORCE_BIT               = 0b100000                  #32
+    LOAD_BIT                = 0b1000000                 #64
+    CODE_BIT                = 0b10000000                #128
+    GONZALES_BIT            = 0b100000000               #256
+    BCKPRESSURE_BIT         = 0b1000000000              #512
+    PRESSURETOGGLE_BIT      = 0b10000000000             #1024
+    MULTIPACKET_BIT         = 0b100000000000            #2048
 
     PKT_STATE_NEW           = "NEW"
     PKT_TAG_NONE            = "NONE:NONE"

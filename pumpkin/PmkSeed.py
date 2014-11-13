@@ -338,8 +338,10 @@ class Seed(object):
         port = p3[1]
         return [ip, port, rpath, file]
 
-    def ack_pkt(self, pkt):
-        if self.context.with_acks():
+    def ack_pkt(self, pkt, force=False):
+        header = pkt[0]
+        if (header["aux"] & Packet.ACK_BIT) or force:
+        #if self.context.with_acks():
             dpkt = copy.deepcopy(pkt)
             dpkt[0]["state"] = "PACK_OK"
             pkt_id = self.get_pkt_id(dpkt)
@@ -538,7 +540,7 @@ class Seed(object):
 
     def are_we_safe(self):
         if self._alert == Seed.CODE_RED:
-            q_pred, _, _ = self.queue_prediction()
+            q_pred, _, _, _, _ = self.queue_prediction()
             if q_pred >= Seed.CODE_ORANGE:
                 #print "ORANGE: "+str(q_pred)
                 return False
@@ -549,16 +551,20 @@ class Seed(object):
         return False
 
     def look_ahead(self, pkt):
+        q_pred = None
+        header = pkt[0]
         if self._alert == Seed.CODE_RED:
-            q_pred, _, _ = self.queue_prediction()
+            q_pred, _, _, m, c = self.queue_prediction()
+            header["c_pred"] = (m,c)
             if q_pred >= Seed.CODE_ORANGE:
                 #print "ORANGE: "+str(q_pred)
+
                 return False
             else:
                 #print "GREEN: "+str(q_pred)
                 self._alert = Seed.CODE_GREEN
 
-        header = pkt[0]
+
         l = len(pkt)
         if header["aux"] & Packet.TIMING_BIT:
             if "data" in pkt[l-2].keys():
@@ -571,7 +577,9 @@ class Seed(object):
             header["c_size"] = data_len
 
         if header["aux"] & Packet.LOAD_BIT:
-            q_pred, _, _ = self.queue_prediction()
+            if not q_pred:
+                q_pred, _, _, _, _ = self.queue_prediction()
+                header["c_pred"] = (m,c)
             if q_pred >= Seed.CODE_RED:
                 self._alert = Seed.CODE_RED
                 print "CODE RED"
@@ -628,7 +636,7 @@ class Seed(object):
 
             y = m*x + c*n
 
-            return (y, x, n)
+            return (y, x, n, m, c)
 
 
     def get_forecast(self):
@@ -700,6 +708,11 @@ class Seed(object):
                 complexity[data_len][1] = n+1
             else:
                 complexity[data_len] = [etime,1]
+
+            if (header["aux"] & Packet.TIMING_BIT) and (header["aux"] & Packet.TRACER_BIT):
+                #ack this packet
+                print "Sending ACK TRACER"
+                self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
             #print "Time: "+str(data_len)+" "+str_etime
