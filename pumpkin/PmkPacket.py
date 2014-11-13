@@ -18,6 +18,7 @@ class Packet(object):
     BCKPRESSURE_BIT         = 0b1000000000              #512
     PRESSURETOGGLE_BIT      = 0b10000000000             #1024
     MULTIPACKET_BIT         = 0b100000000000            #2048
+    NACK_BIT                = 0b1000000000000           #4096
 
     PKT_STATE_NEW           = "NEW"
     PKT_TAG_NONE            = "NONE:NONE"
@@ -84,4 +85,10 @@ class Packet(object):
     def clear_pkt_bit(pkt, bit):
         header = pkt[0]
         header["aux"] = header["aux"] & (~bit)
+        return pkt
+
+    @staticmethod
+    def set_pkt_bit(pkt, bit):
+        header = pkt[0]
+        header["aux"] = header["aux"] | bit
         return pkt

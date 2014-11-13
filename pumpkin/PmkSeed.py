@@ -343,6 +343,9 @@ class Seed(object):
         if (header["aux"] & Packet.ACK_BIT) or force:
         #if self.context.with_acks():
             dpkt = copy.deepcopy(pkt)
+            dheader = dpkt[0]
+            Packet.clear_pkt_bit(dpkt, Packet.ACK_BIT)
+            Packet.set_pkt_bit(dpkt, Packet.NACK_BIT)
             dpkt[0]["state"] = "PACK_OK"
             pkt_id = self.get_pkt_id(dpkt)
             self._lock_in_fpkts.acquire()

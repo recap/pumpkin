@@ -434,7 +434,7 @@ class ZMQPacketMonitor(SThread):
                         logging.debug("Enabling Packet")
                         self.context.getProcGraph().enable_host_eps(last_host)
 
-                if header["aux"] & Packet.ACK_BIT:
+                if header["aux"] & Packet.NACK_BIT:
                     if header["aux"] & Packet.TRACER_BIT:
                         host = header["last_host"]
                         c_tag = header["c_tag"]
