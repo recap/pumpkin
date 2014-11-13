@@ -712,6 +712,7 @@ class Seed(object):
             if (header["aux"] & Packet.TRACER_BIT):
                 #ack this packet
                 print "Sending ACK TRACER"
+                header["c_wtime"] = avg
                 self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
