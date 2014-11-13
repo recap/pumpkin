@@ -700,6 +700,7 @@ class Seed(object):
             etime = htime - stime
             data_len = header["c_size"]
             complexity = self._complexity
+            avg = 0
             if data_len in complexity.keys():
                 t = complexity[data_len][0]
                 n = complexity[data_len][1]
