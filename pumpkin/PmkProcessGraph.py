@@ -387,6 +387,14 @@ class ProcessGraph(object):
             for ep in self.hostroute[host]:
                 ep["enabled"] = True
 
+    def update_ep_prediction(self, pred, host, ctag):
+        if ctag in self.tagroute.keys():
+            for ep in self.tagroute[ctag]["endpoints"]:
+                if host in ep["host"]:
+                    ep["c_pred"] = pred
+
+        pass
+
     def showGraph(self):
         #import matplotlib.pyplot as plt
         #nx.draw(self.graph)

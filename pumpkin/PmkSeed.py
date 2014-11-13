@@ -716,6 +716,7 @@ class Seed(object):
                 _, _, _, m,c = self.queue_prediction()
                 header["c_wtime"] = etime
                 header["c_pred"] = (m,c)
+                header["last_host"] = self.context.get_uuid()
                 self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
