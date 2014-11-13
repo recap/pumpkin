@@ -1254,6 +1254,7 @@ class Seed(object):
         lpkt[0]["t_state"] = tag
         lpkt[0]["t_otype"] = otype
         lpkt[0]["last_func"] = self.__class__.__name__
+        lpkt[0]["c_size"] = sys.getsizeof(msg)
 
         if lpkt[0]["stop_func"] == self.__class__.__name__:
             if self.context.with_acks():
