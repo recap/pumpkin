@@ -556,16 +556,17 @@ class Seed(object):
     def look_ahead(self, pkt):
         q_pred = None
         header = pkt[0]
-        if self._alert == Seed.CODE_RED:
-            q_pred, _, _, m, c = self.queue_prediction()
-            header["c_pred"] = (m,c)
-            if q_pred >= Seed.CODE_ORANGE:
-                #print "ORANGE: "+str(q_pred)
 
-                return False
-            else:
-                #print "GREEN: "+str(q_pred)
-                self._alert = Seed.CODE_GREEN
+        # if self._alert == Seed.CODE_RED:
+        #     q_pred, _, _, m, c = self.queue_prediction()
+        #     header["c_pred"] = (m,c)
+        #     if q_pred >= Seed.CODE_ORANGE:
+        #         #print "ORANGE: "+str(q_pred)
+        #
+        #         return False
+        #     else:
+        #         #print "GREEN: "+str(q_pred)
+        #         self._alert = Seed.CODE_GREEN
 
 
         l = len(pkt)
@@ -583,10 +584,10 @@ class Seed(object):
             if not q_pred:
                 q_pred, _, _, m, c = self.queue_prediction()
                 header["c_pred"] = (m,c)
-            if q_pred >= Seed.CODE_RED:
-                self._alert = Seed.CODE_RED
-                print "CODE RED"
-                return False
+            # if q_pred >= Seed.CODE_RED:
+            #     self._alert = Seed.CODE_RED
+            #     print "CODE RED"
+            #     return False
 
         return True
 
