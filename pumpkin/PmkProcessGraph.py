@@ -292,6 +292,8 @@ class ProcessGraph(object):
                         cuid = ep["cuid"]
                         if "wait" not in ep.keys():
                             ep["wait"] = 0
+                        if "wshift" not in ep.keys():
+                            ep["wshift"] = 0
                         if cuid in self.hostroute.keys():
                             if ep not in self.hostroute[cuid]:
                                 self.hostroute[cuid].append(ep)

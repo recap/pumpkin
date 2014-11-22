@@ -527,7 +527,10 @@ class EndpointPicker(object):
                                 t2 = ep["timestamp"]
                                 et = t1 - t2
 
-                                w = ep["wait"]
+                                w = ep["wait"] #+ ep["wshift"]
+                                #if ep["wshift"] > 10:
+                                #    print "SHIFT: "+ str(ep["wshift"])
+                                #ep["wshift"] = 0
 
                                 w -= et
                                 if w < 0:
@@ -535,12 +538,14 @@ class EndpointPicker(object):
                                     pred = ep["c_pred"]
                                     m = pred[0] # m in y = mx + c
                                     c = pred[1] # c in y = mx + c
-                                    p = pred[2] #total queue backlog
+                                    b = pred[2] #total queue backlog
                                     x = pkt[0]["c_size"]
                                     y = m*x + c
                                     #print "Adding: "+str(y)
                                     #adding
-                                    ep["wait"] = (y*0.5)#+p
+                                    ep["wait"] = (y) + b
+                                    pred[2] = 0
+                                    #ep["wshift"] = b
                                     ep["timestamp"] = t1
 
                                 else:
