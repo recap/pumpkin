@@ -540,7 +540,7 @@ class EndpointPicker(object):
                                     y = m*x + c
                                     #print "Adding: "+str(y)
                                     #adding
-                                    ep["wait"] = y+p
+                                    ep["wait"] = (y*0.5)#+p
                                     ep["timestamp"] = t1
 
                                 else:
