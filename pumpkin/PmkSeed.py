@@ -717,6 +717,8 @@ class Seed(object):
                 #ack this packet
                 print "Sending ACK TRACER"
                 p, _, _, m,c = self.queue_prediction()
+                if p < 0:
+                    p = 0
                 header["c_wtime"] = etime
                 header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
