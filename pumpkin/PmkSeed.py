@@ -716,9 +716,9 @@ class Seed(object):
             if (header["aux"] & Packet.TRACER_BIT):
                 #ack this packet
                 print "Sending ACK TRACER"
-                _, _, _, m,c = self.queue_prediction()
+                p, _, _, m,c = self.queue_prediction()
                 header["c_wtime"] = etime
-                header["c_pred"] = (m,c)
+                header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
                 self.ack_pkt(pkt)
 

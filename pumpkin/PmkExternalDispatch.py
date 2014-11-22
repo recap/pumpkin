@@ -533,12 +533,14 @@ class EndpointPicker(object):
                                 if w < 0:
                                     #w = 0
                                     pred = ep["c_pred"]
-                                    m = pred[0]
-                                    c = pred[1]
+                                    m = pred[0] # m in y = mx + c
+                                    c = pred[1] # c in y = mx + c
+                                    p = pred[2] #total queue backlog
                                     x = pkt[0]["c_size"]
                                     y = m*x + c
                                     #print "Adding: "+str(y)
-                                    ep["wait"] = y
+                                    #adding
+                                    ep["wait"] = y+p
                                     ep["timestamp"] = t1
 
                                 else:
