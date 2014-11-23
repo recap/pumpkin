@@ -277,11 +277,20 @@ class ExternalDispatch(SThread):
 
                             #print "HERE6"
                             if pep["state"] == Endpoint.NEW_STATE:
+
                                 if pep["tracer_burst"] < Endpoint.TRACER_BURST:
                                     pep["tracer_burst"] += 1
                                     dcpkt2 = Packet.set_tracer_bits(dcpkt2)
                                 else:
                                     pep["state"] = Endpoint.OK_STATE
+                            else:
+                                if "tracer_interval" in pep.keys():
+                                    pep["tracer_interval"] -= 1
+                                    if pep["tracer_interval"] <= 0:
+                                        dcpkt2 = Packet.set_tracer_bits(dcpkt2)
+                                        pep["tracer_interval"] = Endpoint.TRACER_INTERVAL
+
+
 
                             if ep in self.dispatchers.keys():
                                 #print "HERE7"

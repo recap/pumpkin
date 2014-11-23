@@ -8,3 +8,4 @@ class Endpoint(object):
     OK_STATE = 3
 
     TRACER_BURST = 10
+    TRACER_INTERVAL = 100

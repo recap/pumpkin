@@ -144,6 +144,7 @@ class ProcessGraph(object):
                         self.__reset_ep_ttl(e["name"], eep["ep"])
                         eep["state"] = Endpoint.NEW_STATE
                         eep["tracer_burst"] = 0
+                        eep["tracer_interval"] = Endpoint.TRACER_INTERVAL
                     d["endpoints"].append(eep)
                     logging.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
                     self.__reg_update = True
@@ -160,6 +161,7 @@ class ProcessGraph(object):
                     ep["priority"] =  int(ep["priority"]) - 5
                     ep["state"] = Endpoint.NEW_STATE
                     ep["tracer_burst"] = 0
+                    ep["tracer_interval"] = Endpoint.TRACER_INTERVAL
                     self.__reset_ep_ttl(e["name"], ep["ep"])
 
             else:

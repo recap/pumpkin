@@ -1152,15 +1152,15 @@ class Seed(object):
         self._pkt_end_timing(dpkt)
 
 
-        r = random.randint(1,100)
-        if r == 10:
-            Packet.set_pkt_bit(dpkt, Packet.LOAD_BIT)
-            Packet.set_pkt_bit(dpkt, Packet.ACK_BIT)
-            Packet.set_pkt_bit(dpkt, Packet.TRACER_BIT)
-            print "Set LOAD_BIT :"+str(self.__tmp_counter)
-            self.__tmp_counter = 0
-        else:
-            self.__tmp_counter += 1
+        # r = random.randint(1,100)
+        # if r == 10:
+        #     Packet.set_pkt_bit(dpkt, Packet.LOAD_BIT)
+        #     Packet.set_pkt_bit(dpkt, Packet.ACK_BIT)
+        #     Packet.set_pkt_bit(dpkt, Packet.TRACER_BIT)
+        #     print "Set LOAD_BIT :"+str(self.__tmp_counter)
+        #     self.__tmp_counter = 0
+        # else:
+        #     self.__tmp_counter += 1
 
 
         pkt = dpkt
