@@ -279,7 +279,7 @@ class ExternalDispatch(SThread):
                             if pep["state"] == Endpoint.NEW_STATE:
                                 if pep["tracer_burst"] < Endpoint.TRACER_BURST:
                                     pep["tracer_burst"] += 1
-                                    dcpkt2 = Packet.set_pkt_bits(dcpkt2)
+                                    dcpkt2 = Packet.set_tracer_bits(dcpkt2)
                                 else:
                                     pep["state"] = Endpoint.OK_STATE
 
