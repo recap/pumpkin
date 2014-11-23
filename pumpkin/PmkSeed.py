@@ -554,7 +554,7 @@ class Seed(object):
         return False
 
     def look_ahead(self, pkt):
-        q_pred = None
+
         header = pkt[0]
 
         # if self._alert == Seed.CODE_RED:
@@ -581,9 +581,8 @@ class Seed(object):
             header["c_size"] = data_len
 
         if header["aux"] & Packet.LOAD_BIT:
-            if not q_pred:
-                q_pred, _, _, m, c = self.queue_prediction()
-                header["c_pred"] = (m,c)
+            q_pred, _, _, m, c = self.queue_prediction()
+            header["c_pred"] = (m,c, q_pred)
             # if q_pred >= Seed.CODE_RED:
             #     self._alert = Seed.CODE_RED
             #     print "CODE RED"
