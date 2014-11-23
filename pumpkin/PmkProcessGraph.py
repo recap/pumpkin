@@ -12,7 +12,7 @@ from networkx.readwrite import json_graph
 
 from PmkShared import *
 from PmkPacket import *
-
+from PmkEndpoint import *
 
 class ProcessGraph(object):
 
@@ -142,6 +142,8 @@ class ProcessGraph(object):
 
                         eep["priority"] = int(eep["priority"]) - 5
                         self.__reset_ep_ttl(e["name"], eep["ep"])
+                        eep["state"] = Endpoint.NEW_STATE
+                        eep["tracer_burst"] = 0
                     d["endpoints"].append(eep)
                     logging.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
                     self.__reg_update = True
@@ -160,6 +162,7 @@ class ProcessGraph(object):
 
             else:
                 for ep in e["endpoints"]:
+                    ep["state"] = Endpoint.OK_STATE
                     logging.info("Discovered local seed: "+e["name"]+" at "+ep["ep"])
 
 
@@ -397,7 +400,9 @@ class ProcessGraph(object):
                 for ep in eps["endpoints"]:
                     if host in ep["cuid"]:
                         ep["c_pred"] = pred
-                        ep["timestamp"] = time.time()
+                        if "timestamp" not in ep.keys():
+                            ep["timestamp"] = time.time()
+
 
 
 

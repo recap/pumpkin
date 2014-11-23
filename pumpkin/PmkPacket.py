@@ -92,3 +92,19 @@ class Packet(object):
         header = pkt[0]
         header["aux"] = header["aux"] | bit
         return pkt
+
+    @staticmethod
+    def set_tracer_bits(pkt):
+        pkt = Packet.clear_pkt_bit(pkt, Packet.TIMING_BIT)
+        pkt = Packet.clear_pkt_bit(pkt, Packet.GONZALES_BIT)
+        pkt = Packet.clear_pkt_bit(pkt, Packet.LOAD_BIT)
+        pkt = Packet.clear_pkt_bit(pkt, Packet.ACK_BIT)
+        pkt = Packet.clear_pkt_bit(pkt, Packet.TRACER_BIT)
+        return pkt
+
+    @staticmethod
+    def clear_tracer_bits(pkt):
+        pkt = Packet.clear_pkt_bit(pkt, Packet.LOAD_BIT)
+        pkt = Packet.clear_pkt_bit(pkt, Packet.ACK_BIT)
+        pkt = Packet.clear_pkt_bit(pkt, Packet.TRACER_BIT)
+        return pkt

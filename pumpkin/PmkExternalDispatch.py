@@ -21,6 +21,7 @@ from networkx.readwrite import json_graph
 from Queue import *
 from PmkShared import *
 from PmkPacket import *
+from PmkEndpoint import *
 
 
 class tx(Queue):
@@ -275,6 +276,13 @@ class ExternalDispatch(SThread):
                                 dcpkt2.append(next_hop)
 
                             #print "HERE6"
+                            if pep["state"] == Endpoint.NEW_STATE:
+                                if pep["tracer_burst"] < Endpoint.TRACER_BURST:
+                                    pep["tracer_burst"] += 1
+                                    dcpkt2 = Packet.set_pkt_bits(dcpkt2)
+                                else:
+                                    pep["state"] = Endpoint.OK_STATE
+
                             if ep in self.dispatchers.keys():
                                 #print "HERE7"
                                 disp = self.dispatchers[ep]
@@ -527,6 +535,15 @@ class EndpointPicker(object):
                                 t2 = ep["timestamp"]
                                 et = t1 - t2
 
+                                bklog = ep["wshift"]
+                                bklog -= et
+                                if bklog > 0:
+                                    #print "BACKLOG: "+str(bklog)
+                                    continue
+                                else:
+                                    ep["wshift"] = 0
+
+
                                 w = ep["wait"] #+ ep["wshift"]
                                 #if ep["wshift"] > 10:
                                 #    print "SHIFT: "+ str(ep["wshift"])
@@ -543,9 +560,10 @@ class EndpointPicker(object):
                                     y = m*x + c
                                     #print "Adding: "+str(y)
                                     #adding
-                                    ep["wait"] = (y) + b
+                                    ep["wait"] = (y) #+ b
+                                    #print "SETTING: "+str(b)
+                                    ep["wshift"] = b
                                     pred[2] = 0
-                                    #ep["wshift"] = b
                                     ep["timestamp"] = t1
 
                                 else:
@@ -553,6 +571,7 @@ class EndpointPicker(object):
                                     continue
 
                             self.route_index[route_id] = s_idx
+
                             ret_peps.append(ep)
                             found = True
                             break
