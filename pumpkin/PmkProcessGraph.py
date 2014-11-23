@@ -158,6 +158,8 @@ class ProcessGraph(object):
                 for ep in e["endpoints"]:
                     logging.info("Discovered new seed: "+e["name"]+" at "+ep["ep"])
                     ep["priority"] =  int(ep["priority"]) - 5
+                    ep["state"] = Endpoint.NEW_STATE
+                    ep["tracer_burst"] = 0
                     self.__reset_ep_ttl(e["name"], ep["ep"])
 
             else:
