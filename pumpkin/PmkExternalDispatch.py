@@ -569,7 +569,7 @@ class EndpointPicker(object):
                                     y = m*x + c
                                     #print "Adding: "+str(y)
                                     #adding
-                                    ep["wait"] = (y) #+ b
+                                    ep["wait"] = (y*0.8) #+ b
                                     #print "SETTING: "+str(b)
                                     ep["wshift"] = b
                                     pred[2] = 0

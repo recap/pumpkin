@@ -1178,7 +1178,8 @@ class Seed(object):
             d["data"] = msg
             self.track(d)
 
-        if not self.context.is_speedy():
+        #if not self.context.is_speedy():
+        if not aux & Packet.GONZALES_BIT:
             pkt = copy.deepcopy(dpkt)
             caller = inspect.stack()[1][3]
             #logging.debug("Caller for dispatch function: "+inspect.stack()[1][3])
