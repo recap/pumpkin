@@ -672,6 +672,7 @@ class Seed(object):
         header = pkt[0]
         l = len(pkt)
         if header["aux"] & Packet.TIMING_BIT:
+            header["aux"] = header["aux"] | Packet.STIMING_BIT
             header["last_timestamp"] = time.time()
             data = None
             if "data" in pkt[l-2].keys():
@@ -687,17 +688,17 @@ class Seed(object):
 
     def _pkt_reset_timing(self,pkt):
         header = pkt[0]
-        if header["aux"] & Packet.TIMING_BIT:
+        if header["aux"] & Packet.STIMING_BIT:
             #reset timing bit
-            header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
+            header["aux"] = header["aux"] & (~Packet.STIMING_BIT)
             header["c_size"] = 0
             header["last_timestamp"] = 0
 
     def _pkt_end_timing(self, pkt):
         header = pkt[0]
-        if (header["aux"] & Packet.TIMING_BIT) and (header["last_timestamp"] != 0):
+        if (header["aux"] & Packet.STIMING_BIT) and (header["last_timestamp"] != 0):
             #reset timing bit
-            #header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
+            header["aux"] = header["aux"] & (~Packet.STIMING_BIT)
             htime = time.time()
             stime = header["last_timestamp"]
             etime = htime - stime

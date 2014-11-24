@@ -19,6 +19,7 @@ class Packet(object):
     PRESSURETOGGLE_BIT      = 0b10000000000             #1024
     MULTIPACKET_BIT         = 0b100000000000            #2048
     NACK_BIT                = 0b1000000000000           #4096
+    STIMING_BIT             = 0b10000000000000
 
     PKT_STATE_NEW           = "NEW"
     PKT_STATE_PACK_OK       = "PACK_OK"
