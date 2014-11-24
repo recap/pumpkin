@@ -755,7 +755,8 @@ class Seed(object):
         self.inc_state_counter(tstag)
 
         self._pkt_start_timing(pkt)
-        self.run(pkt,*nargs)
+        #self.run(pkt,*nargs)
+        self.run(pkt,nargs)
         self._pkt_end_timing(pkt)
 
         # if self._complexity_record:
