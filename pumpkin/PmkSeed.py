@@ -638,7 +638,7 @@ class Seed(object):
             x = float(self._q_in_data)
 
             y = m*x + c*n
-
+            logging.debug("Regression: PKTS: "+str(n)+" DATA: "+str(x))
             return (y, x, n, m, c)
 
 
@@ -697,7 +697,7 @@ class Seed(object):
         header = pkt[0]
         if (header["aux"] & Packet.TIMING_BIT) and (header["last_timestamp"] != 0):
             #reset timing bit
-            header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
+            #header["aux"] = header["aux"] & (~Packet.TIMING_BIT)
             htime = time.time()
             stime = header["last_timestamp"]
             etime = htime - stime
