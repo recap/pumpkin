@@ -547,7 +547,7 @@ class EndpointPicker(object):
                                 bklog = ep["wshift"]
                                 bklog -= et
                                 if bklog > 0:
-                                    #print "BACKLOG: "+str(bklog)
+                                    print "BACKLOG: "+str(bklog)
                                     continue
                                 else:
                                     ep["wshift"] = 0
