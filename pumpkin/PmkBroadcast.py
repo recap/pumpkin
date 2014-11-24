@@ -119,9 +119,10 @@ def get_lan_ip():
     if not ip:
 
         pip = get_public_ip()
-        if is_amazon(pip):
-            #if it is an amazon Public IP return it else get interface IP
-            return pip
+        if pip:
+            if is_amazon(pip):
+                #if it is an amazon Public IP return it else get interface IP
+                return pip
 
         interfaces = [
             "eth0",
@@ -154,17 +155,22 @@ def is_private(ip):
     return False
 
 def is_amazon(ip):
-    ipa = netaddr.IPAddress(ip)
-    if ipa.is_private():
+    try:
+        if not ip:
+            return False
+        ipa = netaddr.IPAddress(ip)
+        if ipa.is_private():
+            return False
+
+        if ipa.is_reserved():
+            return False
+
+        for anet in AMAZON_IPS:
+            if ipa in netaddr.IPNetwork(anet):
+
+                return True
+    except:
         return False
-
-    if ipa.is_reserved():
-        return False
-
-    for anet in AMAZON_IPS:
-        if ipa in netaddr.IPNetwork(anet):
-
-            return True
 
     return False
 def get_zmq_supernodes(node_list):

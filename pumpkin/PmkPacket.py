@@ -21,6 +21,8 @@ class Packet(object):
     NACK_BIT                = 0b1000000000000           #4096
 
     PKT_STATE_NEW           = "NEW"
+    PKT_STATE_PACK_OK       = "PACK_OK"
+    PKT_STATE_ARP_OK        = "ARP_OK"
     PKT_TAG_NONE            = "NONE:NONE"
     PKT_TTL_DISABLED        = 'D'
 
