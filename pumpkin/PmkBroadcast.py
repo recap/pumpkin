@@ -264,7 +264,7 @@ class RabbitMQBroadcaster(SThread):
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()
 
-                if self.connection.is_closed:
+                if self.connection.is_closed():
                     self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
