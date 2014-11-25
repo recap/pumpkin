@@ -411,7 +411,7 @@ class MainContext(object):
                 #    tcp_ep = ep
 
             #logging.warning("Found no endpoint matching defaulting to tcp")
-            return h_ep
+            return None
 
         def get_matching_endpoint(self, ep):
             dest_proto = Packet.get_proto_from_ep(ep)
@@ -439,7 +439,9 @@ class MainContext(object):
             #     #    tcp_ep = ep
 
             #logging.warning("Found no endpoint matching defaulting to tcp")
-            return None
+            ep = self.get_our_endpoint("amqp")
+
+            return ep
 
         def get_our_pub_ep(self, proto="tcp"):
             ep = "tcp://"+str(self.get_local_ip())+":"+str(PmkShared.ZMQ_PUB_PORT)

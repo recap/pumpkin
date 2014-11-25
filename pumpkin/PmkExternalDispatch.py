@@ -342,7 +342,7 @@ class ExternalDispatch(SThread):
                 otag = group+":"+otype+":"+state
                 self.send_express(otag, pkt)
             except Exception as e:
-                logging.error("Error sending: "+e.message)
+                #logging.error("Error sending: "+e.message)
                 return
         else:
             logging.debug("Packet on priority queue!")
