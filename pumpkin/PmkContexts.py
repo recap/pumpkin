@@ -78,8 +78,7 @@ class MainContext(object):
 
             self.pkt_shelve_2 = None
 
-            maj, min = sys.version_info
-            self.python_version_info = min
+
 
             pass
 
