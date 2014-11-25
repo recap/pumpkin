@@ -49,6 +49,8 @@ class MainContext(object):
             self.__supernodes = []
             self.__threads = []
 
+
+
             self.rx = None #rx(100000)
             self.tx = None #tx(100000)
             self.mx = None
@@ -75,6 +77,9 @@ class MainContext(object):
             self.__rabbitmq_cred = ()
 
             self.pkt_shelve_2 = None
+
+            maj, min = sys.version_info
+            self.python_version_info = min
 
             pass
 
