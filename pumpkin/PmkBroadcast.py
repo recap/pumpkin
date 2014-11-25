@@ -238,7 +238,7 @@ class RabbitMQBroadcaster(SThread):
                 if sys.version_info < (2,7):
                     pass
                 else:
-                    if self.connection.is_closed():
+                    if self.connection.is_closed:
                         self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
@@ -270,7 +270,7 @@ class RabbitMQBroadcaster(SThread):
                 if sys.version_info < (2,7):
                     pass
                 else:
-                    if self.connection.is_closed():
+                    if self.connection.is_closed:
                         self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
