@@ -91,6 +91,13 @@ class MainContext(object):
                 return False
             pass
 
+        def broadcast_rabbitmq(self):
+            if self.__attrs.rabbitmq_broadcast:
+                return True
+            else:
+                return False
+            pass
+
         def set_rabbitmq(self, rabbitmq):
             self.__rabbitmq = rabbitmq
 

@@ -277,7 +277,7 @@ class Pumpkin(Daemon):
         edispatch.start()
         context.addThread(edispatch)
 
-        if context.fallback_rabbitmq():
+        if context.broadcast_rabbitmq():
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
 
@@ -517,6 +517,8 @@ def main():
 
     parser.add_argument('--rabbitmq_fallback', action='store_true',
                        help='use rabbitmq')
+    parser.add_argument('--rabbitmq_broadcast', action='store_true',
+                       help='use rabbitmq for broadcast')
     parser.add_argument('--rbt_host', action='store', dest='rabbitmq_host', default=None)
     parser.add_argument('--rbt_user', action='store', dest='rabbitmq_user', default=None)
     parser.add_argument('--rbt_pass', action='store', dest='rabbitmq_pass', default=None)
@@ -586,6 +588,7 @@ def main():
                     args.rabbitmq_vhost = config.get("rabbitmq", "vhost")
 
                 args.rabbitmq_fallback = config.getboolean("rabbitmq", "fallback")
+                args.rabbitmq_broadcast = config.getboolean("rabbitmq", "broadcast")
 
             if config.has_option("pumpkin","persistent"):
                 args.persistent = config.get("pumpkin", "persistent")
