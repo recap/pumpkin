@@ -137,6 +137,7 @@ class ExternalDispatch(SThread):
 
         if not ep:
             logging.warn("No last contact to send back packet")
+            return
 
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
 
