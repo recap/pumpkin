@@ -340,6 +340,7 @@ class Seed(object):
 
     def ack_pkt(self, pkt, force=False):
         header = pkt[0]
+        print "Sending to last: "+json.dumps(pkt)
         if (header["aux"] & Packet.ACK_BIT) or force:
         #if self.context.with_acks():
             dpkt = copy.deepcopy(pkt)
