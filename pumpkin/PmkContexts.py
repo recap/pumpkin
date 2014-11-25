@@ -421,11 +421,12 @@ class MainContext(object):
                 dst_net = dest_ip_parts[0] + dest_ip_parts[1]
                 for lep in self.endpoints:
                     src_ip = Packet.get_ip_from_ep(lep[0])
-                    src_ip_parts = src_ip.split('.')
-                    if len(src_ip_parts) > 2:
-                        src_net = src_ip_parts[0]+src_ip_parts[1]
-                        if dst_net == src_net:
-                            return lep
+                    if src_ip:
+                        src_ip_parts = src_ip.split('.')
+                        if len(src_ip_parts) > 2:
+                            src_net = src_ip_parts[0]+src_ip_parts[1]
+                            if dst_net == src_net:
+                                return lep
 
 
             #tcp_ep = None

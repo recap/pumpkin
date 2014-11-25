@@ -12,6 +12,7 @@ import PmkBroadcast
 import PmkShared
 from PmkShared import *
 from PmkPacket import *
+from PmkContexts import *
 from Queue import *
 
 
@@ -20,8 +21,46 @@ class rx(Queue):
         Queue.__init__(self, maxsize)
         self.__state_switch = False
         self.__green = True
+        self.context = MainContext()
         pass
 
+    def parse_n_load(self, pkt):
+        header = pkt[0]
+
+        if header["aux"] & Packet.NACK_BIT:
+            if header["aux"] & Packet.TRACER_BIT:
+                host = header["last_host"]
+                c_tag = header["c_tag"]
+                pred = header["c_pred"]
+                c_wtime = header["c_wtime"]
+                print json.dumps(pkt)
+
+                self.context.getProcGraph().update_ep_prediction(pred, host,c_tag)
+
+                if self.dig(pkt):
+                    # if not p_dig:
+                    #     #release backpressure
+                    #     p_dig = True
+                    #     last_contact = header["last_contact"]
+                    #     header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+                    #     #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+                    #     header["last_host"] = self.context.get_uuid()
+                    #     self.context.get_tx(2).put((None,None,None,pkt))
+
+                    self.put(pkt)
+
+                else:
+                    p_dig = False
+                    #back pressure
+
+                    last_contact = header["last_contact"]
+                    header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+                    header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+                    header["last_host"] = self.context.get_uuid()
+                    self.context.get_tx(2).put((None,None,None,pkt))
+
+                    #print last_contact
+                    pass
 
     def dig(self, pkt):
         ret = True
@@ -250,8 +289,9 @@ class RabbitMQMonitor():
                             body = zlib.decompress(bodyz)
                             logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
                             pkt = json.loads(body)
-                            rx.dig(pkt)
-                            rx.put(pkt)
+                            rx.parse_n_load(pkt)
+                            #rx.dig(pkt)
+                            #rx.put(pkt)
                             # pkt = json.loads(body)
                             #
                             # l = len(pkt)
