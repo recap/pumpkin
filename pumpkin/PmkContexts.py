@@ -714,7 +714,7 @@ class MainContext(object):
 
         def start_rxtx_buffer(self):
             logging.info("Setting buffer queue limit to: "+str(self.get_buffer_size()))
-            self.rx = rx(self.get_buffer_size())
+            self.rx = rx(self.get_buffer_size(), self)
             self.txs[1] = tx(self.get_buffer_size())
             self.txs[2] = tx(self.get_buffer_size())
             self.mx = mx()

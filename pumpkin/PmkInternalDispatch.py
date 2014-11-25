@@ -10,18 +10,20 @@ import base64
 import PmkSeed
 import PmkBroadcast
 import PmkShared
+#import PmkContexts
 from PmkShared import *
 from PmkPacket import *
-from PmkContexts import *
+#from PmkContexts import *
 from Queue import *
 
 
 class rx(Queue):
-    def __init__(self, maxsize=0):
+    def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, maxsize)
         self.__state_switch = False
         self.__green = True
-        self.context = MainContext()
+        self.context = context
+
         pass
 
     def parse_n_load(self, pkt):
