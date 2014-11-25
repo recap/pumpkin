@@ -235,7 +235,9 @@ class RabbitMQBroadcaster(SThread):
                 else:
                     dataz = zlib.compress(data)
 
-                if self.context.python_version_info <= 6:
+                if sys.version_info < (2,7):
+                    pass
+                else:
                     if self.connection.is_closed():
                         self._connect()
 
@@ -265,7 +267,9 @@ class RabbitMQBroadcaster(SThread):
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()
 
-                if self.context.python_version_info <= 6:
+                if sys.version_info < (2,7):
+                    pass
+                else:
                     if self.connection.is_closed():
                         self._connect()
 
