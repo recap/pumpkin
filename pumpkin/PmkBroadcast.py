@@ -235,7 +235,7 @@ class RabbitMQBroadcaster(SThread):
                 else:
                     dataz = zlib.compress(data)
 
-                if self.connection.is_closed:
+                if self.connection.is_closed():
                     self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
