@@ -135,6 +135,9 @@ class ExternalDispatch(SThread):
         else:
             ep = header["last_contact"]
 
+        if not ep:
+            logging.warn("No last contact to send back packet")
+
         #TODO BUG BUG BUG seg faults due to sharing zmq shit between threads - solved with redispatcher
 
         if ep in self.redispatchers.keys():
@@ -260,7 +263,10 @@ class ExternalDispatch(SThread):
                             oep = self.last_contacts[pep["ep"]]
 
                         #oep = self.context.get_our_endpoint(self.getProtoFromEP(pep["ep"]))
-                        dcpkt2[0]["last_contact"] = oep[0]
+                        if oep:
+                            dcpkt2[0]["last_contact"] = oep[0]
+                        else:
+                            dcpkt2[0]["last_contact"] = None
 
                         if pep:
                             found = True
@@ -334,7 +340,8 @@ class ExternalDispatch(SThread):
                 group, state, otype, pkt = self.tx.get(True, 5)
                 otag = group+":"+otype+":"+state
                 self.send_express(otag, pkt)
-            except:
+            except Exception as e:
+                logging.error("Error sending: "+e.message)
                 return
         else:
             logging.debug("Packet on priority queue!")
