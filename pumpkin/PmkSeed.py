@@ -339,24 +339,28 @@ class Seed(object):
         return [ip, port, rpath, file]
 
     def ack_pkt(self, pkt, force=False):
-        header = pkt[0]
-        #print "Sending to last: "+json.dumps(pkt)
-        if (header["aux"] & Packet.ACK_BIT) or force:
-        #if self.context.with_acks():
-            dpkt = copy.deepcopy(pkt)
-            dheader = dpkt[0]
-            Packet.clear_pkt_bit(dpkt, Packet.ACK_BIT)
-            Packet.set_pkt_bit(dpkt, Packet.NACK_BIT)
-            dpkt[0]["state"] = "PACK_OK"
-            pkt_id = self.get_pkt_id(dpkt)
-            self._lock_in_fpkts.acquire()
-            self.context.pktReady(dpkt)
-            if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
-            self._lock_in_fpkts.release()
-            if not pkt[0]["last_func"] == None:
-                 print "Sending to last: "+json.dumps(pkt    )
-                 exdisp = self.context.getExternalDispatch()
-                 exdisp.send_to_last(dpkt)
+        try:
+            header = pkt[0]
+            #print "Sending to last: "+json.dumps(pkt)
+            if (header["aux"] & Packet.ACK_BIT) or force:
+            #if self.context.with_acks():
+                dpkt = copy.deepcopy(pkt)
+                dheader = dpkt[0]
+                Packet.clear_pkt_bit(dpkt, Packet.ACK_BIT)
+                Packet.set_pkt_bit(dpkt, Packet.NACK_BIT)
+                dpkt[0]["state"] = "PACK_OK"
+                pkt_id = self.get_pkt_id(dpkt)
+                self._lock_in_fpkts.acquire()
+                self.context.pktReady(dpkt)
+                if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
+                self._lock_in_fpkts.release()
+                if not pkt[0]["last_func"] == None:
+                     print "Sending to last: "+json.dumps(pkt    )
+                     exdisp = self.context.getExternalDispatch()
+                     exdisp.send_to_last(dpkt)
+                pass
+        except Exception as msg:
+            msg.message
             pass
 
 
