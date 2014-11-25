@@ -235,8 +235,9 @@ class RabbitMQBroadcaster(SThread):
                 else:
                     dataz = zlib.compress(data)
 
-                if self.connection.is_closed():
-                    self._connect()
+                if sys.version_info > (2, 6):
+                    if self.connection.is_closed():
+                        self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
 
@@ -264,8 +265,9 @@ class RabbitMQBroadcaster(SThread):
                 dataz = zlib.compress(data)
                 self.context.getProcGraph().ackRegistryUpdate()
 
-                if self.connection.is_closed():
-                    self._connect()
+                if sys.version_info > (2, 6):
+                    if self.connection.is_closed():
+                        self._connect()
 
                 self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
 
