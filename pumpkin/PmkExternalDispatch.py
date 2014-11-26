@@ -565,7 +565,8 @@ class EndpointPicker(object):
                                 #p chooses ep priority from _get_priority_eps, setting it to 0 forces rescan
                                 p = 0
                                 t1 = time.time()
-                                t2 = ep["timestamp"]
+                                #t2 = ep["timestamp"]
+                                t2 = ep["last_update_time"]
                                 et = t1 - t2
 
                                 bklog = ep["wshift"]
@@ -598,8 +599,8 @@ class EndpointPicker(object):
                                     #print "SETTING: "+str(b)
                                     ep["wshift"] = b
                                     pred[2] = 0
-                                    #ep["timestamp"] = t1
-                                    ep["timestamp"] = pkt["last_timestamp"]
+                                    ep["timestamp"] = t1
+
 
 
 

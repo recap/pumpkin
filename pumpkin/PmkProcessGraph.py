@@ -406,6 +406,7 @@ class ProcessGraph(object):
                         ep["c_pred"] = pred
                         if "timestamp" not in ep.keys():
                             ep["timestamp"] = time.time()
+                            ep["last_update_time"] = time.time()
 
 
 
