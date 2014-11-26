@@ -847,7 +847,8 @@ class RabbitMQDispatch(Dispatch):
                     logging.debug("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
-            except:
+            except Exception as e:
+                logging.ERROR("RabbitMQ connection error: "+str(e.message))
                 time.sleep(1)
         pass
 
