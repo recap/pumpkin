@@ -346,8 +346,11 @@ class ExternalDispatch(SThread):
                 group, state, otype, pkt = self.tx.get(True, 5)
                 otag = group+":"+otype+":"+state
                 self.send_express(otag, pkt)
-            except Exception as e:
-                logging.error("Error sending: "+e.message)
+            except Empty:
+                return
+
+            except:
+                logging.error("Error sending pkt")
                 return
         else:
             logging.debug("Packet on priority queue!")
@@ -565,8 +568,8 @@ class EndpointPicker(object):
                                 #p chooses ep priority from _get_priority_eps, setting it to 0 forces rescan
                                 p = 0
                                 t1 = time.time()
-                                #t2 = ep["timestamp"]
-                                t2 = ep["last_update_time"]
+                                t2 = ep["timestamp"]
+                                #t2 = ep["last_update_time"]
                                 et = t1 - t2
 
                                 bklog = ep["wshift"]
