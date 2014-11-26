@@ -347,7 +347,7 @@ class ExternalDispatch(SThread):
                 otag = group+":"+otype+":"+state
                 self.send_express(otag, pkt)
             except Exception as e:
-                #logging.error("Error sending: "+e.message)
+                logging.error("Error sending: "+e.message)
                 return
         else:
             logging.debug("Packet on priority queue!")
@@ -422,6 +422,8 @@ class EndpointPicker(object):
         return rtable
 
     def _get_priority_eps(self, rtable, cuid, p=0):
+        #p=0 always chooses lowest priority
+        #p = 0
         first = rtable.keys()[0]
         proutes = rtable[first][cuid]
 
@@ -432,6 +434,8 @@ class EndpointPicker(object):
 
                 cp = int(ep_key)
                 found = True
+                if cp == 11:
+                    pass
 
         if found:
             return (cp, proutes[str(cp)])
@@ -493,6 +497,9 @@ class EndpointPicker(object):
 
         mode = epl["mode"]
         ep = epl["ep"]
+        if not epl["enabled"]:
+            return False
+
 
         if ep in self.ep_checks.keys():
             return self.ep_checks[ep]
@@ -511,6 +518,8 @@ class EndpointPicker(object):
 
             if not disp == None:
                 self.ep_checks[ep] = disp.test(ep)
+                if not self.ep_checks[ep]:
+                    epl["enabled"] = False
                 return self.ep_checks[ep]
 
         return False
@@ -553,6 +562,8 @@ class EndpointPicker(object):
                     for ep in eps:
                         if self._check_conn_ep(ep):
                             if "c_pred" in ep.keys():
+                                #p chooses ep priority from _get_priority_eps, setting it to 0 forces rescan
+                                p = 0
                                 t1 = time.time()
                                 t2 = ep["timestamp"]
                                 et = t1 - t2
@@ -560,7 +571,7 @@ class EndpointPicker(object):
                                 bklog = ep["wshift"]
                                 bklog -= et
                                 if bklog > 0:
-                                    print "BACKLOG: "+str(bklog)
+                                    logging.debug("BACKLOG: "+str(bklog))
                                     continue
                                 else:
                                     ep["wshift"] = 0
@@ -583,21 +594,29 @@ class EndpointPicker(object):
                                     #print "Adding: "+str(y)
                                     #adding
                                     ep["wait"] = (y) #+ b
-                                    print "WAIT: "+str(y)+" WSHIFT: "+str(b)+" X: "+str(x)+" M: "+str(m)+" C: "+str(c)
+                                    logging.debug("WAIT: "+str(y)+" WSHIFT: "+str(b)+" X: "+str(x)+" M: "+str(m)+" C: "+str(c))
                                     #print "SETTING: "+str(b)
                                     ep["wshift"] = b
                                     pred[2] = 0
                                     ep["timestamp"] = t1
 
+
+
                                 else:
                                     #logging.debug("Waiting: "+str(w))
                                     continue
+
 
                             self.route_index[route_id] = s_idx
 
                             ret_peps.append(ep)
                             found = True
                             break
+
+                        else:
+                            #no connection
+                            continue
+
                 else:
                     break
 
