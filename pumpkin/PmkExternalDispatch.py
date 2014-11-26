@@ -837,7 +837,8 @@ class RabbitMQDispatch(Dispatch):
         message = zlib.compress(json.dumps(pkt))
         while not send:
             try:
-                if not self.connection.is_closed:
+                #if not self.connection.is_closed:
+                if True:
                     logging.debug("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
