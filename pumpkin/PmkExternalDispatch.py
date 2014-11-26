@@ -146,7 +146,12 @@ class ExternalDispatch(SThread):
             disp.dispatch(pkt)
         else:
             #disp = self.gdisp
-            disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+            if ep.startswith("tcp://"):
+                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+
+            if ep.startswith("amqp://"):
+                disp = RabbitMQDispatch(self.context)
+
             if not disp == None:
                 self.redispatchers[ep] = disp
                 disp.connect(ep)

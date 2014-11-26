@@ -357,7 +357,7 @@ class Seed(object):
                 if not pkt[0]["last_func"] == None:
                      print "Sending to last: "+json.dumps(pkt    )
                      exdisp = self.context.getExternalDispatch()
-                     #exdisp.send_to_last(dpkt)
+                     exdisp.send_to_last(dpkt)
                 pass
         except Exception as msg:
             msg.message
