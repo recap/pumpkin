@@ -598,7 +598,8 @@ class EndpointPicker(object):
                                     #print "SETTING: "+str(b)
                                     ep["wshift"] = b
                                     pred[2] = 0
-                                    ep["timestamp"] = t1
+                                    #ep["timestamp"] = t1
+                                    ep["timestamp"] = pkt["last_timestamp"]
 
 
 

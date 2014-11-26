@@ -729,6 +729,7 @@ class Seed(object):
                 header["c_wtime"] = etime
                 header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
+                header["Last_timestamp"] = time.time()
                 self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
