@@ -195,12 +195,16 @@ class ExternalDispatch(SThread):
         header = pkt[0]
         while not entry:
             time.sleep(5)
+
             tracer_tag = self.context.get_group()+":Internal:TRACE"
             routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
             entry = self.ep_sched.pick_random(routes, header["traces"])
 
             if entry:
+                print "Random send to: "+json.dumps(entry)
                 self.send_to_entry(pkt, entry)
+            else:
+                print "No random host found."
 
 
     def send_express(self, otag, pkt):

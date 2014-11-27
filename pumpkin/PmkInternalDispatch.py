@@ -164,6 +164,7 @@ class InternalDispatch(SThread):
                             forward = True
 
                 if forward:
+
                     header["traces"].append(self.context.getUuid())
                     exdisp = self.context.getExternalDispatch()
                     exdisp.send_to_random_one(pkt)
