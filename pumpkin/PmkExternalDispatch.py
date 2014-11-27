@@ -194,7 +194,7 @@ class ExternalDispatch(SThread):
         entry = None
         header = pkt[0]
         while not entry:
-            time.sleep(5)
+            #time.sleep(5)
 
             tracer_tag = self.context.get_group()+":Internal:TRACE"
             routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
@@ -203,8 +203,10 @@ class ExternalDispatch(SThread):
             if entry:
                 print "Random send to: "+json.dumps(entry)
                 self.send_to_entry(pkt, entry)
+                return True
             else:
                 print "No random host found."
+                return False
 
 
     def send_express(self, otag, pkt):
@@ -385,26 +387,58 @@ class ExternalDispatch(SThread):
         pass
 
     def __loop_body(self):
-        if self.tx2.empty():
-            try:
-                group, state, otype, pkt = self.tx.get(True, 5)
-                otag = group+":"+otype+":"+state
-                self.send_express(otag, pkt)
-            except Empty:
-                return
 
-            except:
-                logging.error("Error sending pkt")
-                return
-        else:
-            logging.debug("Packet on priority queue!")
+        if not self.tx2.empty():
             group, state, otype, pkt = self.tx2.get(True, 1)
-            header =  pkt[0]
+            header = pkt[0]
+            if header["aux"] & Packet.CODE_BIT:
+                if not self.send_to_random_one(pkt):
+                    #requeue
+                    self.tx2.put(None,None,None,pkt)
             if header["aux"] & Packet.BCKPRESSURE_BIT:
                 self.send_to_last(pkt)
             else:
                 otag = group+":"+otype+":"+state
                 self.send_express(otag, pkt)
+
+        try:
+            group, state, otype, pkt = self.tx.get(True, 5)
+            otag = group+":"+otype+":"+state
+            self.send_express(otag, pkt)
+        except Empty:
+            return
+
+        except:
+            logging.error("Error sending pkt")
+            return
+
+        # if self.tx2.empty():
+        #     try:
+        #         group, state, otype, pkt = self.tx.get(True, 5)
+        #         otag = group+":"+otype+":"+state
+        #         self.send_express(otag, pkt)
+        #     except Empty:
+        #         return
+        #
+        #     except:
+        #         logging.error("Error sending pkt")
+        #         return
+        # else:
+        #     logging.debug("Packet on priority queue!")
+        #     try:
+        #         group, state, otype, pkt = self.tx2.get(True, 1)
+        #     except Empty:
+        #         return
+        #     header =  pkt[0]
+        #     if header["aux"] & Packet.CODE_BIT:
+        #         if not self.send_to_random_one(pkt):
+        #             #requeue
+        #             self.tx2.put(None,None,None,pkt)
+        #     if header["aux"] & Packet.BCKPRESSURE_BIT:
+        #         self.send_to_last(pkt)
+        #     else:
+        #         otag = group+":"+otype+":"+state
+        #         self.send_express(otag, pkt)
         pass
 
     def run(self):

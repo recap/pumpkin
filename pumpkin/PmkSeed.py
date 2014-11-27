@@ -206,7 +206,7 @@ class Seed(object):
 
     def deploy_seed(self, name, file_path, count):
         pkt = self.__rawpacket()
-        pkt = Packet.set_pkt_bit(pkt. Packet.CODE_BIT)
+        pkt = Packet.set_pkt_bit(pkt, Packet.CODE_BIT)
 
         seeds = {}
         #dir = expanduser("~")+"/pumpkin-examples/tweeter/"
@@ -1325,9 +1325,12 @@ class Seed(object):
         header = pkt[0]
         if "traces" not in header.keys():
             header["traces"] = []
-            header["traces"].append(self.context.getUuid())
-        exdisp = self.context.getExternalDispatch()
-        exdisp.send_to_random_one(pkt)
+
+        header["traces"].append(self.context.getUuid())
+
+        self.context.get_tx(2).put(None,None,None,pkt)
+        #exdisp = self.context.getExternalDispatch()
+        #exdisp.send_to_random_one(pkt)
 
     def re_dispatch(self,pkt):
 
