@@ -193,6 +193,9 @@ class Seed(object):
         pkt = Packet.new_empty_packet(ship_id, cont_id)
         return pkt
 
+    def get_empty_packet(self):
+        return self.__rawpacket()
+
     def get_new_box(self):
         return str(uuid.uuid4())[:8]
 

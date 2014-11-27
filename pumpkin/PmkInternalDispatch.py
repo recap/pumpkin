@@ -492,7 +492,7 @@ class ZMQPacketMonitor(SThread):
                         c_tag = header["c_tag"]
                         pred = header["c_pred"]
                         c_wtime = header["c_wtime"]
-                        print json.dumps(pkt)
+                        #print json.dumps(pkt)
 
                         self.context.getProcGraph().update_ep_prediction(pred, host,c_tag)
 

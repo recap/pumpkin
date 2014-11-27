@@ -392,9 +392,9 @@ class ExternalDispatch(SThread):
 
     def __loop_body(self):
 
-        print "In LOOP 1"
+
         if not self.tx2.empty():
-            print "In LOOP 2"
+
             group, state, otype, pkt = self.tx2.get(True, 1)
             header = pkt[0]
             ok = False
