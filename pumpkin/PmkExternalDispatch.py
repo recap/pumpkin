@@ -235,7 +235,7 @@ class ExternalDispatch(SThread):
                      #print "HERE1"
                      break
                 else:
-                    self.tx.put(tags,pkt)
+                    self.tx.put((tags[0],tags[1],tags[2],pkt))
                     found = True
                     #time.sleep(1)
                     break
@@ -417,9 +417,9 @@ class ExternalDispatch(SThread):
         except Empty:
             return
 
-        except:
-            logging.error("Error sending pkt")
-            return
+        #except Exception as e:
+        #    logging.error("Error sending pkt")
+        #    return
 
         # if self.tx2.empty():
         #     try:
