@@ -196,15 +196,19 @@ class ExternalDispatch(SThread):
 
 
         tracer_tag = self.context.get_group()+":Internal:TRACE"
-        routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
-        entry = self.ep_sched.pick_random(routes, header["traces"])
+        routess = self.graph.getRoutes(tracer_tag)
+        if routess:
+            routes = routess[0]["endpoints"]
+            entry = self.ep_sched.pick_random(routes, header["traces"])
 
-        if entry:
-            print "Random send to: "+json.dumps(entry)
-            self.send_to_entry(pkt, entry)
-            return True
+            if entry:
+                print "Random send to: "+json.dumps(entry)
+                self.send_to_entry(pkt, entry)
+                return True
+            else:
+                print "No random host found."
+                return False
         else:
-            print "No random host found."
             return False
 
 
