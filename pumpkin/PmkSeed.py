@@ -17,6 +17,7 @@ import inspect
 import zmq
 from numpy import arange,array,ones,linalg
 import random
+import base64
 
 import PmkShared
 
@@ -202,6 +203,27 @@ class Seed(object):
     def rawrun(self):
         self.run(self.__rawpacket())
         pass
+
+    def deploy_seed(self, name, file_path, count):
+        pkt = self.__rawpacket()
+        pkt = Packet.set_pkt_bit(pkt. Packet.CODE_BIT)
+
+        seeds = {}
+        #dir = expanduser("~")+"/pumpkin-examples/tweeter/"
+        #seed = "filterenglish.py"
+        #path = dir+seed
+
+        with open (file_path, "r") as myfile:
+            data=myfile.read()
+
+        datab64 = base64.encodestring(data)
+        seeds[name] = {}
+        seeds[name]["code"] = datab64
+        seeds[name]["count"] = count
+
+        pkt[0]["seeds"] = seeds
+
+        self.send_around(pkt)
 
     def get_cont_id(self,pkt):
         return pkt[0]["container"]
