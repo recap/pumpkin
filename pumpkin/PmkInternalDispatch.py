@@ -306,7 +306,7 @@ class RabbitMQMonitor():
                         else:
                             self.cnt += 1
                             body = zlib.decompress(bodyz)
-                            logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
+                            logging.info("RabbitMQ received from "+self.queue+": "+ str(body))
                             pkt = json.loads(body)
                             rx.parse_n_load(pkt)
                             #rx.dig(pkt)
@@ -564,68 +564,5 @@ class ZMQPacketMonitor(SThread):
             #    sys.exit(1)
 
         pass
-
-
-
-#class InternalDispatch2(Thread):
-#    def __init__(self, context):
-#        Thread.__init__(self)
-#        self.context = context
-#        pass
-#
-#    def run(self):
-#
-#        rx = self.context.getRx()
-#        tx = self.context.getTx()
-#        while 1:
-#            #fname = rx.get(True)
-#            #fh = open(fname, "r")
-#            #pkt = fh.read()
-#            pkt = rx.get(True)
-#            m = re.search('##START-CONF(.+?)##END-CONF(.*)', pkt, re.S)
-#            if m:
-#                pkt_header = m.group(1)
-#                pkt_data = m.group(2)
-#                d = json.loads(pkt_header)
-#                for fc in d["invoke"]:
-#                    state = fc["state"]
-#                    if not ((int(state) & DRPackets.READY_STATE) == 1):
-#                        func = fc["func"]
-#                        logging.debug("Trying invoking local function: "+str(func))
-#                        if func in DRPlugin.hplugins:
-#                            klass = DRPlugin.hplugins[func](self.context)
-#                            #klass.on_load()
-#                            rt = klass.run(pkt_data)
-#                            pkt_data = rt
-#                            #xf = klass()
-#                            logging.debug("RESULT: "+str(rt))
-#                            fc["state"] = DRPackets.READY_STATE
-#                            opkt = "##START-CONF" + json.dumps(d) + "##END-CONF\n"+str(rt)
-#                            logging.debug("Out PKT: "+ str(opkt))
-#                            #tx.put(opkt)
-#
-#                            #foutname = "./tx/"+d["container-id"]+d["box-id"]+".pkt"
-#                            #fout = open(foutname, "w")
-#                            #fout.write(strg)
-#                            #fout.flush()
-#                            #fout.close()
-#                            #logging.debug("HERE 1")
-#                            #tx.put(d,True)
-#                            #logging.debug("HERE 2")
-#                            #break
-#
-#                            #logging.debug("Return result: "+str(strg))
-#                        else:
-#                            logging.debug("No local function "+func+" found")
-#
-#
-#                    else:
-#                        logging.debug("Ready moving on")
-#
-#
-#
-#                #logging.debug("Packet dispatch: "+str(pkt_header))
-
-
 
 

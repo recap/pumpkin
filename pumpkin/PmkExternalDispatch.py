@@ -956,7 +956,7 @@ class RabbitMQDispatch(Dispatch):
         pass
 
     def close(self):
-        self.connetion.close()
+        self.connection.close()
 
 
 
