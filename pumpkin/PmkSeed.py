@@ -377,7 +377,7 @@ class Seed(object):
                 if pkt_id in self.in_flight_pkts: del self.in_flight_pkts[pkt_id]
                 self._lock_in_fpkts.release()
                 if not pkt[0]["last_func"] == None:
-                     print "Sending to last: "+json.dumps(pkt    )
+                     logging.debug("Sending to last: "+json.dumps(pkt))
                      exdisp = self.context.getExternalDispatch()
                      exdisp.send_to_last(dpkt)
                 pass

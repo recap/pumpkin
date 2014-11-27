@@ -236,9 +236,9 @@ class ExternalDispatch(SThread):
                      break
                 else:
                     self.tx.put((tags[0],tags[1],tags[2],pkt))
-                    found = True
+                    return False
                     #time.sleep(1)
-                    break
+                    #break
                     # dump non routable packets as this will lead to deadlock from tx queue filling
                     # if self.context.is_speedy():
                     #     found = True
@@ -388,7 +388,7 @@ class ExternalDispatch(SThread):
 
                             if state == "REDISPATCH" and found == True:
                                 break
-        pass
+        return True
 
     def __loop_body(self):
 
@@ -413,7 +413,9 @@ class ExternalDispatch(SThread):
         try:
             group, state, otype, pkt = self.tx.get(True, 5)
             otag = group+":"+otype+":"+state
-            self.send_express((group,state,otype), pkt)
+            if not self.send_express((group,state,otype), pkt):
+                print "no route"
+                time.sleep(5)
         except Empty:
             return
 
