@@ -186,9 +186,14 @@ class ProcessGraph(object):
         self.__display_graph = False
 
     def getRoutes(self, tag):
+        self.rlock.acquire()
+        ret = None
         #logging.debug("Finding route for "+ tag)
         if tag in self.tagroute.keys():
-            return self.tagroute[tag]
+            ret = self.tagroute[tag]
+
+        self.rlock.release()
+        return ret
 
     def getPriorityEndpoint(self, route):
         bep = None

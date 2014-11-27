@@ -193,20 +193,19 @@ class ExternalDispatch(SThread):
     def send_to_random_one(self, pkt):
         entry = None
         header = pkt[0]
-        while not entry:
-            #time.sleep(5)
 
-            tracer_tag = self.context.get_group()+":Internal:TRACE"
-            routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
-            entry = self.ep_sched.pick_random(routes, header["traces"])
 
-            if entry:
-                print "Random send to: "+json.dumps(entry)
-                self.send_to_entry(pkt, entry)
-                return True
-            else:
-                print "No random host found."
-                return False
+        tracer_tag = self.context.get_group()+":Internal:TRACE"
+        routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
+        entry = self.ep_sched.pick_random(routes, header["traces"])
+
+        if entry:
+            print "Random send to: "+json.dumps(entry)
+            self.send_to_entry(pkt, entry)
+            return True
+        else:
+            print "No random host found."
+            return False
 
 
     def send_express(self, tags, pkt):
@@ -237,6 +236,7 @@ class ExternalDispatch(SThread):
                      break
                 else:
                     self.tx.put(tags,pkt)
+                    found = True
                     #time.sleep(1)
                     break
                     # dump non routable packets as this will lead to deadlock from tx queue filling
