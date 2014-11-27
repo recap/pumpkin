@@ -528,8 +528,9 @@ class EndpointPicker(object):
         our_cuid = self.context.getUuid()
         for ep in routes:
             if ep["priority"] < cp and ep["cuid"] not in traces:
-                cp = ep["priority"]
-                rep = ep
+                if self._check_conn_ep(ep):
+                    cp = ep["priority"]
+                    rep = ep
 
         return rep
 
