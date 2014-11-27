@@ -149,19 +149,33 @@ class InternalDispatch(SThread):
                 #   x = 1
                 #   self._dispatch(pkt)
                 #   continue
-
-                seeds = pkt[0]["seeds"]
+                logging.debug("Received CODE packet...")
+                seeds = header["seeds"]
+                forward = False
                 for seed_key in seeds.keys():
                     seed = seeds[seed_key]
                     seed_code = base64.decodestring(seed["code"])
                     seed_count = seed["count"]
-                    self.context.load_seed_from_string(seed_code)
+                    if seed_count > 0:
+                        logging.debug("Loading seed "+seed_key+" from CODE packet.")
+                        self.context.load_seed_from_string(seed_code)
+                        seed["count"] -= 1
+                        if seed["count"] > 0:
+                            forward = True
 
-                l = len(pkt)
-                if "tracer" in pkt[l-1]["func"]:
-                    pkt.pop()
+                if forward:
+                    header["traces"].append(self.context.getUuid())
+                    exdisp = self.context.getExternalDispatch()
+                    exdisp.send_to_random_one(pkt)
 
-                del pkt[0]["seeds"]
+                #only load code
+                continue
+
+                # l = len(pkt)
+                # if "tracer" in pkt[l-1]["func"]:
+                #     pkt.pop()
+                #
+                # del pkt[0]["seeds"]
 
             #logging.debug("Packet received: \n"+pkts)
             #pkt = json.loads(pkts)

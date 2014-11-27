@@ -192,11 +192,13 @@ class ExternalDispatch(SThread):
 
     def send_to_random_one(self, pkt):
         entry = None
+        header = pkt[0]
         while not entry:
             time.sleep(5)
             tracer_tag = self.context.get_group()+":Internal:TRACE"
             routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
-            entry = self.ep_sched.pick_random(routes)
+            entry = self.ep_sched.pick_random(routes, header["traces"])
+
             if entry:
                 self.send_to_entry(pkt, entry)
 
@@ -502,7 +504,7 @@ class EndpointPicker(object):
     #
     #     return mode
 
-    def pick_random(self, routes):
+    def pick_random(self, routes, traces):
         #route_id = route["name"]
         #ret_peps = []
         #found = False
@@ -521,7 +523,7 @@ class EndpointPicker(object):
         rep = None
         our_cuid = self.context.getUuid()
         for ep in routes:
-            if ep["priority"] < cp and ep["cuid"] is not our_cuid:
+            if ep["priority"] < cp and ep["cuid"] not in traces:
                 cp = ep["priority"]
                 rep = ep
 
