@@ -39,30 +39,30 @@ class rx(Queue):
 
                 self.context.getProcGraph().update_ep_prediction(pred, host,c_tag)
 
-                if self.dig(pkt):
-                    # if not p_dig:
-                    #     #release backpressure
-                    #     p_dig = True
-                    #     last_contact = header["last_contact"]
-                    #     header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
-                    #     #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
-                    #     header["last_host"] = self.context.get_uuid()
-                    #     self.context.get_tx(2).put((None,None,None,pkt))
+        if self.dig(pkt):
+            # if not p_dig:
+            #     #release backpressure
+            #     p_dig = True
+            #     last_contact = header["last_contact"]
+            #     header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+            #     #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+            #     header["last_host"] = self.context.get_uuid()
+            #     self.context.get_tx(2).put((None,None,None,pkt))
 
-                    self.put(pkt)
+            self.put(pkt)
 
-                else:
-                    p_dig = False
-                    #back pressure
+        else:
+            p_dig = False
+            #back pressure
 
-                    last_contact = header["last_contact"]
-                    header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
-                    header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
-                    header["last_host"] = self.context.get_uuid()
-                    self.context.get_tx(2).put((None,None,None,pkt))
+            last_contact = header["last_contact"]
+            header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+            header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+            header["last_host"] = self.context.get_uuid()
+            self.context.get_tx(2).put((None,None,None,pkt))
 
-                    #print last_contact
-                    pass
+            #print last_contact
+            pass
 
     def dig(self, pkt):
         ret = True
@@ -309,21 +309,7 @@ class RabbitMQMonitor():
                             logging.info("RabbitMQ received from "+self.queue+": "+ str(body))
                             pkt = json.loads(body)
                             rx.parse_n_load(pkt)
-                            #rx.dig(pkt)
-                            #rx.put(pkt)
-                            # pkt = json.loads(body)
-                            #
-                            # l = len(pkt)
-                            # func = None
-                            # if method.routing_key in self.tag_map:
-                            #     func = self.tag_map[method.routing_key]
-                            #     if ":" in func:
-                            #         func = func.split(":")[1]
-                            #     data = pkt[l-1]["data"]
-                            #
-                            # if func in PmkSeed.iplugins.keys():
-                            #     klass = PmkSeed.iplugins[func]
-                            #     rt = klass._stage_run(pkt, data)
+
                     else:
                         time.sleep(1)
                 except pika.exceptions.ConnectionClosed as e:
