@@ -1328,7 +1328,7 @@ class Seed(object):
 
         header["traces"].append(self.context.getUuid())
 
-        self.context.get_tx(2).put(None,None,None,pkt)
+        self.context.get_tx(2).put((None,None,None,pkt))
         #exdisp = self.context.getExternalDispatch()
         #exdisp.send_to_random_one(pkt)
 

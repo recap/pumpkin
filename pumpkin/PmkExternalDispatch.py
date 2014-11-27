@@ -209,7 +209,8 @@ class ExternalDispatch(SThread):
                 return False
 
 
-    def send_express(self, otag, pkt):
+    def send_express(self, tags, pkt):
+        otag = tags[0]+":"+tags[2]+":"+tags[1]
         ntag = None
         state = pkt[0]["state"]
         header = pkt[0]
@@ -235,20 +236,23 @@ class ExternalDispatch(SThread):
                      #print "HERE1"
                      break
                 else:
+                    self.tx.put(tags,pkt)
+                    #time.sleep(1)
+                    break
                     # dump non routable packets as this will lead to deadlock from tx queue filling
-                    if self.context.is_speedy():
-                        found = True
-                        break
+                    # if self.context.is_speedy():
+                    #     found = True
+                    #     break
 
-                    if "seeds" in header.keys():
-                        tracer_tag = self.context.get_group()+":Internal:TRACE"
-                        routes = self.graph.getRoutes(tracer_tag)
+                    #if "seeds" in header.keys():
+                    #    tracer_tag = self.context.get_group()+":Internal:TRACE"
+                    #    routes = self.graph.getRoutes(tracer_tag)
 
-                    if routes:
-                        break
-
-                    logging.debug("No Route: "+str(otag))
-                    time.sleep(5)
+                    # if routes:
+                    #     break
+                    #
+                    # logging.debug("No Route: "+str(otag))
+                    # time.sleep(5)
             #print "HERE2"
             if routes:
 
@@ -394,17 +398,17 @@ class ExternalDispatch(SThread):
             if header["aux"] & Packet.CODE_BIT:
                 if not self.send_to_random_one(pkt):
                     #requeue
-                    self.tx2.put(None,None,None,pkt)
+                    self.tx2.put((None,None,None,pkt))
             if header["aux"] & Packet.BCKPRESSURE_BIT:
                 self.send_to_last(pkt)
             else:
                 otag = group+":"+otype+":"+state
-                self.send_express(otag, pkt)
+                self.send_express((group,state,otype), pkt)
 
         try:
             group, state, otype, pkt = self.tx.get(True, 5)
             otag = group+":"+otype+":"+state
-            self.send_express(otag, pkt)
+            self.send_express((group,state,otype), pkt)
         except Empty:
             return
 
