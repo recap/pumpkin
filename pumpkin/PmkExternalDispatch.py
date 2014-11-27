@@ -395,13 +395,18 @@ class ExternalDispatch(SThread):
         if not self.tx2.empty():
             group, state, otype, pkt = self.tx2.get(True, 1)
             header = pkt[0]
+            ok = False
             if header["aux"] & Packet.CODE_BIT:
+                ok = True
                 if not self.send_to_random_one(pkt):
                     #requeue
                     self.tx2.put((None,None,None,pkt))
+
             if header["aux"] & Packet.BCKPRESSURE_BIT:
+                ok = True
                 self.send_to_last(pkt)
-            else:
+
+            if not ok:
                 otag = group+":"+otype+":"+state
                 self.send_express((group,state,otype), pkt)
 
