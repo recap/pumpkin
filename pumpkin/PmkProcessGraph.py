@@ -403,10 +403,19 @@ class ProcessGraph(object):
             for eps in self.tagroute[ctag]:
                 for ep in eps["endpoints"]:
                     if host in ep["cuid"]:
-                        ep["c_pred"] = pred
-                        if "timestamp" not in ep.keys():
-                            ep["timestamp"] = time.time()
-                            ep["last_update_time"] = time.time()
+                        if "locked" in ep.keys():
+                            if not ep["locked"]:
+                                ep["c_pred"] = pred
+                                if "timestamp" not in ep.keys():
+                                    ep["timestamp"] = time.time()
+
+                        else:
+                            ep["locked"] = False
+                            ep["c_pred"] = pred
+                            if "timestamp" not in ep.keys():
+                                ep["timestamp"] = time.time()
+
+
 
 
 

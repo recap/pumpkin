@@ -150,9 +150,11 @@ class InternalDispatch(SThread):
                 #   self._dispatch(pkt)
                 #   continue
 
-                seed_arr = pkt[0]["seeds"]
-                for seed in seed_arr:
-                    seed_code = base64.decodestring(seed)
+                seeds = pkt[0]["seeds"]
+                for seed_key in seeds.keys():
+                    seed = seeds[seed_key]
+                    seed_code = base64.decodestring(seed["code"])
+                    seed_count = seed["count"]
                     self.context.load_seed_from_string(seed_code)
 
                 l = len(pkt)

@@ -96,6 +96,33 @@ class ExternalDispatch(SThread):
 
         return mode
 
+    def send_to_entry(self, pkt, entry):
+        ep = entry["ep"]
+        if ep in self.dispatchers.keys():
+                disp = self.dispatchers[ep]
+                disp.dispatch(pkt)
+        else:
+            disp = None
+            if entry["mode"] == "zmq.PULL":
+                disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                #disp = ZMQPacketDispatch(self.context)
+                #disp = self.gdisp
+
+            if entry["mode"] == "amqp.PUSH":
+                disp = RabbitMQDispatch(self.context)
+                pass
+
+            if entry["mode"] == "raw.Q":
+                disp = InternalRxQueue(self.context)
+                pass
+
+            if not disp == None:
+                self.dispatchers[ep] = disp
+                disp.connect(ep)
+                disp.dispatch(pkt)
+
+
+
     def send_to_ep(self, pkt, ep):
         mode = self.get_mode_from_ep(ep)
 
@@ -162,6 +189,17 @@ class ExternalDispatch(SThread):
                 logging.error("No dispatchers found for: "+ep)
 
         pass
+
+    def send_to_random_one(self, pkt):
+        entry = None
+        while not entry:
+            time.sleep(5)
+            tracer_tag = self.context.get_group()+":Internal:TRACE"
+            routes = self.graph.getRoutes(tracer_tag)[0]["endpoints"]
+            entry = self.ep_sched.pick_random(routes)
+            if entry:
+                self.send_to_entry(pkt, entry)
+
 
     def send_express(self, otag, pkt):
         ntag = None
@@ -464,6 +502,31 @@ class EndpointPicker(object):
     #
     #     return mode
 
+    def pick_random(self, routes):
+        #route_id = route["name"]
+        #ret_peps = []
+        #found = False
+        # for route in routes:
+        #     rtable = self._restructure_table(route)
+        #     for r_key in rtable[0].keys():
+        #         if r_key is self.context.getUuid():
+        #             continue
+        #
+        #         #node = rtable[r_key]
+        #         _, eps = self._get_priority_eps(rtable, r_key, 0)
+        #         for ep in eps:
+        #             if self._check_conn_ep(ep):
+        #                 return ep
+        cp = 10000
+        rep = None
+        our_cuid = self.context.getUuid()
+        for ep in routes:
+            if ep["priority"] < cp and ep["cuid"] is not our_cuid:
+                cp = ep["priority"]
+                rep = ep
+
+        return rep
+
 
 
 
@@ -569,15 +632,16 @@ class EndpointPicker(object):
                                 p = 0
                                 t1 = time.time()
                                 t2 = ep["timestamp"]
-                                #t2 = ep["last_update_time"]
                                 et = t1 - t2
 
                                 bklog = ep["wshift"]
                                 bklog -= et
                                 if bklog > 0:
+                                    ep["locked"] = True
                                     logging.debug("BACKLOG: "+str(bklog))
                                     continue
                                 else:
+                                    ep["locked"] = False
                                     ep["wshift"] = 0
 
 

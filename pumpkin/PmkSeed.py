@@ -1299,6 +1299,14 @@ class Seed(object):
 
         return lpkt
 
+    def send_around(self, pkt):
+        header = pkt[0]
+        if "traces" not in header.keys():
+            header["traces"] = []
+            header["traces"].append(self.context.getUuid())
+        exdisp = self.context.getExternalDispatch()
+        exdisp.send_to_random_one(pkt)
+
     def re_dispatch(self,pkt):
 
         self._pkt_reset_timing(pkt)
