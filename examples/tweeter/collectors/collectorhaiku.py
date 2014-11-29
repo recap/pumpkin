@@ -47,7 +47,8 @@ class collectorhaiku(PmkSeed.Seed):
         pass
 
 
-    def run(self, pkt, tweet):
+    def run(self, pkt, data):
+        tweet = data[0]
         #print "RECEIVED TWEET: "+tweet
         m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
         if m:

@@ -46,6 +46,6 @@ class negative_collector(PmkSeed.Seed):
         pass
 
 
-    def run(self, pkt, tweet):
+    def run(self, pkt, data):
         pass
 

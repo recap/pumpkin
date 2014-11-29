@@ -44,7 +44,8 @@ class collectorhasa(PmkSeed.Seed):
         pass
 
 
-    def run(self, pkt, tweet):
+    def run(self, pkt, data):
+        tweet = data[0]
         st = tweet.replace("has an", "has a")
         sta = st.split("has a")
         self.G.add_edge(sta[0].strip(),sta[1].strip())

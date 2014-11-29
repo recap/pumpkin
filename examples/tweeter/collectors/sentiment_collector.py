@@ -40,7 +40,8 @@ class sentiment_collector(PmkSeed.Seed):
         self.neg_counter = 0
         self.current_date = None
 
-    def run(self, pkt, tweet):
+    def run(self, pkt, data):
+        tweet = data[0]
         new_date = re.search('T\w*(\s+)(.*)(\n)', tweet).group(2)
         self.current_date = datetime.datetime.strptime(new_date, "%Y-%m-%d %H:%M:%S")
         if self.date == None:

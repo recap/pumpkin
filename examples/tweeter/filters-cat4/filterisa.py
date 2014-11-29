@@ -46,7 +46,8 @@ class filterisa(PmkSeed.Seed):
         pass
 
 
-    def run(self, pkt, tweet):
+    def run(self, pkt, data):
+        tweet = data[0]
         m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
         if m:
             tw = m.group(2)

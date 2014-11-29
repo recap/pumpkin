@@ -35,7 +35,7 @@ import nltk
 import time
 import sys
 
-from pumpkin import PmkSeed
+from pumpkin import *
 
 
 
@@ -71,6 +71,8 @@ class filterenglish(PmkSeed.Seed):
 
     def run(self, pkt, data):
         try:
+            pkt = Packet.set_streaming_bits(pkt)
+            time.sleep(0.1)
             tweet = data[0]
             m = re.search('W(\s+)(.*)(\n)', tweet, re.S)
             if m:
@@ -85,11 +87,16 @@ class filterenglish(PmkSeed.Seed):
 
                 tw = m.group(2)
                 if self.is_english(tw):
-                    self.dispatch(pkt, tweet, "ENGLISH")
+                    #self.dispatch(pkt, tweet, "ENGLISH")
                     #self.eng_cnt += 1
+                    print "English"
+                    pass
                 else:
-                    self.dispatch(pkt, tweet, "NONENGLISH")
+                    print "NON ENGLISH"
+                    #self.dispatch(pkt, tweet, "NONENGLISH")
                     #self.neng_cnt += 1
+                    #print "Non English"
+                    pass
         except:
             self.logger.error("Unexpected error:" + str(sys.exc_info()[0]))
 
