@@ -356,7 +356,7 @@ class ExternalDispatch(SThread):
                                     pep["tracer_interval"] -= 1
                                     if pep["tracer_interval"] <= 0:
                                         dcpkt2 = Packet.set_tracer_bits(dcpkt2)
-                                        dcpkt2 = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                        #dcpkt2 = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
                                         pep["tracer_interval"] = Endpoint.TRACER_INTERVAL
 
                                 if dcpkt2[0]["aux"] & Packet.MULTIPACKET_BIT:
