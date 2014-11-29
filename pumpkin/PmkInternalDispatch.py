@@ -474,6 +474,7 @@ class ZMQPacketMonitor(SThread):
 
         queue_put = self.context.getRx().put
         dig = self.context.getRx().dig
+        rx = self.context.getRx()
         p_dig = True
         while True:
             try:
@@ -481,84 +482,86 @@ class ZMQPacketMonitor(SThread):
                 #self.context.getRx().put(msg)
                 d_msg = zlib.decompress(msg)
                 pkt = json.loads(d_msg)
-                header = pkt[0]
-                #check for back ppressure packets
-                # if header["aux"] & Packet.BCKPRESSURE_BIT:
-                #     if header["aux"] & Packet.PRESSURETOGGLE_BIT:
-                #         last_host = header["last_host"]
-                #         self.context.getProcGraph().disable_host_eps(last_host)
-                #         logging.debug("Requeueing packet")
-                #         pkt = Packet.clear_pkt_bit(pkt,Packet.BCKPRESSURE_BIT )
-                #         pkt = Packet.clear_pkt_bit(pkt, Packet.PRESSURETOGGLE_BIT)
-                #         self.context.get_tx(1).put_pkt(pkt)
-                #     else:
-                #         last_host = header["last_host"]
-                #         logging.debug("Enabling Packet")
-                #         self.context.getProcGraph().enable_host_eps(last_host)
+                rx.parse_n_load(pkt)
 
-                if header["aux"] & Packet.NACK_BIT:
-                    if header["aux"] & Packet.TRACER_BIT:
-                        host = header["last_host"]
-                        c_tag = header["c_tag"]
-                        pred = header["c_pred"]
-                        c_wtime = header["c_wtime"]
-                        #print json.dumps(pkt)
-
-                        self.context.getProcGraph().update_ep_prediction(pred, host,c_tag)
-
-                if dig(pkt):
-                    # if not p_dig:
-                    #     #release backpressure
-                    #     p_dig = True
-                    #     last_contact = header["last_contact"]
-                    #     header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
-                    #     #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
-                    #     header["last_host"] = self.context.get_uuid()
-                    #     self.context.get_tx(2).put((None,None,None,pkt))
-
-                    queue_put(pkt)
-
-                else:
-                    p_dig = False
-                    #back pressure
-
-                    last_contact = header["last_contact"]
-                    header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
-                    header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
-                    header["last_host"] = self.context.get_uuid()
-                    self.context.get_tx(2).put((None,None,None,pkt))
-
-                    #print last_contact
-                    pass
-                #self.proccess_pkt(msg)
-                #del msg
-
-                # if "REVERSE" in msg:
-                #     logging.debug(msg)
-                #     ep = msg.split("::")[1]
-                #     logging.debug("Reverse connecting to: "+ep)
-                #     rec = self.zmq_cntx.socket(zmq.PULL)
-                #     rec.connect(ep)
-                #     msg = rec.recv()
-                #     logging.debug("Received msg: "+msg)
-                #     #continue
-                #self.rx.put(msg)
-                #logging.debug("Message: "+str(msg))
-            # except zmq.ZMQError as e:
-            #     if self.stopped():
-            #         logging.debug("Exiting thread "+  self.__class__.__name__)
-            #         soc.close()
-            #         #zmq_cntx.destroy()
-            #         #zmq_cntx.term()
-            #         break
+            #     header = pkt[0]
+            #     #check for back ppressure packets
+            #     # if header["aux"] & Packet.BCKPRESSURE_BIT:
+            #     #     if header["aux"] & Packet.PRESSURETOGGLE_BIT:
+            #     #         last_host = header["last_host"]
+            #     #         self.context.getProcGraph().disable_host_eps(last_host)
+            #     #         logging.debug("Requeueing packet")
+            #     #         pkt = Packet.clear_pkt_bit(pkt,Packet.BCKPRESSURE_BIT )
+            #     #         pkt = Packet.clear_pkt_bit(pkt, Packet.PRESSURETOGGLE_BIT)
+            #     #         self.context.get_tx(1).put_pkt(pkt)
+            #     #     else:
+            #     #         last_host = header["last_host"]
+            #     #         logging.debug("Enabling Packet")
+            #     #         self.context.getProcGraph().enable_host_eps(last_host)
+            #
+            #     if header["aux"] & Packet.NACK_BIT:
+            #         if header["aux"] & Packet.TRACER_BIT:
+            #             host = header["last_host"]
+            #             c_tag = header["c_tag"]
+            #             pred = header["c_pred"]
+            #             c_wtime = header["c_wtime"]
+            #             #print json.dumps(pkt)
+            #
+            #             self.context.getProcGraph().update_ep_prediction(pred, host,c_tag)
+            #
+            #     if dig(pkt):
+            #         # if not p_dig:
+            #         #     #release backpressure
+            #         #     p_dig = True
+            #         #     last_contact = header["last_contact"]
+            #         #     header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+            #         #     #header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+            #         #     header["last_host"] = self.context.get_uuid()
+            #         #     self.context.get_tx(2).put((None,None,None,pkt))
+            #
+            #         queue_put(pkt)
+            #
             #     else:
-            #         continue
-            except Exception as e:
-                 logging.error(str(e))
-
-            #except MemoryError as e:
-            #    logging.error(str(e))
-            #    sys.exit(1)
+            #         p_dig = False
+            #         #back pressure
+            #
+            #         last_contact = header["last_contact"]
+            #         header["aux"] = header["aux"] | Packet.BCKPRESSURE_BIT
+            #         header["aux"] = header["aux"] | Packet.PRESSURETOGGLE_BIT
+            #         header["last_host"] = self.context.get_uuid()
+            #         self.context.get_tx(2).put((None,None,None,pkt))
+            #
+            #         #print last_contact
+            #         pass
+            #     #self.proccess_pkt(msg)
+            #     #del msg
+            #
+            #     # if "REVERSE" in msg:
+            #     #     logging.debug(msg)
+            #     #     ep = msg.split("::")[1]
+            #     #     logging.debug("Reverse connecting to: "+ep)
+            #     #     rec = self.zmq_cntx.socket(zmq.PULL)
+            #     #     rec.connect(ep)
+            #     #     msg = rec.recv()
+            #     #     logging.debug("Received msg: "+msg)
+            #     #     #continue
+            #     #self.rx.put(msg)
+            #     #logging.debug("Message: "+str(msg))
+            # # except zmq.ZMQError as e:
+            # #     if self.stopped():
+            # #         logging.debug("Exiting thread "+  self.__class__.__name__)
+            # #         soc.close()
+            # #         #zmq_cntx.destroy()
+            # #         #zmq_cntx.term()
+            # #         break
+            # #     else:
+            # #         continue
+            # except Exception as e:
+            #      logging.error(str(e))
+            #
+            # #except MemoryError as e:
+            # #    logging.error(str(e))
+            # #    sys.exit(1)
 
         pass
 
