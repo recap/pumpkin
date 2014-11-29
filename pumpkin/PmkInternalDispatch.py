@@ -26,7 +26,7 @@ class rx(Queue):
 
         pass
 
-    def parse_n_load(self, pkt):
+    def __load(self, pkt):
         header = pkt[0]
 
         if header["aux"] & Packet.NACK_BIT:
@@ -63,6 +63,16 @@ class rx(Queue):
 
             #print last_contact
             pass
+
+    def parse_n_load(self, pkt):
+        header = pkt[0]
+        if header["aux"] & Packet.MULTIPACKET_BIT:
+            pkt_list = pkt[2:]
+            for apkt in pkt_list:
+                self.__load(apkt)
+        else:
+            self.__load(pkt)
+
 
     def dig(self, pkt):
         ret = True

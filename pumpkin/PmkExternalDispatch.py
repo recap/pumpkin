@@ -49,6 +49,7 @@ class ExternalDispatch(SThread):
         SThread.__init__(self)
         self.context = context
         self.dispatchers = {}
+        self.capacitor = {}
         self.redispatchers = {}
         self.last_contacts = {}
         self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
@@ -355,6 +356,32 @@ class ExternalDispatch(SThread):
                                     if pep["tracer_interval"] <= 0:
                                         dcpkt2 = Packet.set_tracer_bits(dcpkt2)
                                         pep["tracer_interval"] = Endpoint.TRACER_INTERVAL
+
+                            if dcpkt2[0]["aux"] & Packet.MULTIPACKET_BIT:
+                                if ep in self.capacitor.keys():
+                                    qpkt = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                    self.capacitor[ep]["packets"].append(qpkt)
+                                    self.capacitor[ep]["charge"] += 1
+
+                                else:
+                                    self.capacitor[ep] = {}
+                                    self.capacitor[ep]["charge"] = 0
+                                    self.capacitor[ep]["packets"] = []
+                                    qpkt = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                    self.capacitor[ep]["packets"].append(qpkt)
+                                    self.capacitor[ep]["charge"] += 1
+
+
+                                if self.capacitor[ep]["charge"] > 5:
+                                    self.capacitor[ep]["charge"] = 0
+                                    pkt_list = self.capacitor[ep]["packets"]
+                                    head_packet = pkt_list[0][:2]
+                                    all_pkts = head_packet+pkt_list
+                                    dcpkt2 = all_pkts
+                                    dcpkt2 = Packet.set_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                else:
+                                    return True
+
 
 
 
