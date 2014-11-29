@@ -483,6 +483,8 @@ class ZMQPacketMonitor(SThread):
                 d_msg = zlib.decompress(msg)
                 pkt = json.loads(d_msg)
                 rx.parse_n_load(pkt)
+            except Exception as e:
+                 logging.error(str(e))
 
             #     header = pkt[0]
             #     #check for back ppressure packets
@@ -563,6 +565,6 @@ class ZMQPacketMonitor(SThread):
             # #    logging.error(str(e))
             # #    sys.exit(1)
 
-        pass
+
 
 
