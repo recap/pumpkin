@@ -721,56 +721,56 @@ class EndpointPicker(object):
                     for ep in eps:
                         if self._check_conn_ep(ep):
 
-                            if not Endpoint.ready(ep, pkt):
-                                continue
+                            # if not Endpoint.ready(ep, pkt):
+                            #     continue
 
-                            # if "c_pred" in ep.keys():
-                            #     #p chooses ep priority from _get_priority_eps, setting it to 0 forces rescan
-                            #     p = 0
-                            #     t1 = time.time()
-                            #     t2 = ep["timestamp"]
-                            #     et = t1 - t2
-                            #
-                            #     bklog = ep["wshift"]
-                            #     bklog -= et
-                            #     if bklog > 0:
-                            #         ep["locked"] = True
-                            #         logging.debug("BACKLOG: "+str(bklog))
-                            #         continue
-                            #     else:
-                            #         ep["locked"] = False
-                            #         ep["wshift"] = 0
-                            #
-                            #
-                            #     w = ep["wait"] #+ ep["wshift"]
-                            #     #if ep["wshift"] > 10:
-                            #     #    print "SHIFT: "+ str(ep["wshift"])
-                            #     #ep["wshift"] = 0
-                            #
-                            #     w -= et
-                            #     if w < 0:
-                            #         #w = 0
-                            #         pred = ep["c_pred"]
-                            #         m = pred[0] # m in y = mx + c
-                            #         c = pred[1] # c in y = mx + c
-                            #         b = pred[2] #total queue backlog
-                            #         x = pkt[0]["c_size"]
-                            #         y = m*x + c
-                            #         #print "Adding: "+str(y)
-                            #         #adding
-                            #         ep["wait"] = (y) #+ b
-                            #         logging.debug("WAIT: "+str(y)+" WSHIFT: "+str(b)+" X: "+str(x)+" M: "+str(m)+" C: "+str(c))
-                            #         #print "SETTING: "+str(b)
-                            #         ep["wshift"] = b
-                            #         pred[2] = 0
-                            #         ep["timestamp"] = t1
-                            #
-                            #
-                            #
-                            #
-                            #     else:
-                            #         #logging.debug("Waiting: "+str(w))
-                            #         continue
+                            if "c_pred" in ep.keys():
+                                #p chooses ep priority from _get_priority_eps, setting it to 0 forces rescan
+                                p = 0
+                                t1 = time.time()
+                                t2 = ep["timestamp"]
+                                et = t1 - t2
+
+                                bklog = ep["wshift"]
+                                bklog -= et
+                                if bklog > 0:
+                                    ep["locked"] = True
+                                    logging.debug("BACKLOG: "+str(bklog))
+                                    continue
+                                else:
+                                    ep["locked"] = False
+                                    ep["wshift"] = 0
+
+
+                                w = ep["wait"] #+ ep["wshift"]
+                                #if ep["wshift"] > 10:
+                                #    print "SHIFT: "+ str(ep["wshift"])
+                                #ep["wshift"] = 0
+
+                                w -= et
+                                if w < 0:
+                                    #w = 0
+                                    pred = ep["c_pred"]
+                                    m = pred[0] # m in y = mx + c
+                                    c = pred[1] # c in y = mx + c
+                                    b = pred[2] #total queue backlog
+                                    x = pkt[0]["c_size"]
+                                    y = m*x + c
+                                    #print "Adding: "+str(y)
+                                    #adding
+                                    ep["wait"] = (y) #+ b
+                                    logging.debug("WAIT: "+str(y)+" WSHIFT: "+str(b)+" X: "+str(x)+" M: "+str(m)+" C: "+str(c))
+                                    #print "SETTING: "+str(b)
+                                    ep["wshift"] = b
+                                    pred[2] = 0
+                                    ep["timestamp"] = t1
+
+
+
+
+                                else:
+                                    #logging.debug("Waiting: "+str(w))
+                                    continue
 
 
                             self.route_index[route_id] = s_idx
