@@ -41,6 +41,7 @@ class Packet(object):
         header["ship"]          = ship_id
         header["cont_id"]       = cont_id
         header["box"]           = 0
+        header["flow"]          = None
         header["fragment"]      = 0
         header["e"]             = 0
         header["state"]         = Packet.PKT_STATE_NEW
@@ -63,6 +64,12 @@ class Packet(object):
 
         pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
 
+        return pkt
+
+    @staticmethod
+    def set_pkt_flow(pkt, flow):
+        header = pkt[0]
+        header["flow"] = flow
         return pkt
 
     @staticmethod
