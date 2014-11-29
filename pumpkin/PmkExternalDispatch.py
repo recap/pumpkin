@@ -374,7 +374,7 @@ class ExternalDispatch(SThread):
                                         self.capacitor[ep]["charge"] += 1
 
 
-                                    if self.capacitor[ep]["charge"] > 5:
+                                    if self.capacitor[ep]["charge"] > 500:
                                         print "BUNCH"
                                         self.capacitor[ep]["charge"] = 0
                                         pkt_list = self.capacitor[ep]["packets"]
