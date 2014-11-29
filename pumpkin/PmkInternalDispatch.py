@@ -412,45 +412,47 @@ class ZMQPacketMonitor(SThread):
 
         self.rx = self.context.getRx()
 
-    def proccess_pkt(self, pkts):
-        pkt = json.loads(pkts)
-        logging.debug("PACKET RECEIVED: "+pkts)
-        #Check for PACK
-        if pkt[0]["state"] == "PACK_OK":
+        pass
 
-            seed = pkt[0]["last_func"]
-
-            if seed in PmkSeed.iplugins.keys():
-                klass = PmkSeed.iplugins[seed]
-                klass.pack_ok(pkt)
-                self._packed_pkts += 1
-                #logging.debug("PACKED pkts: "+str(self._packed_pkts))
-                return True
-        # if pkt[0]["state"] == "MERGE":
-        #     seed = pkt[0]["last_func"]
-        #
-        #     if seed in PmkSeed.iplugins.keys():
-        #         klass = PmkSeed.iplugins[seed]
-        #         klass.merge(pkt)
-        #         #klass.pack_ok(pkt)
-        #         #self._packed_pkts += 1
-        #         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
-        #         continue
-        if pkt[0]["state"] == "ARP_OK":
-            logging.debug("Received ARP_OK: "+json.dumps(pkt))
-            self.context.put_pkt_in_shelve2(pkt)
-            return True
-
-        l = len(pkt)
-        func = pkt[l-1]["func"]
-        data = pkt[l-2]["data"]
-
-        if ":" in func:
-                func = func.split(":")[1]
-
-        if func in PmkSeed.iplugins.keys():
-            klass = PmkSeed.iplugins[func]
-            rt = klass._stage_run(pkt, data)
+    # def proccess_pkt(self, pkts):
+    #     pkt = json.loads(pkts)
+    #     logging.debug("PACKET RECEIVED: "+pkts)
+    #     #Check for PACK
+    #     if pkt[0]["state"] == "PACK_OK":
+    #
+    #         seed = pkt[0]["last_func"]
+    #
+    #         if seed in PmkSeed.iplugins.keys():
+    #             klass = PmkSeed.iplugins[seed]
+    #             klass.pack_ok(pkt)
+    #             self._packed_pkts += 1
+    #             #logging.debug("PACKED pkts: "+str(self._packed_pkts))
+    #             return True
+    #     # if pkt[0]["state"] == "MERGE":
+    #     #     seed = pkt[0]["last_func"]
+    #     #
+    #     #     if seed in PmkSeed.iplugins.keys():
+    #     #         klass = PmkSeed.iplugins[seed]
+    #     #         klass.merge(pkt)
+    #     #         #klass.pack_ok(pkt)
+    #     #         #self._packed_pkts += 1
+    #     #         #logging.debug("PACKED pkts: "+str(self._packed_pkts))
+    #     #         continue
+    #     if pkt[0]["state"] == "ARP_OK":
+    #         logging.debug("Received ARP_OK: "+json.dumps(pkt))
+    #         self.context.put_pkt_in_shelve2(pkt)
+    #         return True
+    #
+    #     l = len(pkt)
+    #     func = pkt[l-1]["func"]
+    #     data = pkt[l-2]["data"]
+    #
+    #     if ":" in func:
+    #             func = func.split(":")[1]
+    #
+    #     if func in PmkSeed.iplugins.keys():
+    #         klass = PmkSeed.iplugins[func]
+    #         rt = klass._stage_run(pkt, data)
 
 
     def run(self):

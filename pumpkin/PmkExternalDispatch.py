@@ -375,12 +375,15 @@ class ExternalDispatch(SThread):
 
 
                                     if self.capacitor[ep]["charge"] > 5:
+                                        print "BUNCH"
                                         self.capacitor[ep]["charge"] = 0
                                         pkt_list = self.capacitor[ep]["packets"]
+
                                         head_packet = pkt_list[0][:2]
                                         all_pkts = head_packet+pkt_list
                                         dcpkt2 = all_pkts
                                         dcpkt2 = Packet.set_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                        self.capacitor[ep]["packets"] = []
                                     else:
                                         return True
 
