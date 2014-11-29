@@ -746,6 +746,7 @@ class Seed(object):
                 complexity[data_len] = [etime,1]
 
             if (header["aux"] & Packet.TRACER_BIT):
+                pkt = Packet.clear_pkt_bit(pkt, Packet.MULTIPACKET_BIT)
                 #ack this packet
                 print "Sending ACK TRACER"
                 p, _, _, m,c = self.queue_prediction()
