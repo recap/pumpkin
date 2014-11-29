@@ -361,7 +361,7 @@ class ExternalDispatch(SThread):
 
                                 if dcpkt2[0]["aux"] & Packet.MULTIPACKET_BIT:
                                     if ep in self.capacitor.keys():
-                                        qpkt = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                        #qpkt = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
                                         self.capacitor[ep]["packets"].append(qpkt)
                                         self.capacitor[ep]["charge"] += 1
 
@@ -369,7 +369,8 @@ class ExternalDispatch(SThread):
                                         self.capacitor[ep] = {}
                                         self.capacitor[ep]["charge"] = 0
                                         self.capacitor[ep]["packets"] = []
-                                        qpkt = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                        #qpkt = Packet.clear_pkt_bit(dcpkt2, Packet.MULTIPACKET_BIT)
+                                        qpkt = dcpkt2
                                         self.capacitor[ep]["packets"].append(qpkt)
                                         self.capacitor[ep]["charge"] += 1
 

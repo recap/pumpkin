@@ -746,12 +746,14 @@ class Seed(object):
                 complexity[data_len] = [etime,1]
 
             if (header["aux"] & Packet.TRACER_BIT):
-                pkt = Packet.clear_pkt_bit(pkt, Packet.MULTIPACKET_BIT)
+
                 #ack this packet
                 print "Sending ACK TRACER"
                 p, _, _, m,c = self.queue_prediction()
-                if p < 0:
+                if p < 0 or (header["aux"] & Packet.MULTIPACKET_BIT):
                     p = 0
+
+                pkt = Packet.clear_pkt_bit(pkt, Packet.MULTIPACKET_BIT)
                 header["c_wtime"] = etime
                 header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
