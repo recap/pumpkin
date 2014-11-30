@@ -3,6 +3,7 @@ __author__="reggie"
 
 import uuid
 import re
+import base64
 
 class Packet(object):
     NULL_BITS               = 0b0
@@ -28,13 +29,13 @@ class Packet(object):
     PKT_TTL_DISABLED        = 'D'
 
     @staticmethod
-    def new_empty_packet(ship_id, cont_id=None, automaton=None):
+    def new_empty_packet(ship_id=None, cont_id=None, automaton=None):
         pkt = []
         header = {}
         if not automaton:
             automaton = {}
-
-        ship_id = ship_id
+        if not ship_id:
+            ship_id =  str(uuid.uuid4())[:8]
         if not cont_id:
             cont_id =  str(uuid.uuid4())[:8]
 
@@ -123,4 +124,28 @@ class Packet(object):
     def set_streaming_bits(pkt):
         pkt = Packet.set_pkt_bit(pkt, Packet.TIMING_BIT)
         pkt = Packet.set_pkt_bit(pkt, Packet.GONZALES_BIT)
+        return pkt
+
+    @staticmethod
+    def create_code_packet():
+        pkt = Packet.new_empty_packet()
+        pkt = Packet.set_pkt_bit(pkt, Packet.CODE_BIT)
+        seeds = {}
+        pkt[0]["seeds"] = seeds
+        return pkt
+
+    @staticmethod
+    def add_code_to_packet(pkt, name, file_path, count=1):
+        header = pkt[0]
+        seeds = None
+        if header["aux"] & Packet.CODE_BIT:
+            seeds = header["seeds"]
+            with open (file_path, "r") as seed_file:
+                data=seed_file.read()
+
+            datab64 = base64.encodestring(data)
+            seeds[name] = {}
+            seeds[name]["code"] = datab64
+            seeds[name]["count"] = count
+
         return pkt

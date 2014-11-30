@@ -50,6 +50,7 @@ class ExternalDispatch(SThread):
         self.context = context
         self.dispatchers = {}
         self.capacitor = {}
+        self.flows = {}
         self.redispatchers = {}
         self.last_contacts = {}
         self.gdisp = ZMQPacketDispatch(self.context, self.context.zmq_context)
@@ -232,6 +233,21 @@ class ExternalDispatch(SThread):
 
         routes = None
         found = False
+
+        ## check flow ##
+        if "flow" in header.keys():
+            flow = header["flow"]
+            if flow in self.flows.keys():
+                fl_ep = self.flows[flow]
+                if fl_ep:
+                    if Endpoint.ready(pkt, fl_ep):
+                        self.send_to_entry(fl_ep, pkt)
+                        return True
+
+                    else:
+                        self.tx.put((tags[0],tags[1],tags[2],pkt))
+                        return False
+
         while not found:
             while 1:
                 routes = self.graph.getRoutes(otag)
@@ -400,29 +416,34 @@ class ExternalDispatch(SThread):
                                 #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
 
                             else:
-                                disp = None
-                                if entry["mode"] == "zmq.PULL":
-                                    disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
-                                    #disp = ZMQPacketDispatch(self.context)
-                                    #disp = self.gdisp
+                                if "flow" in dcpkt2[0].keys():
+                                    fl_key = dcpkt2[0]["flow"]
+                                    self.flows[fl_key] = entry
 
-                                if entry["mode"] == "amqp.PUSH":
-                                    disp = RabbitMQDispatch(self.context)
-                                    pass
-
-                                if entry["mode"] == "raw.Q":
-                                    disp = InternalRxQueue(self.context)
-                                    pass
-
-                                if not disp == None:
-                                    self.dispatchers[ep] = disp
-                                    disp.connect(ep)
-                                    disp.dispatch(dcpkt2)
-                                    #disp.dispatch(json.dumps(dcpkt))
-                                    #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
-
-                                else:
-                                    logging.error("No dispatchers found for: "+ep)
+                                self.send_to_entry(dcpkt2, entry)
+                                # disp = None
+                                # if entry["mode"] == "zmq.PULL":
+                                #     disp = ZMQPacketDispatch(self.context, self.context.zmq_context)
+                                #     #disp = ZMQPacketDispatch(self.context)
+                                #     #disp = self.gdisp
+                                #
+                                # if entry["mode"] == "amqp.PUSH":
+                                #     disp = RabbitMQDispatch(self.context)
+                                #     pass
+                                #
+                                # if entry["mode"] == "raw.Q":
+                                #     disp = InternalRxQueue(self.context)
+                                #     pass
+                                #
+                                # if not disp == None:
+                                #     self.dispatchers[ep] = disp
+                                #     disp.connect(ep)
+                                #     disp.dispatch(dcpkt2)
+                                #     #disp.dispatch(json.dumps(dcpkt))
+                                #     #disp.dispatch("REVERSE::tcp://192.168.1.9:4569::TOPIC")
+                                #
+                                # else:
+                                #     logging.error("No dispatchers found for: "+ep)
 
                             if state == "REDISPATCH" and found == True:
                                 break
