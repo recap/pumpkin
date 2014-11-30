@@ -162,16 +162,21 @@ class InternalDispatch(SThread):
                 logging.debug("Received CODE packet...")
                 seeds = header["seeds"]
                 forward = False
+                deployed = False
                 for seed_key in seeds.keys():
                     seed = seeds[seed_key]
                     seed_code = base64.decodestring(seed["code"])
                     seed_count = seed["count"]
+                    if deployed and seed_count > 0:
+                        forward = True
+                        break
                     if seed_count > 0:
                         logging.debug("Loading seed "+seed_key+" from CODE packet.")
                         self.context.load_seed_from_string(seed_code)
                         seed["count"] -= 1
-                        if seed["count"] > 0:
-                            forward = True
+                        deployed = True
+                        #if seed["count"] > 0:
+                        #    forward = True
 
                 if forward:
 
