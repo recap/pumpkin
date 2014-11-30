@@ -418,7 +418,8 @@ class ExternalDispatch(SThread):
                             else:
                                 if "flow" in dcpkt2[0].keys():
                                     fl_key = dcpkt2[0]["flow"]
-                                    self.flows[fl_key] = entry
+                                    if fl_key:
+                                        self.flows[fl_key] = entry
 
                                 self.send_to_entry(dcpkt2, entry)
                                 # disp = None
