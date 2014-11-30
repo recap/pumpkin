@@ -293,6 +293,7 @@ class RabbitMQMonitor():
             self.parent = parent
             self.tag_map = self.parent.tag_map
             self.channel = self.connection.channel()
+            self.channel.basic_qos(prefetch_count=1000)
             self.queue = queue
             self.exchange = exchange
             self.cnt = 0
@@ -302,6 +303,7 @@ class RabbitMQMonitor():
             #self.channel.queue_bind(exchange=str(exchange),
             #       queue=str(queue))
             self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True)
+            self.channel.basic_qos(prefetch_count=1000)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
@@ -322,7 +324,7 @@ class RabbitMQMonitor():
                         else:
                             self.cnt += 1
                             body = zlib.decompress(bodyz)
-                            logging.info("RabbitMQ received from "+self.queue+": "+ str(body))
+                            logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
                             pkt = json.loads(body)
                             rx.parse_n_load(pkt)
 
