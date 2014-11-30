@@ -18,7 +18,7 @@ class Endpoint(object):
     def ready(ep, pkt):
         if "c_pred" in ep.keys():
             #p chooses ep priority from _get_priority_eps, setting it to 0 forces rescan
-            p = 0
+            #p = 0
             t1 = time.time()
             t2 = ep["timestamp"]
             et = t1 - t2
