@@ -720,9 +720,11 @@ class EndpointPicker(object):
                 if eps:
                     for ep in eps:
                         if self._check_conn_ep(ep):
+                            if "c_pred" in ep.keys():
+                                p = 0
 
                             if not Endpoint.ready(ep, pkt):
-                                p = 0
+                                #p = 0
                                 continue
 
                             # if "c_pred" in ep.keys():
