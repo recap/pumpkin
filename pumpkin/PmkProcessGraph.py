@@ -47,6 +47,7 @@ class ProcessGraph(object):
         pass
 
     def zero_ttl(self, name, ep):
+        print "ZERO: "+str(name)+" "+str(ep)
         key = self.__key(name, ep)
         self.ttl[key] = 0
 
