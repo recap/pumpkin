@@ -805,6 +805,7 @@ class EndpointPicker(object):
                             break
 
                         else:
+                            self.context.getProcGraph().zero_ttl(ep["name"], ep["ep"])
                             #no connection
                             continue
 

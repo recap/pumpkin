@@ -24,6 +24,7 @@ class ProcessGraph(object):
         self.external_registry = {}
         self.__reg_update = False
         self.__display_graph = False
+        self.__ext_update = []
         self.rlock = threading.RLock()
         self.graph = nx.DiGraph()
         self.ep_graph = nx.DiGraph()
@@ -44,6 +45,10 @@ class ProcessGraph(object):
         key = self.__key(name, ep)
         self.ttl[key] = self.MAX_TTL
         pass
+
+    def zero_ttl(self, name, ep):
+        key = self.__key(name, ep)
+        self.ttl[key] = 0
 
     def __subtract_ep_ttl(self, name, ep, sub_count):
         key = self.__key(name,ep)
@@ -139,12 +144,13 @@ class ProcessGraph(object):
 
                 if not found:
                     if loc == "remote":
-
+                        #self.__ext_update.append(True)
                         eep["priority"] = int(eep["priority"]) - 5
                         self.__reset_ep_ttl(e["name"], eep["ep"])
                         eep["state"] = Endpoint.NEW_STATE
                         eep["tracer_burst"] = 0
                         eep["tracer_interval"] = Endpoint.TRACER_INTERVAL
+
                     d["endpoints"].append(eep)
                     logging.info("Discovered remote seed: "+e["name"]+" at "+eep["ep"])
                     self.__reg_update = True
@@ -155,7 +161,7 @@ class ProcessGraph(object):
             if loc == "remote":
                 #remove public ip from internal docker nodes
                 #self.__remove_same_public_ep(e["endpoints"])
-
+                #self.__ext_update.append(True)
                 for ep in e["endpoints"]:
                     logging.info("Discovered new seed: "+e["name"]+" at "+ep["ep"])
                     ep["priority"] =  int(ep["priority"]) - 5
