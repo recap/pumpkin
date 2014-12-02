@@ -207,6 +207,7 @@ class InternalDispatch(SThread):
             if "data" in pkt[l-2]:
                 data = pkt[l-2]["data"]
             else:
+                print "ERROR:"
                 print json.dumps(pkt)
                 exit()
 
