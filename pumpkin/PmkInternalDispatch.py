@@ -204,7 +204,11 @@ class InternalDispatch(SThread):
 
             l = len(pkt)
             func = pkt[l-1]["func"]
-            data = pkt[l-2]["data"]
+            if "data" in pkt[l-2]:
+                data = pkt[l-2]["data"]
+            else:
+                print json.dumps(pkt)
+                exit()
 
             if ":" in func:
                 func = func.split(":")[1]
