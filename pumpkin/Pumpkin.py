@@ -55,6 +55,9 @@ from PmkFtpServer import *
 class Pumpkin(Daemon):
     def __init__(self, pidfile="/tmp/pumpkin.pid"):
         Daemon.__init__(self,pidfile, "/dev/null", "/tmp/pumpkin.stdout", "/tmp/pumpkin.stderr")
+
+        #if os.path.isfile("/tmp/id")
+
         uid = str(gethostname())+"-"+str(uuid.uuid4())[:8]
         ex_cntx = str(uuid.uuid4())[:8]
 
@@ -62,7 +65,14 @@ class Pumpkin(Daemon):
         self.context = MainContext(uid)
         self.context.setExecContext(ex_cntx)
         self.context.setSupernodeList(SUPERNODES)
-        self.context.set_local_ip(get_lan_ip())
+
+        ips4_private, ips4_public, ips6_private, ips6_public = get_ip_list()
+        if len(ips4_public) == 0:
+            pip = get_public_ip()
+            ips4_public.append(pip)
+
+        self.context.set_ips(ips4_private, ips4_public, ips6_private, ips6_public)
+
         self.context.__pumpkin = self
 
         self.zmq_context = zmq.Context()
@@ -131,10 +141,10 @@ class Pumpkin(Daemon):
             for p in local_peers:
                 if p not in self.context.peers:
                     self.context.peers[p] = local_peers[p]
-                    logging.debug("Subscribing to new Peer ["+local_peers[p]+"]")
-                    zmqsub = ZMQBroadcastSubscriber(self.context, zmq_context, local_peers[p])
-                    zmqsub.start()
-                    self.context.addThread(zmqsub)
+                    #logging.debug("Subscribing to new Peer ["+local_peers[p]+"]")
+                    #zmqsub = ZMQBroadcastSubscriber(self.context, zmq_context, local_peers[p])
+                    #zmqsub.start()
+                    #self.context.addThread(zmqsub)
 
             local_peers.close()
         except Exception as er:
@@ -177,7 +187,7 @@ class Pumpkin(Daemon):
         context = self.context
         logging.info("Node assigned UID: "+context.getUuid())
         logging.info("Exec context: "+context.getExecContext())
-        logging.info("Node bound to IP: "+context.get_local_ip())
+        #logging.info("Node bound to IP: "+context.get_local_ip())
         home = expanduser("~")
         wd = home+"/.pumpkin/"+context.getUuid()+"/"
         context.working_dir = wd
@@ -208,9 +218,10 @@ class Pumpkin(Daemon):
 
         if not context.is_ghost():
             #zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
-            zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
-            zmqbc.start()
-            context.addThread(zmqbc)
+            #zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            #zmqbc.start()
+            #context.addThread(zmqbc)
+            pass
 
         if context.with_broadcast():
             #Listen for UDP broadcasts on LAN
@@ -222,6 +233,13 @@ class Pumpkin(Daemon):
             udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
             udpbc.start()
             context.addThread(udpbc)
+
+            zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
+            #zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            zmqbc.start()
+            context.addThread(zmqbc)
+
+            pass
 
         #Local stuff to exploit multi-cores still needs testing
 
@@ -259,12 +277,12 @@ class Pumpkin(Daemon):
         edispatch.start()
         context.addThread(edispatch)
 
-        if context.fallback_rabbitmq():
+        if context.broadcast_rabbitmq():
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
 
-            #connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
-            rabbitmq = RabbitMQMonitor(context, None)
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host,  credentials=credentials, virtual_host=vhost))
+            rabbitmq = RabbitMQMonitor(context, connection)
             context.set_rabbitmq(rabbitmq)
 
             q = context.get_group()+":info"
@@ -276,9 +294,19 @@ class Pumpkin(Daemon):
             bunnylistener.start()
             context.addThread(bunnylistener)
 
-            logging.debug("Adding RabbitMQ monitor: "+context.getUuid())
+            logging.debug("Adding RabbitMQ queue: "+context.getUuid())
             rabbitmq.add_monitor_queue(context.getUuid())
             #rabbitmq.add_monitor_queue("test")
+
+            qm = context.get_group()+":track"
+            monitor = RabbitMqLog(self.context)
+            monitor.connect(qm)
+
+            mon_dispatcher = LogDisptacher(self.context)
+            mon_dispatcher.add_monitor(monitor)
+            mon_dispatcher.start()
+            context.addThread(mon_dispatcher)
+
 
 
 
@@ -319,20 +347,30 @@ class Pumpkin(Daemon):
 
 
         if not context.isWithNoPlugins():# and not context.isSupernode():
+            tcp_ep = False
             for ep in context.getEndpoints():
                 if context.isZMQEndpoint(ep):
                     #ep[0] = PmkShared._get_nextport(ep[0], "TCP")
-                    tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
-                    tcpm.start()
-                    context.addThread(tcpm)
+                    if context.isTCPEndpoint(ep) and not tcp_ep:
+                        tcp_ep = True
+                        tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
+                        tcpm.start()
+                        context.addThread(tcpm)
+
+                    if not context.isTCPEndpoint(ep):
+                        tcpm = ZMQPacketMonitor(context, zmq_context, ep[0])
+                        tcpm.start()
+                        context.addThread(tcpm)
+
 
 
             for sn in get_zmq_supernodes(PmkShared.SUPERNODES):
                 if not str(sn).__contains__("127.0.0.1"):
-                    logging.debug("Subscribing to: "+sn)
-                    zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
-                    zmqsub.start()
-                    context.addThread(zmqsub)
+                    #logging.debug("Subscribing to: "+sn)
+                    #zmqsub = ZMQBroadcastSubscriber(context, zmq_context, sn)
+                    #zmqsub.start()
+                    #context.addThread(zmqsub)
+                    pass
                 pass
 
             try:
@@ -406,9 +444,20 @@ def main():
 
 
     ###################TEST###############################3
+    #try:
+    #    import eggyyy
+    #except ImportError:
+    #    pass
 
+    #import psutil
+    #x = psutil.cpu_percent()
 
+    #x = get_cpu_util()
+    #print str(x)
+    #exit(0)
 
+    #get_local_ip_list()
+    #exit(0)
 
     ######################################################3
 
@@ -468,6 +517,8 @@ def main():
 
     parser.add_argument('--rabbitmq_fallback', action='store_true',
                        help='use rabbitmq')
+    parser.add_argument('--rabbitmq_broadcast', action='store_true',
+                       help='use rabbitmq for broadcast')
     parser.add_argument('--rbt_host', action='store', dest='rabbitmq_host', default=None)
     parser.add_argument('--rbt_user', action='store', dest='rabbitmq_user', default=None)
     parser.add_argument('--rbt_pass', action='store', dest='rabbitmq_pass', default=None)
@@ -475,8 +526,13 @@ def main():
 
     parser.add_argument('--gonzales', action='store_true',
                        help='disable certain slow features for faster streaming.')
-    parser.add_argument('--buffer_size', action='store', dest="bsize", default=1,
+    parser.add_argument('--buffer_size', action='store', dest="bsize", default=100000,
                        help='queue size for rx/tx buffers in number of messages')
+
+    parser.add_argument('--nocompress', action='store_true',
+                       help='do not compress messages.')
+
+
 
 
 
@@ -495,6 +551,9 @@ def main():
 
     requests_log = logging.getLogger("pika")
     requests_log.setLevel(logging.WARNING)
+
+    stun_log = logging.getLogger("pystun")
+    stun_log.setLevel(logging.WARNING)
 
 
 
@@ -529,6 +588,7 @@ def main():
                     args.rabbitmq_vhost = config.get("rabbitmq", "vhost")
 
                 args.rabbitmq_fallback = config.getboolean("rabbitmq", "fallback")
+                args.rabbitmq_broadcast = config.getboolean("rabbitmq", "broadcast")
 
             if config.has_option("pumpkin","persistent"):
                 args.persistent = config.get("pumpkin", "persistent")

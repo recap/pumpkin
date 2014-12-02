@@ -9,12 +9,15 @@ import sys
 import zlib
 
 import PmkSeed
+import PmkBroadcast
+import PmkShared
+
 
 from PmkShared import *
 from Queue import *
 
 class rx(Queue):
-    def __init__(self, maxsize=0):
+    def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, maxsize)
         pass
 
@@ -401,7 +404,14 @@ class ZMQPacketMonitor(SThread):
         soc = self.zmq_cntx.socket(zmq.PULL)
         soc.setsockopt(zmq.RCVBUF, 2000)
         #soc.setsockopt(zmq.HWM, 100)
-        soc.bind(self.bind_to)
+        try:
+            bind_to = "tcp://*:"+str(PmkShared.ZMQ_ENDPOINT_PORT)
+            soc.bind(bind_to)
+        except zmq.ZMQError as e:
+            nip = PmkBroadcast.get_llan_ip()
+            self.bind_to = "tcp://"+str(nip)+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)
+            logging.warning("Rebinding to: "+self.bind_to)
+            soc.bind(self.bind_to)
         #soc.setsockopt(zmq.HWM, 1000)
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)

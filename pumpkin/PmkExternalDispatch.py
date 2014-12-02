@@ -24,7 +24,7 @@ from PmkShared import *
 
 
 class tx(Queue):
-    def __init__(self, maxsize=0):
+    def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, maxsize)
         pass
 

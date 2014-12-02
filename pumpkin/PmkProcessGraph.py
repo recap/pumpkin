@@ -17,7 +17,7 @@ class ProcessGraph(object):
 
     MAX_TTL = 60 #seconds
     INT_TTL = 15 #seconds
-    def __init__(self):
+    def __init__(self, context):
 
         self.registry = {}
         self.external_registry = {}

@@ -8,11 +8,13 @@ import imp
 import PmkSeed
 import re
 import logging
+import json
 
 import PmkShared
 
 from PmkExternalDispatch import *
 from PmkInternalDispatch import *
+from PmkMonitor import *
 from PmkBroadcast import *
 
 
@@ -47,16 +49,21 @@ class MainContext(object):
             self.__supernodes = []
             self.__threads = []
 
+
+
             self.rx = None #rx(100000)
             self.tx = None #tx(100000)
+            self.mx = None
+            self.txs = {}
 
             self.cmd = cmd()
             self.registry = {}
             self.__ip = "127.0.0.1"
+            self.ips = {}
             self.endpoints = []
             self.__reg_update = False
             self.rlock = threading.RLock()
-            self.proc_graph = ProcessGraph()
+            self.proc_graph = ProcessGraph(self)
             self.__exec_context = None
             self.zmq_context = None
             self.working_dir = "~/.pumpkin/"+self.__uuid
@@ -65,33 +72,31 @@ class MainContext(object):
             self.openfiles = []
             self.peers = {}
 
+
             self.__rabbitmq = None
             self.__rabbitmq_cred = ()
 
             self.pkt_shelve_2 = None
 
-            self._eff = {}
+
 
             pass
 
-        def update_eff(self, key, eff):
-            e1, n1, e2, n2 = self.get_eff(key)
-            if e1 != 2:
-                nvals = (eff[0], eff[1], e1, n1)
-                self._eff[key] = nvals
-            else:
-                nvals = (eff[0], eff[1], eff[0], eff[1])
-                self._eff[key] = nvals
-
-
-        def get_eff(self, key):
-            if key in self._eff:
-                return self._eff[key]
-            else:
-                return (2, 0, 0, 0)
+        def set_ips(self, ips4_private, ips4_public, ips6_private, ips6_public):
+            self.ips["ips4_private"]    = ips4_private
+            self.ips["ips4_public"]     = ips4_public
+            self.ips["ips6_private"]    = ips6_private
+            self.ips["ips6_public"]     = ips6_public
 
         def fallback_rabbitmq(self):
             if self.__attrs.rabbitmq_fallback:
+                return True
+            else:
+                return False
+            pass
+
+        def broadcast_rabbitmq(self):
+            if self.__attrs.rabbitmq_broadcast:
                 return True
             else:
                 return False
@@ -153,6 +158,35 @@ class MainContext(object):
 
             return modname
 
+        def load_seed_from_string(self, seed):
+
+            modname = None
+            file = "/tmp/"
+            fhd = seed
+            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+
+            if m:
+                conf = m.group(1).replace("##","")
+                if conf:
+                    d = json.loads(conf)
+                    modname = d["object_name"]
+                    file = file + modname +".py"
+                    fh = open(file, "w")
+                    fh.write(seed)
+                    fh.close()
+                    if not "auto-load" in d.keys() or d["auto-load"] == True:
+                        imp.load_source(modname,file)
+
+                        klass = PmkSeed.hplugins[modname](self)
+                        PmkSeed.iplugins[modname] = klass
+                        klass.pre_load(d)
+                        klass.on_load()
+                        klass.post_load()
+                        js = klass.getConfEntry()
+                        self.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+
+            return modname
+
         def startPktShelve(self, filename):
             self.pkt_shelve = shelve.open(self.working_dir+"/"+filename)
             pass
@@ -163,7 +197,7 @@ class MainContext(object):
 
 
         def getPktId(self, pkt):
-            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+pkt[0]["box"]+":"+pkt[0]["fragment"]
+            id= pkt[0]["ship"]+":"+pkt[0]["container"]+":"+str(pkt[0]["box"])+":"+str(pkt[0]["fragment"])
             return id
 
         def pktReady(self, pkt):
@@ -181,7 +215,30 @@ class MainContext(object):
         def put_pkt_in_shelve2(self, pkt):
             shlf = self.pkt_shelve_2
             pkt_id = str(self.getPktId(pkt))
-            shlf[pkt_id] = pkt
+            s_pkt_id = pkt_id.split(":")[0] +":"
+            pkt_arr = None
+            pkt_s = json.dumps(pkt)
+            if s_pkt_id in shlf.keys():
+
+                pkt_arr = shlf[s_pkt_id]
+                pkt_arr.append(pkt)
+                shlf[s_pkt_id] = pkt_arr
+            else:
+
+                pkt_arr = []
+                pkt_arr.append(pkt)
+                shlf[s_pkt_id] = pkt_arr
+
+            #shlf.sync()
+            #for kk in self.pkt_shelve_2.keys():
+            #    print "KEYS: "+kk+" VALUE: "+json.dumps(self.pkt_shelve_2[kk])
+            #    for p in self.pkt_shelve_2[kk]:
+            #        print "...................VALUES: "+json.dumps(p)
+            #pkt_arr.append(pkt)
+
+            #print "SHLV2_: "+json.dumps(self.pkt_shelve_2)
+
+            #shlf[pkt_id] = pkt
 
         def get_pkt_from_shelve(self,pkt_id):
             pkt_id = str(pkt_id)
@@ -202,14 +259,16 @@ class MainContext(object):
             pkt_id = str(pkt_id)
             pkt_id_parts = pkt_id.split(':')
             ret = []
+            #print "SHLV2: "+json.dumps(self.pkt_shelve_2)
+
             if len(pkt_id_parts) < 4:
                 for k in self.pkt_shelve_2.keys():
                     if pkt_id in k:
-                        ret.append(self.pkt_shelve_2[k])
+                        ret.extend(self.pkt_shelve_2[k])
             else:
                 if pkt_id in self.pkt_shelve_2.keys():
                     spkt = self.pkt_shelve_2[pkt_id]
-                    ret.append(spkt)
+                    ret.extend(spkt)
 
             return ret
 
@@ -217,12 +276,14 @@ class MainContext(object):
         def isPktShelved(self, pkt):
 
             pkt_id = str(self.getPktId(pkt))
-            func = pkt[0]["last_func"]
+
             if pkt_id in self.pkt_shelve:
                 spkt = self.pkt_shelve[pkt_id]
                 #Check if the duplicate ID is for the same function
                 #it could be a returning packet for a different function
-                if func == spkt[0]["last_func"]:
+                last_func = spkt[0]["last_func"]
+                func_to_call = pkt[len(pkt) - 1]["func"]
+                if last_func == func_to_call:
                     return True
             return False
 
@@ -260,6 +321,8 @@ class MainContext(object):
         def set_local_ip(self,ip):
             self.__ip = ip
 
+
+
             #FIXME dynamic configuration
             #self.endpoints.append( ("ipc://"+self.getUuid(), "zmq.ipc", "zmq.PULL" ) )
             #self.endpoints.append( ("ipc://"+self.getUuid(), "zmq.ipc", "zmq.PUB" ) )
@@ -283,11 +346,23 @@ class MainContext(object):
                 return True
             return False
 
+        def isTCPEndpoint(self, entry):
+            e = str(entry[0])
+            if "tcp" in e.lower():
+                return True
+            return False
+
         def getEndpoints(self):
             return self.endpoints
 
         def get_group(self):
             return self.__attrs.group
+
+        def is_with_nocompress(self):
+            if self.__attrs.nocompress:
+                return True
+            else:
+                return False
 
         def hasRx(self):
             return self.__attrs.rxdir
@@ -295,8 +370,22 @@ class MainContext(object):
         def singleSeed(self):
             return self.__attrs.singleseed
 
+        def get_ip_list(self, type="ips4_private"):
+            if type == "ips4_private":
+                return self.ips["ips4_private"]
+            else:
+                return []
+        def get_public_ip(self):
+            if len(self.ips["ips4_public"]) > 0:
+                return self.ips["ips4_public"][0]
+            else:
+                return "127.0.0.1"
+
         def get_local_ip(self):
-            return self.__ip
+            if len(self.ips["ips4_private"]) > 0:
+                return self.ips["ips4_private"][0]
+            else:
+                return "127.0.0.1"
 
         def getProcGraph(self):
             return self.proc_graph
@@ -312,14 +401,48 @@ class MainContext(object):
 
         def get_our_endpoint(self, proto):
             tcp_ep = None
+            h_ep = ("","","",0)
             for ep in self.endpoints:
+                if ep[3] > h_ep[3]:
+                    h_ep = ep
                 if str(ep[0]).startswith(proto):
                     return ep
-                if str(ep[0]).startswith("tcp://"):
-                    tcp_ep = ep
+                #if str(ep[0]).startswith("tcp://"):
+                #    tcp_ep = ep
 
-            logging.warning("Found no endpoint matching defaulting to tcp")
-            return tcp_ep
+            #logging.warning("Found no endpoint matching defaulting to tcp")
+            return None
+
+        def get_matching_endpoint(self, ep):
+            dest_proto = Packet.get_proto_from_ep(ep)
+            if dest_proto == "tcp":
+                dest_ip = Packet.get_ip_from_ep(ep)
+                dest_ip_parts = dest_ip.split('.')
+                dst_net = dest_ip_parts[0] + dest_ip_parts[1]
+                for lep in self.endpoints:
+                    src_ip = Packet.get_ip_from_ep(lep[0])
+                    if src_ip:
+                        src_ip_parts = src_ip.split('.')
+                        if len(src_ip_parts) > 2:
+                            src_net = src_ip_parts[0]+src_ip_parts[1]
+                            if dst_net == src_net:
+                                return lep
+
+
+            #tcp_ep = None
+            #h_ep = ("","","",0)
+            # for ep in self.endpoints:
+            #     if ep[3] > h_ep[3]:
+            #         h_ep = ep
+            #     if str(ep[0]).startswith(proto):
+            #         return ep
+            #     #if str(ep[0]).startswith("tcp://"):
+            #     #    tcp_ep = ep
+
+            #logging.warning("Found no endpoint matching defaulting to tcp")
+            ep = self.get_our_endpoint("amqp")
+
+            return ep
 
         def get_our_pub_ep(self, proto="tcp"):
             ep = "tcp://"+str(self.get_local_ip())+":"+str(PmkShared.ZMQ_PUB_PORT)
@@ -329,9 +452,9 @@ class MainContext(object):
             if self.__attrs.eps == "ALL":
                 #self.__attrs.eps = "tftp://*:*/*;inproc://*;ipc://*;tcp://*:*"
                 #self.__attrs.eps = "inproc://*;tcp://*:*"
-                #self.__attrs.eps = "inqueue://*"
-                self.__attrs.eps = "amqp://*"
+                #self.__attrs.eps = "amqp://*"
                 #self.__attrs.eps = "tcp://*:*"
+                self.__attrs.eps = "inqueue://*"
 
             #if self.fallback_rabbitmq():
             #    self.__attrs.eps += ";amqp://*"
@@ -361,8 +484,7 @@ class MainContext(object):
                         s = "amqp://"+self.getUuid()
                     else:
                         s = ep
-
-                    self.endpoints.append( (s, "amqp.PUSH", "amqp.PUSH", 15) )
+                    self.endpoints.append( (s, "amqp.PUSH", "amqp.PUSH", 16) )
                     logging.debug("Added endpoint: "+s)
 
                 elif prot == "ipc:":
@@ -374,16 +496,30 @@ class MainContext(object):
                     self.endpoints.append( (s, "zmq.IPC", "zmq.PULL", 4) )
                     logging.debug("Added endpoint: "+s)
 
-                elif prot == "tcp:":
+                # elif prot == "tcp:":
+                #     addr = prts[1].split(":")
+                #     if addr[0] == "*":
+                #         addr[0] = self.__ip
+                #     if addr[1] == "*":
+                #         addr[1] = str(PmkShared.ZMQ_ENDPOINT_PORT)
+                #
+                #     s = "tcp://"+addr[0]+":"+addr[1]
+                #     self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
+                #     logging.debug("Added endpoint: "+s)
+                #
+                elif prot =="tcp:":
                     addr = prts[1].split(":")
                     if addr[0] == "*":
-                        addr[0] = self.__ip
-                    if addr[1] == "*":
-                        addr[1] = str(PmkShared.ZMQ_ENDPOINT_PORT)
+                        for ip_type in self.ips.keys():
+                            for ip in self.ips[ip_type]:
+                                s = "tcp://"+ip+":"+str(PmkShared.ZMQ_ENDPOINT_PORT)
+                                if len(ip) > 15:
+                                    #ipv6
+                                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
+                                else:
+                                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 14) )
 
-                    s = "tcp://"+addr[0]+":"+addr[1]
-                    self.endpoints.append( (s, "zmq.TCP", "zmq.PULL", 15) )
-                    logging.debug("Added endpoint: "+s)
+                                logging.debug("Added endpoint: "+s)
 
                 #TODO uncomment once tftp is integrated
                 #elif prot == "tftp:":
@@ -406,8 +542,12 @@ class MainContext(object):
 
 
         def log_to_file(self):
-            #fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
-            #logging.addHandler(fh)
+            logger = logging.getLogger()
+            fh = logging.FileHandler(self.getWorkingDir()+"logs/pumpkin.log")
+            fh.setLevel(logging.DEBUG)
+            formatter = logging.Formatter("%(levelname)s - %(message)s")
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
             pass
 
 
@@ -450,6 +590,9 @@ class MainContext(object):
         def getUuid(self):
             return self.__uuid
 
+        def get_uuid(self):
+            return self.__uuid
+
         def getPeer(self):
             return self.__peer
 
@@ -483,11 +626,66 @@ class MainContext(object):
         # def getMePeer(self):
         #     return self.__peer
 
+        def get_stat(self):
+            tm = time.time()
+            ip = str(self.get_local_ip())
+            guid = str(self.getUuid())
+
+            rep = "["
+            rep += '{"host_id": "'+guid+'", "timestamp" : '+str(tm)+',"ip" : "'+ip+'"},\n'
+
+            jrep = {}
+            total_in = 0
+            total_out = 0
+            total_pexec = 0
+            total_npkts = 0
+            for x in PmkSeed.iplugins.keys():
+                klass = PmkSeed.iplugins[x]
+                forecast = klass.get_forecast()
+                jrep[klass.get_name()]={}
+                jrep[klass.get_name()]["enabled"] = klass.is_enabled()
+                jrep[klass.get_name()]["stags"] = klass.get_state_counters()
+                jrep[klass.get_name()]["npkts"] = forecast[0]
+                jrep[klass.get_name()]["msize"] = forecast[1]
+                jrep[klass.get_name()]["pexec"] = forecast[2]
+                tin, tout = klass.get_all_counters()
+                total_in += tin
+                total_out += tout
+                total_pexec += forecast[2]
+                total_npkts += forecast[0]
+
+            #jreps = json.dumps(jrep, separators=(',',':') )
+            jreps = json.dumps(jrep)
+
+            rep += jreps
+            rep += ","
+
+            rep += '\n'
+            rep = rep + '{"total_in":'+str(total_in)+',"total_out":'+str(total_out)+'}'
+            rep += ","
+
+            #rx_size = context.get_rx_size()
+            tx_size = self.get_tx_size()
+
+            rep += '\n'
+            rep += '{"rx_size" : "'+str(total_npkts)+'", "tx_size" : "'+str(tx_size)+'", "total_pexec": "'+str(total_pexec)+'"}'
+
+            rep += "]"
+
+            return rep
+
+
         def getRx(self):
             return self.rx
 
         def getTx(self):
-            return self.tx
+            return self.txs[1]
+
+        def get_tx(self, priority=1):
+            return self.txs[priority]
+
+        def get_mx(self):
+            return self.mx
 
         def get_cores(self):
             c = int(self.__attrs.cores)
@@ -516,8 +714,10 @@ class MainContext(object):
 
         def start_rxtx_buffer(self):
             logging.info("Setting buffer queue limit to: "+str(self.get_buffer_size()))
-            self.rx = rx(self.get_buffer_size())
-            self.tx = tx(self.get_buffer_size())
+            self.rx = rx(self.get_buffer_size(), self)
+            self.txs[1] = tx(self.get_buffer_size())
+            self.txs[2] = tx(self.get_buffer_size())
+
             pass
 
 
