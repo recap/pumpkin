@@ -67,9 +67,9 @@ class Pumpkin(Daemon):
         self.context.setSupernodeList(SUPERNODES)
 
         ips4_private, ips4_public, ips6_private, ips6_public = get_ip_list()
-        if len(ips4_public) == 0:
-            pip = get_public_ip()
-            ips4_public.append(pip)
+        #if len(ips4_public) == 0:
+        #    pip = get_public_ip()
+        #    ips4_public.append(pip)
 
         self.context.set_ips(ips4_private, ips4_public, ips6_private, ips6_public)
 
