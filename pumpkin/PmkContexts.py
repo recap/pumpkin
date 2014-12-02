@@ -145,6 +145,7 @@ class MainContext(object):
             return self.__attrs.gonzales
 
         def get_broadcast_rate(self):
+            return 5
             return int(self.__attrs.brate)
 
         def with_broadcast(self):

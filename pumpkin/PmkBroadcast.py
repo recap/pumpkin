@@ -522,7 +522,7 @@ class BroadcastListener(Thread):
         return self.__stop.isSet()
 
 class Broadcaster(SThread):
-    def __init__(self, context, port=UDP_BROADCAST_PORT, rate=30):
+    def __init__(self, context, port=UDP_BROADCAST_PORT, rate=5):
         SThread.__init__(self)
         self.__port = int(port)
         self.__rate = rate
