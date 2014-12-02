@@ -78,6 +78,8 @@ class MainContext(object):
 
             self.pkt_shelve_2 = None
 
+            self._eff = {}
+
 
 
             pass
@@ -87,6 +89,22 @@ class MainContext(object):
             self.ips["ips4_public"]     = ips4_public
             self.ips["ips6_private"]    = ips6_private
             self.ips["ips6_public"]     = ips6_public
+
+        def update_eff(self, key, eff):
+            e1, n1, e2, n2 = self.get_eff(key)
+            if e1 != 2:
+                nvals = (eff[0], eff[1], e1, n1)
+                self._eff[key] = nvals
+            else:
+                nvals = (eff[0], eff[1], eff[0], eff[1])
+                self._eff[key] = nvals
+
+
+        def get_eff(self, key):
+            if key in self._eff:
+                return self._eff[key]
+            else:
+                return (2, 0, 0, 0)
 
         def fallback_rabbitmq(self):
             if self.__attrs.rabbitmq_fallback:
@@ -413,20 +431,20 @@ class MainContext(object):
             #logging.warning("Found no endpoint matching defaulting to tcp")
             return None
 
-        def get_matching_endpoint(self, ep):
-            dest_proto = Packet.get_proto_from_ep(ep)
-            if dest_proto == "tcp":
-                dest_ip = Packet.get_ip_from_ep(ep)
-                dest_ip_parts = dest_ip.split('.')
-                dst_net = dest_ip_parts[0] + dest_ip_parts[1]
-                for lep in self.endpoints:
-                    src_ip = Packet.get_ip_from_ep(lep[0])
-                    if src_ip:
-                        src_ip_parts = src_ip.split('.')
-                        if len(src_ip_parts) > 2:
-                            src_net = src_ip_parts[0]+src_ip_parts[1]
-                            if dst_net == src_net:
-                                return lep
+        # def get_matching_endpoint(self, ep):
+        #     dest_proto = Packet.get_proto_from_ep(ep)
+        #     if dest_proto == "tcp":
+        #         dest_ip = Packet.get_ip_from_ep(ep)
+        #         dest_ip_parts = dest_ip.split('.')
+        #         dst_net = dest_ip_parts[0] + dest_ip_parts[1]
+        #         for lep in self.endpoints:
+        #             src_ip = Packet.get_ip_from_ep(lep[0])
+        #             if src_ip:
+        #                 src_ip_parts = src_ip.split('.')
+        #                 if len(src_ip_parts) > 2:
+        #                     src_net = src_ip_parts[0]+src_ip_parts[1]
+        #                     if dst_net == src_net:
+        #                         return lep
 
 
             #tcp_ep = None
