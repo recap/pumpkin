@@ -250,19 +250,24 @@ class ExternalDispatch(SThread):
 
                             if not self._set_bunch:
                                 if self._pval[0] != eff:
-                                    if eff >= peff:
-                                        if self._bunch < 2000:
-                                            self._bunch = self._bunch * 2 + 1
-                                        else:
-                                            self._bunch += 200
 
-                                        self._pval = (eff, n, peff, pn)
-                                        self._set_bunch = True
-                                    else:
-                                        if self._bunch > 500:
-                                            self._bunch = int(self._bunch * 0.75) + 1
-                                        self._pval = (eff, n, peff, pn)
-                                        self._set_bunch = True
+                                    self._bunch += 200
+                                    self._pval = (eff, n, peff, pn)
+                                    self._set_bunch = True
+
+                                    # if eff >= peff:
+                                    #     if self._bunch < 2000:
+                                    #         self._bunch = self._bunch * 2 + 1
+                                    #     else:
+                                    #         self._bunch += 200
+                                    #
+                                    #     self._pval = (eff, n, peff, pn)
+                                    #     self._set_bunch = True
+                                    # else:
+                                    #     if self._bunch > 500:
+                                    #         self._bunch = int(self._bunch * 0.75) + 1
+                                    #     self._pval = (eff, n, peff, pn)
+                                    #     self._set_bunch = True
 
                             # #bunch = 1
                             # gradient = 0
@@ -303,7 +308,7 @@ class ExternalDispatch(SThread):
                                 multi_pkt.append(next_hop)
                                 dcpkt = copy.deepcopy(multi_pkt)
                                 cq[key] = []
-                                #print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
+                                print "BUNCH, GRADIENT, EFF, PEFF: "+str(self._bunch)+","+str(0)+","+str(eff)+","+str(peff)
                                 self._set_bunch = False
 
                             else:
