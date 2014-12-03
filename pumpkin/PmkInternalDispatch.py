@@ -31,6 +31,9 @@ class rx(Queue):
     def release(self):
         self.rlock.release()
 
+    def acquire(self):
+        self.rlock.acquire()
+
     def dig(self, pkt):
         #print "DIG"
         if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
@@ -444,9 +447,11 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
         queue_put = self.context.getRx().put_n_lock
+        rx = self.context.getRx()
         dig = self.context.getRx().dig
         while True:
             try:
+                rx.acquire()
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
                 pkt = json.loads(zlib.decompress(msg))
