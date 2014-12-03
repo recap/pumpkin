@@ -653,7 +653,8 @@ class ZMQPacketDispatch(Dispatch):
         message = zlib.compress(json.dumps(pkt))
 
         self.soc.send(message)
-        self.soc.recv()
+        m = self.soc.recv()
+        print "R: "+str(m)
 
     def close(self):
         self.soc.close()

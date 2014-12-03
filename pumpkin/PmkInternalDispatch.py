@@ -436,6 +436,8 @@ class ZMQPacketMonitor(SThread):
                 #if "multiple" not in pkt[0].keys():
                 #dig(pkt)
                 queue_put(pkt)
+                s = self.context.getRx().qsize()
+                print "QUEUE: "+str(s)
                 time.sleep(2)
                 soc.send("OK")
                 #self.proccess_pkt(msg)
