@@ -28,7 +28,7 @@ from PmkShared import *
 class tx(Queue):
     def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, 1)
-        self.rlock = Semaphore(1)
+        self.rlock = Semaphore(0)
         pass
 
     def acquire(self):
@@ -670,13 +670,12 @@ class ZMQPacketDispatch(Dispatch):
         #    raise
 
         header = pkt[0]
+        #if header["state"] != "PACK_OK":
+        #    self.tx.acquire()
+        #    print "AQCUIRE 1"
         if header["state"] != "PACK_OK":
-            self.tx.acquire()
-        #print "AQCUIRE 1"
-
-        if "timestamp" in pkt[0].keys():
-
-            pkt[0]["timestamp"] = "{:.12f}".format(time.time())
+            if "timestamp" in pkt[0].keys():
+                pkt[0]["timestamp"] = "{:.12f}".format(time.time())
         #   print "SENDING TIMESTAMP: "+pkt[0]["timestamp"]
 
         message = zlib.compress(json.dumps(pkt))
@@ -686,8 +685,8 @@ class ZMQPacketDispatch(Dispatch):
         m = self.soc.recv()
 
         if header["state"] != "PACK_OK":
-        #print "ACQUIRE 2"
             self.tx.acquire()
+            #print "ACQUIRE 2"
 
         #print "R: "+str(m)
 
