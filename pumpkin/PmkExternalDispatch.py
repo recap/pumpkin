@@ -13,6 +13,8 @@ import socket
 import networkx as nx
 import pika
 import zlib
+import threading
+import math
 
 
 
@@ -26,7 +28,18 @@ from PmkShared import *
 class tx(Queue):
     def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, 1)
+        self.rlock = Semaphore(1)
         pass
+
+    def acquire(self):
+        self.rlock.acquire()
+
+    def release(self):
+        try:
+            self.rlock.release()
+        except:
+            pass
+
 
 
 
@@ -250,7 +263,7 @@ class ExternalDispatch(SThread):
 
                         if eff == 2:
                             time.sleep(1)
-                        if eff < 0.99:
+                        if eff < 1:
 
                             cq = self._coll_queue
                             logging.debug("Efficiency for signiture "+str(key)+" too low "+str(eff))
@@ -265,21 +278,27 @@ class ExternalDispatch(SThread):
                             if not self._set_bunch:
                                 if self._pval[0] != eff:
 
-                                    if eff >= peff:
-                                        self._bunch += 200
+                                    peff_sub10 = (peff*0.05)
+                                    peff_pos10 = (peff*0.05)
+                                    eff_diff = math.fabs(eff - peff)
 
-                                        # if self._bunch < 2000:
-                                        #     self._bunch = self._bunch * 2 + 1
-                                        # else:
-                                        #     self._bunch += 200
+                                    if eff_diff > peff_pos10:
+                                        if eff >= (peff - (peff*0.10)):
 
-                                        self._pval = (eff, n, peff, pn)
-                                        self._set_bunch = True
-                                    else:
-                                        if self._bunch > 500:
-                                            self._bunch = int(self._bunch * 0.75) + 1
-                                        self._pval = (eff, n, peff, pn)
-                                        self._set_bunch = True
+                                            self._bunch += 20
+
+                                            # if self._bunch < 2000:
+                                            #     self._bunch = self._bunch * 2 + 1
+                                            # else:
+                                            #     self._bunch += 200
+
+                                            self._pval = (eff, n, peff, pn)
+                                            self._set_bunch = True
+                                        else:
+                                            #if self._bunch > 500:
+                                            self._bunch = int(self._bunch * 0.80) + 1
+                                            self._pval = (eff, n, peff, pn)
+                                            self._set_bunch = True
 
                             # #bunch = 1
                             # gradient = 0
@@ -604,6 +623,8 @@ class ZMQPacketDispatch(Dispatch):
         self.context = context
         self.soc = None
         self.ep = None
+        self.tx = self.context.getTx()
+
         logging.debug("Created ZMQPacketDispatch")
         if (zmqcontext == None):
             logging.debug("Creating zmq context")
@@ -647,14 +668,28 @@ class ZMQPacketDispatch(Dispatch):
 
         #except zmq.ZMQError as e:
         #    raise
+
+        header = pkt[0]
+        if header["state"] != "PACK_OK":
+            self.tx.acquire()
+        #print "AQCUIRE 1"
+
         if "timestamp" in pkt[0].keys():
-            print "SENDING TIMESTAMP: "+pkt[0]["timestamp"]
+
+            pkt[0]["timestamp"] = "{:.12f}".format(time.time())
+        #   print "SENDING TIMESTAMP: "+pkt[0]["timestamp"]
 
         message = zlib.compress(json.dumps(pkt))
 
         self.soc.send(message)
+        #time.sleep(2)
         m = self.soc.recv()
-        print "R: "+str(m)
+
+        if header["state"] != "PACK_OK":
+        #print "ACQUIRE 2"
+            self.tx.acquire()
+
+        #print "R: "+str(m)
 
     def close(self):
         self.soc.close()

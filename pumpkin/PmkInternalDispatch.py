@@ -64,25 +64,30 @@ class InternalDispatch(SThread):
 
     def run(self):
         rx = self.context.getRx()
+        tx = self.context.getTx()
         #loads = json.loads
         keys = PmkSeed.iplugins.keys
         iplugins = PmkSeed.iplugins
         speedy = self.context.is_speedy()
         while 1:
             #already in json format
-            try:
-                rx.release()
-            except:
-                pass
+
 
             pkt = rx.get(True)
 
+            try:
+                if pkt[0]["state"] == "PACK_OK":
+                    #print "RELEASE"
+                    tx.release()
+            except:
+                pass
 
             #check if multiple packets
             if "multiple" in pkt[0].keys():
                 #logging.debug("Multiple packets")
                 #print json.dumps(pkt)
                 if pkt[0]["state"] == "PACK_OK":
+                    tx.release()
                     n = int(pkt[0]["number"])
                     tm1 = time.time()
                     tm2 = float(pkt[0]["timestamp"])
@@ -97,8 +102,8 @@ class InternalDispatch(SThread):
                     st_overhead = "{:.12f}".format(overhead)
                     st_eff = "{:.12f}".format(eff)
 
-                    print "TIME DISPATCHED: "+pkt[0]["timestamp"]+" TIME REC: "+st_tm+" PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
-                    #print st_tm+" "+st_eff+" "+str(n)
+                    #print "TIME DISPATCHED: "+pkt[0]["timestamp"]+" TIME REC: "+st_tm+" PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
+                    print st_tm+" "+st_eff+" "+str(n)
 
                     #print json.dumps(pkt)
 
@@ -175,6 +180,7 @@ class InternalDispatch(SThread):
             if not speedy:
                 #Check for PACK
                 if pkt[0]["state"] == "PACK_OK":
+                    tx.release()
                     #logging.debug("PACK packet: "+pkts)
                     seed = pkt[0]["last_func"]
 
