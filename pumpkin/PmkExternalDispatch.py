@@ -628,9 +628,10 @@ class ZMQPacketDispatch(Dispatch):
         return True
 
     def connect(self, connect_to):
-        self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        #self.soc = self.zmq_cntx.socket(zmq.PUSH)
+        self.soc = self.zmq_cntx.socket(zmq.REQ)
         self.ep = connect_to
-        self.soc.setsockopt(zmq.HWM, 1)
+        #self.soc.setsockopt(zmq.HWM, 1)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         logging.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)

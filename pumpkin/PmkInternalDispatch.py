@@ -409,7 +409,8 @@ class ZMQPacketMonitor(SThread):
 
     def run(self):
         #context = zmq.Context()
-        soc = self.zmq_cntx.socket(zmq.PULL)
+        #soc = self.zmq_cntx.socket(zmq.PULL)
+        soc = self.zmq_cntx.socket(zmq.REP)
         soc.setsockopt(zmq.RCVBUF, 2000)
         #soc.setsockopt(zmq.HWM, 100)
         try:
