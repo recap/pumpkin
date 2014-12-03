@@ -25,7 +25,7 @@ from PmkShared import *
 
 class tx(Queue):
     def __init__(self, maxsize=0, context=None):
-        Queue.__init__(self, 10)
+        Queue.__init__(self, 1)
         pass
 
 

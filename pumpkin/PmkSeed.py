@@ -873,7 +873,7 @@ class Seed(object):
 
         return id
 
-    def duplicate_pkt_new_container(self,pkt, shallow=True):
+    def duplicate_pkt_new_container(self,pkt, shallow=False):
         lpkt = None
         if shallow:
             lpkt = copy.copy(pkt)
