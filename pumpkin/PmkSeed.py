@@ -337,6 +337,7 @@ class Seed(object):
                     tm1 = time.time()
                     tm2 = float(dpkt[0]["mexec"])
                     tdelta = tm1 - tm2
+                    print "TDELTA: "+str(tdelta)+" BUNCH: "+str(n)
                     multi_pkt[0]["mexec"] = "{:.12f}".format(tdelta)
 
                     multi_pkt[0]["pkts"] = []
