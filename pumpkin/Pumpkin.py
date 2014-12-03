@@ -14,6 +14,8 @@ import cProfile, pstats
 import pika
 import multiprocessing
 
+import gc
+
 
 
 
@@ -184,6 +186,7 @@ class Pumpkin(Daemon):
         return modname
 
     def startContext(self):
+        gc.disable()
         context = self.context
         logging.info("Node assigned UID: "+context.getUuid())
         logging.info("Exec context: "+context.getExecContext())

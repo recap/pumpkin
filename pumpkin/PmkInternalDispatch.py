@@ -18,10 +18,11 @@ from Queue import *
 
 class rx(Queue):
     def __init__(self, maxsize=0, context=None):
-        Queue.__init__(self, maxsize)
+        Queue.__init__(self, 1)
         pass
 
     def dig(self, pkt):
+        print "DIG"
         if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
             iplugins = PmkSeed.iplugins
             keys = PmkSeed.iplugins.keys
@@ -58,9 +59,10 @@ class InternalDispatch(SThread):
             #already in json format
             pkt = rx.get(True)
 
+
             #check if multiple packets
             if "multiple" in pkt[0].keys():
-                logging.debug("Multiple packets")
+                #logging.debug("Multiple packets")
                 #print json.dumps(pkt)
                 if pkt[0]["state"] == "PACK_OK":
                     n = int(pkt[0]["number"])
@@ -88,61 +90,62 @@ class InternalDispatch(SThread):
 
                     self.context.update_eff(key, (eff, n))
 
+                    # for ipkt in pkt[0]["pkts"]:
+                    #     if len(ipkt) > 0:
+                    #         seed = ipkt[0]["last_func"]
+                    #
+                    #         if seed in PmkSeed.iplugins.keys():
+                    #             klass = PmkSeed.iplugins[seed]
+                    #             klass.pack_ok(ipkt)
+                    #             self._packed_pkts += 1
+                    # continue
+
+                else:
+
+                    c = 0
+                    mpkt_t = time.time()
                     for ipkt in pkt[0]["pkts"]:
-                        if len(ipkt) > 0:
-                            seed = ipkt[0]["last_func"]
+                        c += 1
+                        ipkt[0]["multiple"] = True
+                        ipkt[0]["number"] = pkt[0]["number"]
+                        ipkt[0]["seq"] = c
+                        ipkt[0]["mexec"] = mpkt_t
+                        ipkt[0]["timestamp"] = pkt[0]["timestamp"]
+                        ##################invoke ipkt##########################
+                        # if not speedy:
+                        #     #Check for PACK
+                        #     if ipkt[0]["state"] == "PACK_OK":
+                        #         continue
+                                # #logging.debug("PACK packet: "+pkts)
+                                # seed = ipkt[0]["last_func"]
+                                #
+                                # if seed in PmkSeed.iplugins.keys():
+                                #     klass = PmkSeed.iplugins[seed]
+                                #     klass.pack_ok(ipkt)
+                                #     self._packed_pkts += 1
+                                #     continue
 
-                            if seed in PmkSeed.iplugins.keys():
-                                klass = PmkSeed.iplugins[seed]
-                                klass.pack_ok(ipkt)
-                                self._packed_pkts += 1
-                    continue
+                            # if ipkt[0]["state"] == "ARP_OK":
+                            #     logging.debug("Received ARP_OK: "+json.dumps(ipkt))
+                            #     self.context.put_pkt_in_shelve2(ipkt)
+                            #     continue
+                        try:
+                            l = len(ipkt)
+                            func = ipkt[l-1]["func"]
+                            data = ipkt[l-2]["data"]
 
-
-
-                c = 0
-                mpkt_t = time.time()
-                for ipkt in pkt[0]["pkts"]:
-                    c += 1
-                    ipkt[0]["multiple"] = True
-                    ipkt[0]["number"] = pkt[0]["number"]
-                    ipkt[0]["seq"] = c
-                    ipkt[0]["mexec"] = mpkt_t
-                    ipkt[0]["timestamp"] = pkt[0]["timestamp"]
-                    ##################invoke ipkt##########################
-                    if not speedy:
-                        #Check for PACK
-                        if ipkt[0]["state"] == "PACK_OK":
-                            #logging.debug("PACK packet: "+pkts)
-                            seed = ipkt[0]["last_func"]
-
-                            if seed in PmkSeed.iplugins.keys():
-                                klass = PmkSeed.iplugins[seed]
-                                klass.pack_ok(ipkt)
-                                self._packed_pkts += 1
-                                continue
-
-                        if ipkt[0]["state"] == "ARP_OK":
-                            logging.debug("Received ARP_OK: "+json.dumps(ipkt))
-                            self.context.put_pkt_in_shelve2(ipkt)
-                            continue
-                    try:
-                        l = len(ipkt)
-                        func = ipkt[l-1]["func"]
-                        data = ipkt[l-2]["data"]
-
-                        if ":" in func:
-                            func = func.split(":")[1]
+                            if ":" in func:
+                                func = func.split(":")[1]
 
 
-                        if func in keys():
-                            klass = iplugins[func]
-                            if speedy:
-                                rt = klass._stage_run_express(ipkt, data)
-                            else:
+                            if func in keys():
+                                klass = iplugins[func]
+                                #if speedy:
+                                #    rt = klass._stage_run_express(ipkt, data)
+                                #else:
                                 rt = klass._stage_run(ipkt, data)
-                    except:
-                        logging.error("Unexpected error invoking function:", sys.exc_info()[0])
+                        except:
+                            logging.error("Unexpected error invoking function:", sys.exc_info()[0])
 
 
 

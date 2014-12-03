@@ -25,7 +25,7 @@ from PmkShared import *
 
 class tx(Queue):
     def __init__(self, maxsize=0, context=None):
-        Queue.__init__(self, maxsize)
+        Queue.__init__(self, 10)
         pass
 
 
@@ -52,6 +52,20 @@ class ExternalDispatch(SThread):
         self._set_bunch = False
         self._bunch = 1
         self._pval =(0,0,0,0)
+
+        self.bunches = []
+
+        for i in range (1,10):
+            v = i
+            self.bunches.extend([v,v,v,v,v,v,v,v,v,v])
+
+        for i in range (1, 100):
+            v = i*50
+            self.bunches.extend([v,v,v,v,v,v,v,v,v,v])
+
+        self.bunches = self.bunches[::-1]
+
+        pass
 
         if self.context.fallback_rabbitmq():
             #host, port, username, password, vhost = self.context.get_rabbitmq_cred()
@@ -251,15 +265,13 @@ class ExternalDispatch(SThread):
                             if not self._set_bunch:
                                 if self._pval[0] != eff:
 
-                                    # self._bunch += 200
-                                    # self._pval = (eff, n, peff, pn)
-                                    # self._set_bunch = True
-
                                     if eff >= peff:
-                                        if self._bunch < 2000:
-                                            self._bunch = self._bunch * 2 + 1
-                                        else:
-                                            self._bunch += 200
+                                        self._bunch += 200
+
+                                        # if self._bunch < 2000:
+                                        #     self._bunch = self._bunch * 2 + 1
+                                        # else:
+                                        #     self._bunch += 200
 
                                         self._pval = (eff, n, peff, pn)
                                         self._set_bunch = True
@@ -294,7 +306,11 @@ class ExternalDispatch(SThread):
 
                             #if self._bunch > 15000:
                             #    self._bunch = 15000
-                            #self._bunch = 512
+                            #self._bunch = 5000
+                            # if not self._set_bunch:
+                            #     self._bunch = self.bunches.pop()
+                            #     self._set_bunch = True
+
                             if len(cq[key]) > self._bunch:
                                 #print "BUNCH: "+str(self._bunch)
                                 multi_pkt = []
