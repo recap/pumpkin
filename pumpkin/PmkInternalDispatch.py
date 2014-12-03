@@ -22,7 +22,7 @@ class rx(Queue):
         pass
 
     def dig(self, pkt):
-        print "DIG"
+        #print "DIG"
         if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
             iplugins = PmkSeed.iplugins
             keys = PmkSeed.iplugins.keys
@@ -302,7 +302,7 @@ class RabbitMQMonitor():
                             self.cnt += 1
                             pkt = json.loads(zlib.decompress(body))
                             #logging.debug("RabbitMQ received from "+self.queue+": "+ str(pkt))
-                            rx.dig(pkt)
+                            #rx.dig(pkt)
                             rx.put(pkt)
 
                     else:
@@ -433,7 +433,7 @@ class ZMQPacketMonitor(SThread):
                 pkt = json.loads(zlib.decompress(msg))
                 #pkt = json.loads(msg)
                 #if "multiple" not in pkt[0].keys():
-                dig(pkt)
+                #dig(pkt)
                 queue_put(pkt)
                 #self.proccess_pkt(msg)
                 #del msg
