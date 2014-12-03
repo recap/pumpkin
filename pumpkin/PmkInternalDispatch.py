@@ -457,7 +457,7 @@ class ZMQPacketMonitor(SThread):
         dig = self.context.getRx().dig
         while True:
             try:
-                rx.acquire()
+                #rx.acquire()
                 msg = soc.recv()
                 #self.context.getRx().put(msg)
                 pkt = json.loads(zlib.decompress(msg))
