@@ -361,6 +361,7 @@ class Seed(object):
                  tm1 = time.time()
                  tm2 = float(dpkt[0]["pexec"])
                  tdelta = tm1 - tm2
+                 print "SINGLE TDELTA: "+str(tdelta)
                  dpkt[0]["pexec"] = "{:.12f}".format(tdelta)
                  exdisp.send_to_last(dpkt)
             pass
