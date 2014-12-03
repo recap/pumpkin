@@ -23,8 +23,8 @@ class rx(Queue):
         self.rlock = threading.RLock()
         pass
 
-    def put(self, item, block=True, timeout=None):
-        Queue.put(item, block, timeout)
+    def put_n_lock(self, item, block=True, timeout=None):
+        self.put(item, block, timeout)
 
         self.rlock.aquire()
 
@@ -443,7 +443,7 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
-        queue_put = self.context.getRx().put
+        queue_put = self.context.getRx().put_n_lock
         dig = self.context.getRx().dig
         while True:
             try:
