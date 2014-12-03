@@ -20,7 +20,7 @@ from Queue import *
 class rx(Queue):
     def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, 1)
-        self.rlock = threading.Rlock()
+        self.rlock = threading.RLock()
         pass
 
     def put(self, pkt):
@@ -66,7 +66,10 @@ class InternalDispatch(SThread):
         speedy = self.context.is_speedy()
         while 1:
             #already in json format
-            rx.release()
+            try:
+                rx.release()
+            except:
+                pass
 
             pkt = rx.get(True)
 
