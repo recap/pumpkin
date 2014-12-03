@@ -87,7 +87,7 @@ class InternalDispatch(SThread):
                 #logging.debug("Multiple packets")
                 #print json.dumps(pkt)
                 if pkt[0]["state"] == "PACK_OK":
-                    tx.release()
+                    #tx.release()
                     n = int(pkt[0]["number"])
                     tm1 = time.time()
                     tm2 = float(pkt[0]["timestamp"])
@@ -180,7 +180,7 @@ class InternalDispatch(SThread):
             if not speedy:
                 #Check for PACK
                 if pkt[0]["state"] == "PACK_OK":
-                    tx.release()
+                    #tx.release()
                     #logging.debug("PACK packet: "+pkts)
                     seed = pkt[0]["last_func"]
 
@@ -452,7 +452,7 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
-        queue_put = self.context.getRx().put_n_lock
+        queue_put = self.context.getRx().put
         rx = self.context.getRx()
         dig = self.context.getRx().dig
         while True:
