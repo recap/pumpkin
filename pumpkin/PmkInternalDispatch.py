@@ -24,7 +24,7 @@ class rx(Queue):
         pass
 
     def put(self, item, block=True, timeout=None):
-        super(rx, self).put(item, block, timeout)
+        Queue.put(item, block, timeout)
 
         self.rlock.aquire()
 
