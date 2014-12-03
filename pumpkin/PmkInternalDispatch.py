@@ -7,6 +7,7 @@ import time
 import pika
 import sys
 import zlib
+import threading
 
 import PmkSeed
 import PmkBroadcast
@@ -19,7 +20,15 @@ from Queue import *
 class rx(Queue):
     def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, 1)
+        self.rlock = threading.Rlock()
         pass
+
+    def put(self, pkt):
+        super(rx, self).put(pkt)
+        self.rlock.aquire()
+
+    def release(self):
+        self.rlock.release()
 
     def dig(self, pkt):
         #print "DIG"
@@ -57,6 +66,8 @@ class InternalDispatch(SThread):
         speedy = self.context.is_speedy()
         while 1:
             #already in json format
+            rx.release()
+
             pkt = rx.get(True)
 
 
@@ -232,7 +243,10 @@ class InternalDispatch(SThread):
                     rt = klass._stage_run(pkt, data)
 
 
+
             #########################end invoke pkt###########################
+
+
 
 
 
@@ -436,9 +450,7 @@ class ZMQPacketMonitor(SThread):
                 #if "multiple" not in pkt[0].keys():
                 #dig(pkt)
                 queue_put(pkt)
-                s = self.context.getRx().qsize()
-                print "QUEUE: "+str(s)
-                time.sleep(2)
+
                 soc.send("OK")
                 #self.proccess_pkt(msg)
                 #del msg
