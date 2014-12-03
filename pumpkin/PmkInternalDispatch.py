@@ -23,8 +23,9 @@ class rx(Queue):
         self.rlock = threading.RLock()
         pass
 
-    def put(self, pkt):
-        super(rx, self).put(pkt)
+    def put(self, item, block=True, timeout=None):
+        super(rx, self).put(item, block, timeout)
+
         self.rlock.aquire()
 
     def release(self):
