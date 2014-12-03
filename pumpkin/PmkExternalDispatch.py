@@ -647,7 +647,11 @@ class ZMQPacketDispatch(Dispatch):
 
         #except zmq.ZMQError as e:
         #    raise
+        if "timestamp" in pkt[0].keys():
+            print "SENDING TIMESTAMP: "+pkt[0]["timestamp"]
+
         message = zlib.compress(json.dumps(pkt))
+
         self.soc.send(message)
         self.soc.recv()
 
