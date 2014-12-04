@@ -337,11 +337,11 @@ class Seed(object):
                     tm1 = time.time()
                     tm2 = float(dpkt[0]["mexec"])
                     tdelta = tm1 - tm2
-                    print "TDELTA: "+str(tdelta)+" BUNCH: "+str(n)
+                    #print "TDELTA: "+str(tdelta)+" BUNCH: "+str(n)
                     multi_pkt[0]["mexec"] = "{0:.12f}".format(tdelta)
 
                     multi_pkt[0]["pkts"] = []
-                    multi_pkt[0]["pkts"].append(self._t_buffer[key])
+                    #multi_pkt[0]["pkts"].append(self._t_buffer[key])
                     self._t_buffer[key] = []
 
 
@@ -352,7 +352,7 @@ class Seed(object):
                     #print json.dumps(multi_pkt)
 
                     exdisp = self.context.getExternalDispatch()
-                    exdisp.send_to_last(multi_pkt.pop())
+                    exdisp.send_to_last(multi_pkt)
 
                 return
 
