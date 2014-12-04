@@ -333,6 +333,8 @@ class ExternalDispatch(SThread):
                             #     self._bunch = self.bunches.pop()
                             #     self._set_bunch = True
 
+                            self._bunch = 1000
+
                             if len(cq[key]) > self._bunch:
                                 #print "BUNCH: "+str(self._bunch)
                                 multi_pkt = []
@@ -683,7 +685,11 @@ class ZMQPacketDispatch(Dispatch):
 
         message = zlib.compress(json.dumps(pkt))
 
+        print "Sending size: "+sys.getsizeof(message)
+
+
         self.soc.send(message)
+
         #time.sleep(2)
         m = self.soc.recv()
 
