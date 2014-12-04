@@ -483,7 +483,7 @@ class Seed(object):
 
                 tm = time.time()
                 logging.debug("Time: "+str(tm))
-                pkt[0]["pexec"] = "{:.12f}".format(tm)
+                pkt[0]["pexec"] = "{1:.12f}".format(tm)
 
                 if pstate == "MERGE":
                     self.merge(pkt,nargs)
