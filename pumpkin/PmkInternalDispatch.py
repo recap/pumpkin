@@ -96,11 +96,11 @@ class InternalDispatch(SThread):
 
                     eff = mexec/tdelta
                     overhead = tdelta - mexec
-                    st_tm = "{:.12f}".format(tm1)
-                    st_tdelta = "{:.12f}".format(tdelta)
-                    st_mexec = "{:.12f}".format(mexec)
-                    st_overhead = "{:.12f}".format(overhead)
-                    st_eff = "{:.12f}".format(eff)
+                    st_tm = "{0:.12f}".format(tm1)
+                    st_tdelta = "{0:.12f}".format(tdelta)
+                    st_mexec = "{0:.12f}".format(mexec)
+                    st_overhead = "{0:.12f}".format(overhead)
+                    st_eff = "{0:.12f}".format(eff)
 
                     #print "TIME DISPATCHED: "+pkt[0]["timestamp"]+" TIME REC: "+st_tm+" PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
                     print st_tm+" "+st_eff+" "+str(n)
@@ -198,12 +198,12 @@ class InternalDispatch(SThread):
                         overhead = tdelta - pexec
                         eff = pexec / tdelta
                         ieff = tdelta / pexec
-                        st_tm = "{:.12f}".format(tm)
-                        st_tdelta = "{:.12f}".format(tdelta)
-                        st_pexec = "{:.12f}".format(pexec)
-                        st_overhead = "{:.12f}".format(overhead)
-                        st_eff = "{:.12f}".format(eff)
-                        st_ieff = "{:.12f}".format(ieff)
+                        st_tm = "{0:.12f}".format(tm)
+                        st_tdelta = "{0:.12f}".format(tdelta)
+                        st_pexec = "{0:.12f}".format(pexec)
+                        st_overhead = "{0:.12f}".format(overhead)
+                        st_eff = "{0:.12f}".format(eff)
+                        st_ieff = "{0:.12f}".format(ieff)
                         #print "PKT RPTT: "+st_tdelta+" EXEC TIME: "+st_pexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+","+st_ieff
                         print st_tm+" "+st_eff+" 1"
                         l = len(pkt)

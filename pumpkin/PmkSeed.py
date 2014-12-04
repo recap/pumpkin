@@ -338,7 +338,7 @@ class Seed(object):
                     tm2 = float(dpkt[0]["mexec"])
                     tdelta = tm1 - tm2
                     print "TDELTA: "+str(tdelta)+" BUNCH: "+str(n)
-                    multi_pkt[0]["mexec"] = "{:.12f}".format(tdelta)
+                    multi_pkt[0]["mexec"] = "{0:.12f}".format(tdelta)
 
                     multi_pkt[0]["pkts"] = []
                     multi_pkt[0]["pkts"].append(self._t_buffer[key])
@@ -362,7 +362,7 @@ class Seed(object):
                  tm2 = float(dpkt[0]["pexec"])
                  tdelta = tm1 - tm2
                  print "SINGLE TDELTA: "+str(tdelta)
-                 dpkt[0]["pexec"] = "{:.12f}".format(tdelta)
+                 dpkt[0]["pexec"] = "{0:.12f}".format(tdelta)
                  exdisp.send_to_last(dpkt)
             pass
 
@@ -1050,7 +1050,7 @@ class Seed(object):
         if self.context.with_acks():
             tm = time.time()
             lpkt[0]["state"] = "WAITING_PACK"
-            lpkt[0]["last_timestamp"] = "{:.12f}".format(tm)
+            lpkt[0]["last_timestamp"] = "{0:.12f}".format(tm)
         else:
             lpkt[0]["state"] = "TRANSIT"
         lpkt[0]["c_tag"] = stag

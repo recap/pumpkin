@@ -338,7 +338,7 @@ class ExternalDispatch(SThread):
                                 multi_pkt[0]["multiple"] = True
                                 multi_pkt[0]["number"] = len(cq[key])
                                 multi_pkt[0]["pkts"] = cq[key]
-                                multi_pkt[0]["timestamp"] = "{:.12f}".format(time.time())
+                                multi_pkt[0]["timestamp"] = "{0:.12f}".format(time.time())
                                 multi_pkt[0]["state"] = "NEW"
                                 multi_pkt.append(next_hop)
                                 dcpkt = copy.deepcopy(multi_pkt)
@@ -352,7 +352,7 @@ class ExternalDispatch(SThread):
                         #     time.sleep(0.3)
 
 
-                        dcpkt[0]["last_timestamp"] = "{:.12f}".format(time.time())
+                        dcpkt[0]["last_timestamp"] = "{0:.12f}".format(time.time())
 
                         if ep in self.dispatchers.keys():
                             disp = self.dispatchers[ep]
@@ -675,7 +675,7 @@ class ZMQPacketDispatch(Dispatch):
         #    print "AQCUIRE 1"
         if header["state"] != "PACK_OK":
             if "timestamp" in pkt[0].keys():
-                pkt[0]["timestamp"] = "{:.12f}".format(time.time())
+                pkt[0]["timestamp"] = "{0:.12f}".format(time.time())
         #   print "SENDING TIMESTAMP: "+pkt[0]["timestamp"]
 
         message = zlib.compress(json.dumps(pkt))
