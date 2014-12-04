@@ -686,7 +686,7 @@ class ZMQPacketDispatch(Dispatch):
 
         message = zlib.compress(json.dumps(pkt))
 
-        print "Sending size: "+sys.getsizeof(message)
+        print "Sending size: "+str(sys.getsizeof(message))
 
 
         self.soc.send(message)
