@@ -14,12 +14,13 @@ import PmkBroadcast
 import PmkShared
 
 
+
 from PmkShared import *
 from Queue import *
 
 class rx(Queue):
     def __init__(self, maxsize=0, context=None):
-        Queue.__init__(self, 1)
+        Queue.__init__(self, 1000)
         self.rlock = threading.Semaphore(0)
         pass
 
@@ -459,7 +460,7 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
-        queue_put = self.context.getRx().put
+        queue_put = self.context.getRx().put_n_lock
         rx = self.context.getRx()
         dig = self.context.getRx().dig
         while True:
@@ -474,7 +475,7 @@ class ZMQPacketMonitor(SThread):
                 #dig(pkt)
                 queue_put(pkt)
 
-                soc.send("OK")
+                soc.send("##OK##")
                 #self.proccess_pkt(msg)
                 #del msg
 
