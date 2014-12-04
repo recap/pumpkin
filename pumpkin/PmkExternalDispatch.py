@@ -28,7 +28,8 @@ from PmkShared import *
 class tx(Queue):
     def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, 1)
-        self.rlock = Semaphore(0)
+        #self.rlock = Semaphore(0)
+        self.rlock = Lock()
         pass
 
     def acquire(self):
@@ -286,7 +287,7 @@ class ExternalDispatch(SThread):
                                     #     if eff >= (peff - (peff*0.10)):
                                     if eff > peff:
 
-                                        self._bunch += 200
+                                        self._bunch += 20
                                         # if self._bunch < 2000:
                                         #     self._bunch = self._bunch * 2 + 1
                                         # else:
