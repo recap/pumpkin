@@ -686,6 +686,7 @@ class ZMQPacketDispatch(Dispatch):
 
         if header["state"] != "PACK_OK":
             self.tx.acquire()
+            print "Broke LOCK"
             #print "ACQUIRE 2"
 
         #print "R: "+str(m)

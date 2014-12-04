@@ -77,7 +77,7 @@ class InternalDispatch(SThread):
 
             try:
                 if pkt[0]["state"] == "PACK_OK":
-                    #print "RELEASE"
+                    print "RELEASE"
                     tx.release()
             except:
                 pass
