@@ -20,13 +20,14 @@ from Queue import *
 class rx(Queue):
     def __init__(self, maxsize=0, context=None):
         Queue.__init__(self, 1)
-        self.rlock = threading.RLock()
+        self.rlock = threading.Semaphore(0)
         pass
 
     def put_n_lock(self, item, block=True, timeout=None):
         self.put(item, block, timeout)
 
-        self.rlock.acquire()
+        if item[0]["state"] != "PACK_OK":
+            self.rlock.acquire()
 
     def release(self):
         self.rlock.release()
@@ -167,6 +168,8 @@ class InternalDispatch(SThread):
                                 #    rt = klass._stage_run_express(ipkt, data)
                                 #else:
                                 rt = klass._stage_run(ipkt, data)
+                                rx.release()
+
                         except:
                             logging.error("Unexpected error invoking function:", sys.exc_info()[0])
 
@@ -212,6 +215,7 @@ class InternalDispatch(SThread):
 
                         self.context.update_eff(key, (eff, 1))
 
+
                         continue
 
                 # if pkt[0]["state"] == "MERGE":
@@ -254,6 +258,8 @@ class InternalDispatch(SThread):
                     rt = klass._stage_run_express(pkt, data)
                 else:
                     rt = klass._stage_run(pkt, data)
+                rx.release()
+
 
 
 
@@ -452,7 +458,7 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
-        queue_put = self.context.getRx().put
+        queue_put = self.context.getRx().put_n_lock
         rx = self.context.getRx()
         dig = self.context.getRx().dig
         while True:
