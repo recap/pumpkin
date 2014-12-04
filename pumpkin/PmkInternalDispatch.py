@@ -459,7 +459,7 @@ class ZMQPacketMonitor(SThread):
         #soc.setsockopt(zmq.SUBSCRIBE,self.topic)
         #soc.setsockopt(zmq.RCVTIMEO, 10000)
 
-        queue_put = self.context.getRx().put_n_lock
+        queue_put = self.context.getRx().put
         rx = self.context.getRx()
         dig = self.context.getRx().dig
         while True:
