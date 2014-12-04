@@ -285,7 +285,7 @@ class ExternalDispatch(SThread):
                                     eff_diff = math.fabs(eff - peff)
 
                                     if eff_diff > peff_pos10:
-                                        if eff >= peff:#(peff - (peff*0.10)):
+                                        if eff >= (peff - (peff*0.05)):
 
 
                                             self._bunch += 20
