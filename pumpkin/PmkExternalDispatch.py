@@ -282,23 +282,24 @@ class ExternalDispatch(SThread):
                                     peff_pos10 = (peff*0.05)
                                     eff_diff = math.fabs(eff - peff)
 
-                                    if eff_diff > peff_pos10:
-                                        if eff >= (peff - (peff*0.10)):
+                                    # if eff_diff > peff_pos10:
+                                    #     if eff >= (peff - (peff*0.10)):
+                                    if eff > peff:
 
-                                            self._bunch += 20
+                                        self._bunch += 20
 
-                                            # if self._bunch < 2000:
-                                            #     self._bunch = self._bunch * 2 + 1
-                                            # else:
-                                            #     self._bunch += 200
+                                        # if self._bunch < 2000:
+                                        #     self._bunch = self._bunch * 2 + 1
+                                        # else:
+                                        #     self._bunch += 200
 
-                                            self._pval = (eff, n, peff, pn)
-                                            self._set_bunch = True
-                                        else:
-                                            #if self._bunch > 500:
-                                            self._bunch = int(self._bunch * 0.80) + 1
-                                            self._pval = (eff, n, peff, pn)
-                                            self._set_bunch = True
+                                        self._pval = (eff, n, peff, pn)
+                                        self._set_bunch = True
+                                    else:
+                                        #if self._bunch > 500:
+                                        self._bunch = int(self._bunch * 0.80) + 1
+                                        self._pval = (eff, n, peff, pn)
+                                        self._set_bunch = True
 
                             # #bunch = 1
                             # gradient = 0
