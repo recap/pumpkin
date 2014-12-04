@@ -73,6 +73,10 @@ class Pumpkin(Daemon):
             pip = get_public_ip()
             ips4_public.append(pip)
 
+        #### hack #########33
+        ips4_private = ips4_public
+        ###################
+
         self.context.set_ips(ips4_private, ips4_public, ips6_private, ips6_public)
 
         self.context.__pumpkin = self

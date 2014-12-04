@@ -77,7 +77,7 @@ class InternalDispatch(SThread):
 
             try:
                 if pkt[0]["state"] == "PACK_OK":
-                    print "RELEASE"
+                    #print "RELEASE"
                     tx.release()
             except:
                 pass
@@ -459,6 +459,7 @@ class ZMQPacketMonitor(SThread):
             try:
                 #rx.acquire()
                 msg = soc.recv()
+                #print "RECEIVED QUEUE: "+str(rx.qsize())
                 #self.context.getRx().put(msg)
                 pkt = json.loads(zlib.decompress(msg))
                 #pkt = json.loads(msg)
