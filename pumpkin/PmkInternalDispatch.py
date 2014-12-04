@@ -104,7 +104,7 @@ class InternalDispatch(SThread):
                     st_overhead = "{0:.12f}".format(overhead)
                     st_eff = "{0:.12f}".format(eff)
 
-                    #print "TIME DISPATCHED: "+pkt[0]["timestamp"]+" TIME REC: "+st_tm+" PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
+                    print "TIME DISPATCHED: "+pkt[0]["timestamp"]+" TIME REC: "+st_tm+" PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
                     print st_tm+" "+st_eff+" "+str(n)
 
                     #print json.dumps(pkt)
