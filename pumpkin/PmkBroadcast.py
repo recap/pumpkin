@@ -313,7 +313,7 @@ class RabbitMQBroadcastSubscriber(SThread):
                         data = zlib.decompress(dataz)
 
 
-                    logging.debug("Incomming data from ["+self.queue+"]: "+data)
+                    #logging.debug("Incomming data from ["+self.queue+"]: "+data)
                     d = json.loads(data)
                     for k in d.keys():
                         if not (k == "cmd"):
