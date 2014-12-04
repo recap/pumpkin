@@ -352,7 +352,7 @@ class Seed(object):
                     #print json.dumps(multi_pkt)
 
                     exdisp = self.context.getExternalDispatch()
-                    exdisp.send_to_last(multi_pkt)
+                    exdisp.send_to_last(multi_pkt.pop())
 
                 return
 
