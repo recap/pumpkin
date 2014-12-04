@@ -145,7 +145,7 @@ def get_lan_ip():
     return ip
 
 def get_public_ip():
-    return None
+    #return None
     nat_type, external_ip, external_port = stun.get_ip_info()
     return str(external_ip)
 
