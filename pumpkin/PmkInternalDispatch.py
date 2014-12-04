@@ -469,7 +469,15 @@ class ZMQPacketMonitor(SThread):
                 msg = soc.recv()
                 #print "RECEIVED QUEUE: "+str(rx.qsize())
                 #self.context.getRx().put(msg)
+
+                print "Received: "+str(sys.getsizeof(msg))
+                tm1 = time.time()
                 pkt = json.loads(zlib.decompress(msg))
+                tm2 = time.time()
+
+                t_diff = tm2 - tm1
+
+                print "Decompress time: {0:.12f}".format(t_diff)
                 #pkt = json.loads(msg)
                 #if "multiple" not in pkt[0].keys():
                 #dig(pkt)
