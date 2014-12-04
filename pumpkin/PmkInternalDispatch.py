@@ -446,7 +446,7 @@ class ZMQPacketMonitor(SThread):
         #context = zmq.Context()
         #soc = self.zmq_cntx.socket(zmq.PULL)
         soc = self.zmq_cntx.socket(zmq.REP)
-        soc.setsockopt(zmq.RCVBUF, 300)
+        #soc.setsockopt(zmq.RCVBUF, 300)
         #soc.setsockopt(zmq.HWM, 100)
         try:
             bind_to = "tcp://*:"+str(PmkShared.ZMQ_ENDPOINT_PORT)
