@@ -111,6 +111,7 @@ class InternalDispatch(SThread):
 
                     st_out = st_tm+" "+st_eff+" "+str(n)+"\n"
                     self.file.write(st_out)
+                    self.file.flush()
 
                     #print json.dumps(pkt)
 
