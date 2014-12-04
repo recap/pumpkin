@@ -472,7 +472,7 @@ class ZMQPacketMonitor(SThread):
 
                 # print "Received: "+str(sys.getsizeof(msg))
                 # tm1 = time.time()
-                # pkt = json.loads(zlib.decompress(msg))
+                pkt = json.loads(zlib.decompress(msg))
                 # tm2 = time.time()
                 #
                 # t_diff = tm2 - tm1
