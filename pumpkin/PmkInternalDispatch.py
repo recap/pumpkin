@@ -26,9 +26,9 @@ class rx(Queue):
     def put_n_lock(self, item, block=True, timeout=None):
         self.put(item, block, timeout)
 
-        if item[0]["state"] != "PACK_OK":
-            print "BLOCK"
-            self.rlock.acquire()
+        #if item[0]["state"] != "PACK_OK":
+        print "BLOCK"
+        self.rlock.acquire()
 
     def release(self):
         self.rlock.release()
