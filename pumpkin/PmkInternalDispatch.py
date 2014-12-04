@@ -60,6 +60,7 @@ class InternalDispatch(SThread):
     def __init__(self, context):
         SThread.__init__(self)
         self.context = context
+        self.file = open("data.dat",'w')
         pass
 
 
@@ -107,6 +108,9 @@ class InternalDispatch(SThread):
 
                     #print "TIME DISPATCHED: "+pkt[0]["timestamp"]+" TIME REC: "+st_tm+" PKT RPTTM: "+st_tdelta+" EXEC TIME: "+st_mexec+" OVERHEAD: "+st_overhead+" EFF: "+st_eff+" BUNCH: "+str(n)
                     print st_tm+" "+st_eff+" "+str(n)
+
+                    st_out = st_tm+" "+st_eff+" "+str(n)+"\n"
+                    self.file.write(st_out)
 
                     #print json.dumps(pkt)
 
