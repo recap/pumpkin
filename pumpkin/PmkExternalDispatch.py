@@ -288,7 +288,7 @@ class ExternalDispatch(SThread):
                                     if eff >= (peff - (peff*0.1)):
 
 
-                                        self._bunch += 200
+                                        self._bunch += 20
 
 
                                         # if eff  < 0.4:
