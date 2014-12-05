@@ -807,7 +807,7 @@ class RabbitMQDispatch(Dispatch):
 
 
     def close(self):
-        self.connetion.close()
+        self.connection.close()
 
 
 
