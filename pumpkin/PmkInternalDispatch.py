@@ -293,17 +293,19 @@ class RabbitMQMonitor():
             self.parent = parent
             self.tag_map = self.parent.tag_map
             self.channel = self.connection.channel()
-            self.channel.basic_qos(prefetch_count=1000)
+            self.channel.basic_qos(prefetch_count=10000)
             self.queue = queue
             self.exchange = exchange
             self.cnt = 0
-            self.channel.basic_qos(prefetch_count=1000)
+            self.channel.basic_qos(prefetch_count=10000)
             #self.channel.exchange_declare(exchange=str(exchange), type='fanout')
             #self.channel.queue_declare(queue=str(queue))
             #self.channel.queue_bind(exchange=str(exchange),
             #       queue=str(queue))
-            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True)
-            self.channel.basic_qos(prefetch_count=1000)
+            args = {"x-max-length":2}
+
+            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True, arguments=args)
+            self.channel.basic_qos(prefetch_count=10000)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
