@@ -208,7 +208,7 @@ class ExternalDispatch(SThread):
                 self.send_to_entry(pkt, entry)
                 return True
             else:
-                print "No random host found."
+                #print "No random host found."
                 return False
         else:
             return False
@@ -476,7 +476,7 @@ class ExternalDispatch(SThread):
             group, state, otype, pkt = self.tx.get(True, 5)
             otag = group+":"+otype+":"+state
             if not self.send_express((group,state,otype), pkt):
-                print "no route"
+                #print "no route"
                 time.sleep(5)
         except Empty:
             return
