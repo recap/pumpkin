@@ -746,6 +746,7 @@ class EndpointPicker(object):
                                 p = 0
 
                             if not Endpoint.ready(ep, pkt):
+                                #print "WAITING.."
                                 #p = 0
                                 continue
 

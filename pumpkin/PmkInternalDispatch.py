@@ -328,8 +328,13 @@ class RabbitMQMonitor():
                             self.cnt += 1
                             body = zlib.decompress(bodyz)
                             logging.debug("RabbitMQ received from "+self.queue+": "+ str(body))
+
                             pkt = json.loads(body)
+
+
                             rx.parse_n_load(pkt)
+
+                            self.channel.basic_ack(delivery_tag=0, multiple=True)
 
                     else:
                         time.sleep(1)
