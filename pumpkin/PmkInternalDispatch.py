@@ -302,9 +302,10 @@ class RabbitMQMonitor():
             #self.channel.queue_declare(queue=str(queue))
             #self.channel.queue_bind(exchange=str(exchange),
             #       queue=str(queue))
-            args = {"x-max-length":2}
+            #args = {"x-max-length":2}
+            args = {}
 
-            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True, arguments=args)
+            self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True, no_ack=True, arguments=args)
             self.channel.basic_qos(prefetch_count=10000)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
