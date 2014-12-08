@@ -759,7 +759,7 @@ class Seed(object):
                 header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
                 header["last_timestamp"] = time.time()
-                print "{0:.12f}".format(header["last_timestamp"])+" "+self.getName()+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+self.getName()
+                print "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+self.get_name()
                 self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
