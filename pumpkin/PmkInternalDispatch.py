@@ -320,7 +320,7 @@ class RabbitMQMonitor():
 
                 try:
                     #FIX: bug trap empty queue
-                    method, properties, bodyz = self.channel.basic_get(queue=self.queue, no_ack=False)
+                    method, properties, bodyz = self.channel.basic_get(queue=self.queue, no_ack=True)
                     if method:
                         if (method.NAME == 'Basic.GetEmpty'):
                             time.sleep(1)
@@ -334,7 +334,7 @@ class RabbitMQMonitor():
 
                             rx.parse_n_load(pkt)
 
-                            self.channel.basic_ack(delivery_tag=0, multiple=True)
+                            #self.channel.basic_ack(delivery_tag=0, multiple=True)
 
                     else:
                         time.sleep(1)

@@ -11,7 +11,7 @@
 ##                      "required": true,
 ##                      "type": "TweetString",
 ##                      "format": "",
-##                      "state" : "NONENGLISH"
+##                      "state" : "INFO"
 ##                  }
 ##              ],
 ##"return": [
@@ -106,13 +106,22 @@ class tweetinject(PmkSeed.Seed):
 
 
     def boot_strap(self):
-        seeds = {}
-        dir = expanduser("~")+"/pumpkin-examples/tweeter/"
-        seed = "filterenglish.py"
-        path = dir+seed
-        name = seed[:-3]
-        self.deploy_seed("filterenglish", path, 1)
 
+        pkt = Packet.create_code_packet()
+
+        dir = expanduser("~")+"/pumpkin-examples/tweeter/"
+        #seeds = ("filterenglish.py", "filterisa.py", "collectorall.py")
+        #seeds = ("filterenglish.py", "filterisa.py")
+        seeds = ["filterenglish.py"]
+
+        for seed in seeds:
+
+            path = dir+seed
+            name = seed[:-3]
+	    if os.path.isfile(path):
+            	pkt = Packet.add_code_to_packet(pkt, seed, path, 1)
+
+        self.send_around(pkt)
 
         pass
 
@@ -128,6 +137,7 @@ class tweetinject(PmkSeed.Seed):
 
         pkt = self.get_empty_packet()
         pkt = Packet.set_streaming_bits(pkt)
+
         #pkt = Packet.set_pkt_bit(pkt, Packet.MULTIPACKET_BIT)
 
         dir = expanduser("~")+"/tweets/"
@@ -137,6 +147,8 @@ class tweetinject(PmkSeed.Seed):
             fullpath = dir+fl
             if( fl[-3:] == "txt"):
                 print "File: "+str(fl)
+
+                #pkt = Packet.set_pkt_flow(pkt, fl)
 
                 with open(fullpath) as f:
                     for line in f:
