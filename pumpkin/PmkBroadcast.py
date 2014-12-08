@@ -208,78 +208,81 @@ class RabbitMQBroadcaster(SThread):
         cmd_str = None
 
         while True:
+            try:
+                cmd_str = None
 
-            cmd_str = None
+                if not self.context.getProcGraph().isRegistryModified():
 
-            if not self.context.getProcGraph().isRegistryModified():
+                    data = self.context.getProcGraph().dumpExternalRegistry()
 
-                data = self.context.getProcGraph().dumpExternalRegistry()
-
-                try:
-                    cmd_str = self.cmd.get(False)
-                except Queue.Empty as e:
-                    pass
+                    try:
+                        cmd_str = self.cmd.get(False)
+                    except Queue.Empty as e:
+                        pass
 
 
-                if cmd_str:
-                    if len(data) > 5:
-                        data = data[:-1]
-                        data = data+","+cmd_str+"}"
+                    if cmd_str:
+                        if len(data) > 5:
+                            data = data[:-1]
+                            data = data+","+cmd_str+"}"
+                        else:
+                            data = "{"+cmd_str+"}"
                     else:
-                        data = "{"+cmd_str+"}"
-                else:
-                    time.sleep(self.context.get_broadcast_rate())
+                        time.sleep(self.context.get_broadcast_rate())
 
-                if self.context.is_with_nocompress():
-                    dataz = data
-                else:
+                    if self.context.is_with_nocompress():
+                        dataz = data
+                    else:
+                        dataz = zlib.compress(data)
+
+                    if sys.version_info < (2,7):
+                        pass
+                    else:
+                        if self.connection.is_closed:
+                            self._connect()
+
+                    self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
+
+
+                    if self.stopped():
+                        logging.debug("Exiting thread: "+self.__class__.__name__)
+                        break
+                    else:
+                        continue
+
+                if self.context.getProcGraph().isRegistryModified():
+                    data = self.context.getProcGraph().dumpExternalRegistry()
+
+                    # if cmd_str:
+                    #     if len(data) > 5:
+                    #         data = data[:-1]
+                    #         data = data+","+cmd_str+"}"
+                    #     else:
+                    #         data = "{"+cmd_str+"}"
+
+
+                    #if self.context.is_with_nocompress():
+                    #    dataz = data
+                    #else:
                     dataz = zlib.compress(data)
+                    self.context.getProcGraph().ackRegistryUpdate()
 
-                if sys.version_info < (2,7):
-                    pass
-                else:
-                    if self.connection.is_closed:
-                        self._connect()
+                    if sys.version_info < (2,7):
+                        pass
+                    else:
+                        if self.connection.is_closed:
+                            self._connect()
 
-                self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
+                    self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
 
+                    if self.stopped():
+                        logging.debug("Exiting thread: "+self.__class__.__name__)
+                        break
+                    else:
+                        continue
+            except:
+                pass
 
-                if self.stopped():
-                    logging.debug("Exiting thread: "+self.__class__.__name__)
-                    break
-                else:
-                    continue
-
-            if self.context.getProcGraph().isRegistryModified():
-                data = self.context.getProcGraph().dumpExternalRegistry()
-
-                # if cmd_str:
-                #     if len(data) > 5:
-                #         data = data[:-1]
-                #         data = data+","+cmd_str+"}"
-                #     else:
-                #         data = "{"+cmd_str+"}"
-
-
-                #if self.context.is_with_nocompress():
-                #    dataz = data
-                #else:
-                dataz = zlib.compress(data)
-                self.context.getProcGraph().ackRegistryUpdate()
-
-                if sys.version_info < (2,7):
-                    pass
-                else:
-                    if self.connection.is_closed:
-                        self._connect()
-
-                self.channel.basic_publish(exchange=self.exchange,routing_key='',body=dataz)
-
-                if self.stopped():
-                    logging.debug("Exiting thread: "+self.__class__.__name__)
-                    break
-                else:
-                    continue
 
 class RabbitMQBroadcastSubscriber(SThread):
     def __init__(self, context, exchange='global'):
@@ -299,37 +302,39 @@ class RabbitMQBroadcastSubscriber(SThread):
     def run(self):
 
         while True:
-
-            method, properties, dataz = self.channel.basic_get(queue=self.queue, no_ack=True)
-            if method:
-                if (method.NAME == 'Basic.GetEmpty'):
-                    time.sleep(1)
-                else:
-
-                    if self.context.is_with_nocompress():
-                        data = dataz
+            try:
+                method, properties, dataz = self.channel.basic_get(queue=self.queue, no_ack=True)
+                if method:
+                    if (method.NAME == 'Basic.GetEmpty'):
+                        time.sleep(1)
                     else:
-                        data = zlib.decompress(dataz)
 
-
-                    logging.debug("Incomming data from ["+self.queue+"]: "+data)
-                    d = json.loads(data)
-                    for k in d.keys():
-                        if not (k == "cmd"):
-                            self.context.getProcGraph().updateRegistry(d[k])
+                        if self.context.is_with_nocompress():
+                            data = dataz
                         else:
-                            logging.debug('Command detected: '+str(d[k]))
-                            if(d[k]["type"] == "arp"):
-                                pkt_id = d[k]["id"]
-                                pkt = self.context.get_pkt_from_shelve(pkt_id)
-                                for p in pkt:
-                                    ep = d[k]["reply-to"]
-                                    p[0]["state"] = "ARP_OK"
-                                    exdisp = self.context.getExternalDispatch()
-                                    logging.debug("Sending ARP response: "+json.dumps(p))
-                                    exdisp.send_to_ep(p, ep)
-            else:
-                time.sleep(1)
+                            data = zlib.decompress(dataz)
+
+
+                        logging.debug("Incomming data from ["+self.queue+"]: "+data)
+                        d = json.loads(data)
+                        for k in d.keys():
+                            if not (k == "cmd"):
+                                self.context.getProcGraph().updateRegistry(d[k])
+                            else:
+                                logging.debug('Command detected: '+str(d[k]))
+                                if(d[k]["type"] == "arp"):
+                                    pkt_id = d[k]["id"]
+                                    pkt = self.context.get_pkt_from_shelve(pkt_id)
+                                    for p in pkt:
+                                        ep = d[k]["reply-to"]
+                                        p[0]["state"] = "ARP_OK"
+                                        exdisp = self.context.getExternalDispatch()
+                                        logging.debug("Sending ARP response: "+json.dumps(p))
+                                        exdisp.send_to_ep(p, ep)
+                else:
+                    time.sleep(1)
+            except:
+                pass
 
 class ZMQBroadcaster(SThread):
     def __init__(self, context, zmq_context,  sn):

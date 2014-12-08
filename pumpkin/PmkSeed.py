@@ -120,6 +120,8 @@ class Seed(object):
         self.__routine_checks_t()
         if self.context.with_acks():
             self.pkt_checker_t()
+
+        self.data_file = open("data.dat",'w')
         pass
 
 
@@ -759,7 +761,11 @@ class Seed(object):
                 header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
                 header["last_timestamp"] = time.time()
-                print "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+self.get_name()
+                log_str =  "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+self.get_name()
+                self.data_file.write(log_str)
+                self.data_file.write('\n')
+                print log_str
+
                 self.ack_pkt(pkt)
 
             #str_etime = "{:.12f}".format(etime)
