@@ -35,7 +35,7 @@ class rx(Queue):
                 c_tag = header["c_tag"]
                 pred = header["c_pred"]
                 c_wtime = header["c_wtime"]
-                print json.dumps(pkt)
+                logging.debug("TRACER ACK: "+json.dumps(pkt))
 
                 self.context.getProcGraph().update_ep_prediction(pred, host,c_tag)
 
