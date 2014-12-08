@@ -762,9 +762,10 @@ class Seed(object):
                 header["last_host"] = self.context.get_uuid()
                 header["last_timestamp"] = time.time()
                 tin, tout = self.get_all_counters()
-                log_str =  "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+str(tin)+" "+tout+" "+self.get_name()
+                log_str =  "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+str(tin)+" "+str(tout)+" "+self.get_name()
                 self.data_file.write(log_str)
                 self.data_file.write('\n')
+                self.data_file.flush()
                 print log_str
 
                 self.ack_pkt(pkt)
