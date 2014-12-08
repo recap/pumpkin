@@ -761,7 +761,8 @@ class Seed(object):
                 header["c_pred"] = (m,c,p)
                 header["last_host"] = self.context.get_uuid()
                 header["last_timestamp"] = time.time()
-                log_str =  "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+self.get_name()
+                tin, tout = self.get_all_counters()
+                log_str =  "{0:.12f}".format(header["last_timestamp"])+" "+str(m)+" "+str(c)+" "+str(p)+" "+str(header["c_size"])+" "+str(tin)+" "+tout+" "+self.get_name()
                 self.data_file.write(log_str)
                 self.data_file.write('\n')
                 print log_str
