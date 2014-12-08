@@ -306,7 +306,7 @@ class RabbitMQMonitor():
             args = {}
 
             self.channel.queue_declare(queue=str(queue), durable=False, exclusive=True, arguments=args)
-            self.channel.basic_qos(prefetch_count=1000)
+            self.channel.basic_qos(prefetch_count=10000)
             #self.channel.basic_consume(self.callback,
             #          queue=queue,
             #          no_ack=True)
@@ -320,7 +320,7 @@ class RabbitMQMonitor():
 
                 try:
                     #FIX: bug trap empty queue
-                    method, properties, bodyz = self.channel.basic_get(queue=self.queue, no_ack=True)
+                    method, properties, bodyz = self.channel.basic_get(queue=self.queue, no_ack=False)
                     if method:
                         if (method.NAME == 'Basic.GetEmpty'):
                             time.sleep(1)
@@ -334,7 +334,7 @@ class RabbitMQMonitor():
 
                             rx.parse_n_load(pkt)
 
-                            #self.channel.basic_ack(delivery_tag=0, multiple=True)
+                            self.channel.basic_ack(delivery_tag=0, multiple=True)
 
                     else:
                         time.sleep(1)
