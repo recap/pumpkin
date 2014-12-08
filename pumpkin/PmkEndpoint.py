@@ -27,7 +27,7 @@ class Endpoint(object):
             bklog -= et
             if bklog > 0:
                 ep["locked"] = True
-                #print "BACKLOG: "+str(bklog)
+                print "BACKLOG: "+str(bklog)
                 return False
                 #logging.debug("BACKLOG: "+str(bklog))
                 #continue
