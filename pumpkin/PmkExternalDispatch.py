@@ -1034,7 +1034,9 @@ class RabbitMQDispatch(Dispatch):
         return connection
 
     def connect(self, connect_to):
-        self.queue = connect_to.split("://")[1]
+        if connect_to:
+            self.queue = connect_to.split("://")[1]
+
         self.connection = self.__open_rabbitmq_connection()
         self.channel = self.connection.channel()
         #self.channel.exchange_declare(exchange=str(self.queue), type='fanout')
@@ -1049,8 +1051,8 @@ class RabbitMQDispatch(Dispatch):
         message = zlib.compress(json.dumps(pkt))
         while not send:
             try:
-                #if not self.connection.is_closed:
-                if True:
+                if not self.connection.is_closed:
+                #if True:
                     logging.debug("Sending pkt to rabbitmq")
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
@@ -1060,8 +1062,9 @@ class RabbitMQDispatch(Dispatch):
                     self.channel.basic_publish(exchange='',routing_key=str(self.queue),body=message)
                     send = True
             except Exception as e:
-                logging.ERROR("RabbitMQ connection error: "+str(e.message))
+                logging.ERROR("RabbitMQ connection error ")
                 time.sleep(1)
+                pass
         pass
 
     def dispatch_bak(self, pkt):
