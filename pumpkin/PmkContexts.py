@@ -441,7 +441,10 @@ class MainContext(object):
 
             #logging.warning("Found no endpoint matching defaulting to tcp")
             ep = self.get_our_endpoint("amqp")
-            ep[0] = ep[0]+"-ack"
+            if ep:
+                ack_ep = str(ep[0]) +"-ack"
+                n_ep = (ack_ep, ep[1], ep[2], ep[3])
+                ep = n_ep
 
             return ep
 
