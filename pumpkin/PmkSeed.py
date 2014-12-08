@@ -749,7 +749,7 @@ class Seed(object):
             if (header["aux"] & Packet.TRACER_BIT):
 
                 #ack this packet
-                print "Sending ACK TRACER"
+                logging.debug("sending ACK TRACER")
                 p, _, _, m,c = self.queue_prediction()
                 if p < 0 or (header["aux"] & Packet.MULTIPACKET_BIT):
                     p = 0
