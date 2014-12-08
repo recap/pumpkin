@@ -281,6 +281,7 @@ class RabbitMQBroadcaster(SThread):
                     else:
                         continue
             except:
+                logging.warn("Error sending broadcast")
                 pass
 
 
@@ -334,6 +335,7 @@ class RabbitMQBroadcastSubscriber(SThread):
                 else:
                     time.sleep(1)
             except:
+                logging.warn("Error receiving broadcast")
                 pass
 
 class ZMQBroadcaster(SThread):
