@@ -122,9 +122,9 @@ class InternalDispatch(SThread):
             if func in keys():
                 klass = iplugins[func]
                 if speedy:
-                    rt = klass._stage_run_express(pkt, str(data))
+                    rt = klass._stage_run_express(pkt, data)
                 else:
-                    rt = klass._stage_run(pkt, str(data))
+                    rt = klass._stage_run(pkt, data)
 
 
 
