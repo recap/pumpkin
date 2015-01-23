@@ -158,13 +158,13 @@ class ExternalDispatch(SThread):
                      break
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling
-                    if self.context.is_speedy():
-                        found = True
-                        break
+                    #if self.context.is_speedy():
+                    #    found = True
+                    #    break
 
-                    if "code" in header.keys():
-                        tracer_tag = self.context.get_group()+":Internal:TRACE"
-                        routes = self.graph.getRoutes(tracer_tag)
+                    #if "code" in header.keys():
+                    #    tracer_tag = self.context.get_group()+":Internal:TRACE"
+                    #    routes = self.graph.getRoutes(tracer_tag)
 
                     if routes:
                         break

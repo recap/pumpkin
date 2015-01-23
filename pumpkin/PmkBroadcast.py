@@ -283,7 +283,7 @@ class RabbitMQBroadcastSubscriber(SThread):
                         data = zlib.decompress(dataz)
 
 
-                    logging.debug("Incomming data from ["+self.queue+"]: "+data)
+                    #logging.debug("Incomming data from ["+self.queue+"]: "+data)
                     d = json.loads(data)
                     for k in d.keys():
                         if not (k == "cmd"):
@@ -390,7 +390,7 @@ class ZMQBroadcastSubscriber(SThread):
             data = zlib.decompress(dataz)
 
 
-            logging.debug("Incomming data from ["+self.zmq_endpoint+"]: "+data)
+            #logging.debug("Incomming data from ["+self.zmq_endpoint+"]: "+data)
             d = json.loads(data)
             for k in d.keys():
                 if not (k == "cmd"):
