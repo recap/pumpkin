@@ -499,6 +499,8 @@ def main():
 
     parser.add_argument('--rabbitmq_fallback', action='store_true',
                        help='use rabbitmq')
+    parser.add_argument('--rabbitmq_broadcast', action='store_true',
+                       help='use rabbitmq for broadcast')
     parser.add_argument('--rbt_host', action='store', dest='rabbitmq_host', default=None)
     parser.add_argument('--rbt_user', action='store', dest='rabbitmq_user', default=None)
     parser.add_argument('--rbt_pass', action='store', dest='rabbitmq_pass', default=None)
