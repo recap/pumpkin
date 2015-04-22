@@ -570,6 +570,7 @@ def main():
                     args.rabbitmq_vhost = config.get("rabbitmq", "vhost")
 
                 args.rabbitmq_fallback = config.getboolean("rabbitmq", "fallback")
+                args.rabbitmq_broadcast = config.getboolean("rabbitmq", "broadcast")
 
             if config.has_option("pumpkin","persistent"):
                 args.persistent = config.get("pumpkin", "persistent")
