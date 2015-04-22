@@ -270,7 +270,7 @@ class Pumpkin(Daemon):
         edispatch.start()
         context.addThread(edispatch)
 
-        if context.fallback_rabbitmq():
+        if context.broadcast_rabbitmq():
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
 
@@ -289,7 +289,7 @@ class Pumpkin(Daemon):
 
             logging.debug("Adding RabbitMQ queue: "+context.getUuid())
             rabbitmq.add_monitor_queue(context.getUuid())
-            #rabbitmq.add_monitor_queue("test")
+            rabbitmq.add_monitor_queue(context.getUuid()+"ack")
 
             qm = context.get_group()+":track"
             monitor = RabbitMqLog(self.context)
