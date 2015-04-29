@@ -21,19 +21,19 @@ class rx(Queue):
 
     def dig(self, pkt):
         #print "DIG: "+json.dumps(pkt)
-        if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
-            iplugins = PmkSeed.iplugins
-            keys = PmkSeed.iplugins.keys
-            l = len(pkt)
-            func = pkt[l-1]["func"]
-            #data = pkt[l-2]["data"]
+        #if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
+        #    iplugins = PmkSeed.iplugins
+        #    keys = PmkSeed.iplugins.keys
+        #    l = len(pkt)
+        #    func = pkt[l-1]["func"]
+        #    #data = pkt[l-2]["data"]
 
-            if ":" in func:
-                func = func.split(":")[1]
+        #    if ":" in func:
+        #        func = func.split(":")[1]
 
-            if func in keys():
-                klass = iplugins[func]
-                klass.look_ahead(pkt)
+        #    if func in keys():
+        #        klass = iplugins[func]
+        #        klass.look_ahead(pkt)
 
             pass
 
