@@ -166,7 +166,7 @@ class RabbitMQMonitor():
             self.queue = queue
             self.exchange = exchange
             self.cnt = 0
-            self.channel.basic_qos(prefetch_count=1)
+            self.channel.basic_qos(prefetch_count=1000)
             #self.channel.exchange_declare(exchange=str(exchange), type='fanout')
             #self.channel.queue_declare(queue=str(queue))
             #self.channel.queue_bind(exchange=str(exchange),
