@@ -134,6 +134,7 @@ class ExternalDispatch(SThread):
     def send_express(self, otag, pkt):
         ntag = None
         state = pkt[0]["state"]
+        header = pkt[0]
 
         if pkt[1] and not self.context.is_speedy():
             #TODO: some nodes complain that loads does not exist
@@ -157,8 +158,15 @@ class ExternalDispatch(SThread):
                      break
                 else:
                     # dump non routable packets as this will lead to deadlock from tx queue filling
-                    if self.context.is_speedy():
-                        found = True
+                    #if self.context.is_speedy():
+                    #    found = True
+                    #    break
+
+                    #if "code" in header.keys():
+                    #    tracer_tag = self.context.get_group()+":Internal:TRACE"
+                    #    routes = self.graph.getRoutes(tracer_tag)
+
+                    if routes:
                         break
 
                     logging.debug("No Route: "+str(otag))
@@ -434,7 +442,7 @@ class ZMQPacketDispatch(Dispatch):
     def connect(self, connect_to):
         self.soc = self.zmq_cntx.socket(zmq.PUSH)
         self.ep = connect_to
-        self.soc.setsockopt(zmq.HWM, 2000)
+        self.soc.setsockopt(zmq.SNDHWM, 2000)
         #self.soc.setsockopt(zmq.SWAP, 2048*2**10)
         logging.debug("ZMQ connecting to :"+str(connect_to))
         self.soc.connect(connect_to)
