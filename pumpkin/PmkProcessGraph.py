@@ -111,8 +111,14 @@ class ProcessGraph(object):
                 found = False
                 for dep in d["endpoints"]:
                     if dep["ep"] == eep["ep"]:
+                        if("cpu" in dep.keys()) and ("cpu" in eep.keys()):
+                            if int(float(dep["cpu"])) != int(float(eep["cpu"])):
+                                dep["cpu"] = eep["cpu"]
+                                self.__reg_update = True
+
                         found = True
                         self.__reset_ep_ttl(e["name"], eep["ep"])
+
 
                 if not found:
                     if loc == "remote":
@@ -282,12 +288,18 @@ class ProcessGraph(object):
                         if not "cpu" in n1s.keys():
                             n1s["cpu"] = "0"
                         E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
+                        #logging.info("Added node: "+n1s["ep"]+" cpu: "+n1s["cpu"])
+                        #for n,d in E.nodes_iter(data=True):
+                        #    if n == n1s["ep"]:
+                        #        print str(d)
 
                 if "TRACE" in n2:
                     for n2s in n2_routes:
                         if not "cpu" in n2s.keys():
                             n2s["cpu"] = "0"
+
                         E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
+
 
 
                 if "TRACE" not in n1 and "TRACE" not in n2:
@@ -300,21 +312,10 @@ class ProcessGraph(object):
 
                             for n1s in n1_routes:
                                 for n2s in n2_routes:
-
-
-                                    #if n1s["ep"] in E:
-                                    #    nt1 = E[n1s["ep"]]
-                                    #    nt1["cpu"] = n1s["cpu"]
-                                    #else:
                                     if not "cpu" in n1s.keys():
                                         n1s["cpu"] = 0
-
                                     E.add_node(n1s["ep"], ip= n1s["ip"], public_ip=n1s["pip"], attrs=n1s["attrs"], cpu=n1s["cpu"])
 
-                                    #if n2s["ep"] in E:
-                                    #    nt2 = E[n2s["ep"]]
-                                    #    nt2["cpu"] = n2s["cpu"]
-                                    #else:
                                     if not "cpu" in n2s.keys():
                                         n2s["cpu"] = 0
                                     E.add_node(n2s["ep"], ip= n2s["ip"], public_ip=n2s["pip"], attrs=n2s["attrs"], cpu=n2s["cpu"])
@@ -404,6 +405,7 @@ class ProcessGraph(object):
             del ne[rk]
 
         cpu_load = get_cpu_util()
+
         for r in ne.keys():
             eps = ne[r]["endpoints"]
             for ep in eps:

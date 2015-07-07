@@ -219,14 +219,19 @@ class Pumpkin(Daemon):
 
         if context.with_broadcast():
             #Listen for UDP broadcasts on LAN
-            #udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
-            #udplisten.start()
-            #context.addThread(udplisten)
+            udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
+            udplisten.start()
+            context.addThread(udplisten)
 
 
-            #udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
-            #udpbc.start()
-            #context.addThread(udpbc)
+            udpbc = Broadcaster(context, int(context.getAttributeValue().bcport), rate = context.get_broadcast_rate())
+            udpbc.start()
+            context.addThread(udpbc)
+
+            zmqbc = ZMQBroadcaster(context, zmq_context, "tcp://*:"+str(PmkShared.ZMQ_PUB_PORT))
+            zmqbc = ZMQBroadcaster(context, zmq_context, context.get_our_pub_ep("tcp"))
+            zmqbc.start()
+            context.addThread(zmqbc)
             pass
 
         #Local stuff to exploit multi-cores still needs testing
@@ -265,7 +270,7 @@ class Pumpkin(Daemon):
         edispatch.start()
         context.addThread(edispatch)
 
-        if context.fallback_rabbitmq():
+        if context.broadcast_rabbitmq():
             host, port, username, password, vhost = self.context.get_rabbitmq_cred()
             credentials = pika.PlainCredentials(username, password)
 
@@ -284,7 +289,7 @@ class Pumpkin(Daemon):
 
             logging.debug("Adding RabbitMQ queue: "+context.getUuid())
             rabbitmq.add_monitor_queue(context.getUuid())
-            #rabbitmq.add_monitor_queue("test")
+            rabbitmq.add_monitor_queue(context.getUuid()+"ack")
 
             qm = context.get_group()+":track"
             monitor = RabbitMqLog(self.context)
@@ -494,6 +499,8 @@ def main():
 
     parser.add_argument('--rabbitmq_fallback', action='store_true',
                        help='use rabbitmq')
+    parser.add_argument('--rabbitmq_broadcast', action='store_true',
+                       help='use rabbitmq for broadcast')
     parser.add_argument('--rbt_host', action='store', dest='rabbitmq_host', default=None)
     parser.add_argument('--rbt_user', action='store', dest='rabbitmq_user', default=None)
     parser.add_argument('--rbt_pass', action='store', dest='rabbitmq_pass', default=None)
@@ -501,7 +508,7 @@ def main():
 
     parser.add_argument('--gonzales', action='store_true',
                        help='disable certain slow features for faster streaming.')
-    parser.add_argument('--buffer_size', action='store', dest="bsize", default=100000,
+    parser.add_argument('--buffer_size', action='store', dest="bsize", default=200,
                        help='queue size for rx/tx buffers in number of messages')
 
     parser.add_argument('--nocompress', action='store_true',
@@ -563,6 +570,7 @@ def main():
                     args.rabbitmq_vhost = config.get("rabbitmq", "vhost")
 
                 args.rabbitmq_fallback = config.getboolean("rabbitmq", "fallback")
+                args.rabbitmq_broadcast = config.getboolean("rabbitmq", "broadcast")
 
             if config.has_option("pumpkin","persistent"):
                 args.persistent = config.get("pumpkin", "persistent")

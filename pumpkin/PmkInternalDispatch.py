@@ -6,12 +6,13 @@ import zmq
 import time
 import pika
 import zlib
-
+import base64
 import PmkSeed
 import PmkBroadcast
 import PmkShared
 from PmkShared import *
 from Queue import *
+
 
 class rx(Queue):
     def __init__(self, maxsize=0):
@@ -20,19 +21,19 @@ class rx(Queue):
 
     def dig(self, pkt):
         #print "DIG: "+json.dumps(pkt)
-        if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
-            iplugins = PmkSeed.iplugins
-            keys = PmkSeed.iplugins.keys
-            l = len(pkt)
-            func = pkt[l-1]["func"]
-            #data = pkt[l-2]["data"]
+        #if (pkt[0]["state"] == "TRANSIT") or (pkt[0]["state"] == "NEW"):
+        #    iplugins = PmkSeed.iplugins
+        #    keys = PmkSeed.iplugins.keys
+        #    l = len(pkt)
+        #    func = pkt[l-1]["func"]
+        #    #data = pkt[l-2]["data"]
 
-            if ":" in func:
-                func = func.split(":")[1]
+        #    if ":" in func:
+        #        func = func.split(":")[1]
 
-            if func in keys():
-                klass = iplugins[func]
-                klass.look_ahead(pkt)
+        #    if func in keys():
+        #        klass = iplugins[func]
+        #        klass.look_ahead(pkt)
 
             pass
 
@@ -57,11 +58,19 @@ class InternalDispatch(SThread):
             aux = 0
             if "aux" in pkt[0].keys():
                 aux = pkt[0]["aux"]
+
             if aux & TRACER_BIT:
                 #stat = self.context.get_stat()
                 #print stat
                 #continue
                 pass
+            if "code" in pkt[0].keys():
+                seed = base64.decodestring(pkt[0]["code"])
+                #print "SEED: "+seed
+                func = self.context.load_seed_from_string(seed)
+                l = len(pkt)
+                pkt[l-1]["func"] = func
+                del pkt[0]["code"]
 
             #logging.debug("Packet received: \n"+pkts)
             #pkt = json.loads(pkts)
@@ -157,7 +166,7 @@ class RabbitMQMonitor():
             self.queue = queue
             self.exchange = exchange
             self.cnt = 0
-            self.channel.basic_qos(prefetch_count=1)
+            self.channel.basic_qos(prefetch_count=1000)
             #self.channel.exchange_declare(exchange=str(exchange), type='fanout')
             #self.channel.queue_declare(queue=str(queue))
             #self.channel.queue_bind(exchange=str(exchange),
@@ -336,7 +345,7 @@ class ZMQPacketMonitor(SThread):
         #context = zmq.Context()
         soc = self.zmq_cntx.socket(zmq.PULL)
         soc.setsockopt(zmq.RCVBUF, 2000)
-        #soc.setsockopt(zmq.HWM, 100)
+        soc.setsockopt(zmq.RCVHWM, 2000)
         try:
             soc.bind(self.bind_to)
         except zmq.ZMQError as e:

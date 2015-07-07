@@ -79,7 +79,7 @@ class PacketFileMonitor(SThread):
                     self.load_pkt(pktf)
 
                 except Exception as e:
-                    logging.error("Loading paket: "+pktf)
+                    logging.error("Loading packet: "+pktf)
 
 
 
