@@ -591,8 +591,12 @@ def initialize_pumpkin(cli=True):
             if config.has_option("pumpkin","persistent"):
                 args.persistent = config.get("pumpkin", "persistent")
 
+            if config.has_option("broadcast","enable"):
+                args.broadcast = config.get("broadcast", "enable")
+
             if config.has_option("broadcast","supernode"):
                 args.supernode = config.get("broadcast", "supernode")
+
 
             if config.has_option("network", "endpoints"):
                 args.eps = config.get("network", "endpoints")
