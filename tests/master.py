@@ -54,9 +54,16 @@ for i in range(0,1000):
 
     master_seed.dispatch(None, whole_text, "SLAVE")
 
-while master_seed.counter is not 10:
-    time.sleep(1)
+a = 10
+while True:
+    c = master_seed.counter
+    if c > a:
+        a += 10
+        master_seed.dump_dict()
 
-master_seed.dump_dict()
+    time.sleep(2)
+
+
+
 
 
