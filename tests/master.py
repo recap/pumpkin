@@ -35,7 +35,8 @@ class master(PmkSeed.Seed):
         if dict == None:
             dict = self.master_dict
         for k in dict.keys():
-            print k+" "+str(dict[k])
+            if dict[k] > 10:
+                print k+" "+str(dict[k])
 
 
 pmk = pumpkin.initialize_pumpkin(cli=False)
@@ -44,8 +45,8 @@ pmk.context.load_seed("slave.py")
 
 master_seed = pmk.context.load_class(master)
 
-for i in range(0,10):
-    sentences_list = get_sentences(50)
+for i in range(0,1000):
+    sentences_list = get_sentences(500)
 
     whole_text = ""
     for s in sentences_list:
