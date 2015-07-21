@@ -45,7 +45,7 @@ pmk.context.load_seed("slave.py")
 
 master_seed = pmk.context.load_class(master)
 
-for i in range(0,1000):
+for i in range(0,100):
     sentences_list = get_sentences(500)
 
     whole_text = ""
