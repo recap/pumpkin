@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pumpkin Data States</title>
+ <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<script>
+$(function() {
+$( "#tabs" ).tabs();
+});
+</script>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style type="text/css">
+	.box1 {
+          width: 95%;
+          height: 500px;
+          float: left;
+          margin: 0 20px 0 20px;
+          border: 1px solid;
+      }
+	.hh {
+          width: 100%;
+          float: left;
+          margin: 0 0px 0 20px;
+      }
+
+      /*.box1 div, .box1 input {
+          border: 1px solid;
+          -moz-border-radius: 4px;
+          border-radius: 4px;
+          width: 100%;
+          padding: 5px;
+          margin: 3px 0 10px 0;
+      }
+	.box1 div {
+          border-color: grey;
+          height: 300px;
+          overflow: auto;
+      }*/
+	
+
+
+</style>
+
+ <style>
+        .link {
+            stroke: #2E2E2E;
+            stroke-width: 2px;
+        }
+
+        .node {
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .textClass {
+            stroke: #323232;
+            font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
+            font-weight: normal;
+            stroke-width: .5;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<div id="tabs">
+<ul>
+<li><a href="#tabs-1">State Diagram</a></li>
+<li><a href="#tabs-2">Function Network</a></li>
+<li><a href="#tabs-3">Node Network</a></li>
+</ul>
+<div id="tabs-1">
+</div>
+<div id="tabs-2">
+</div>
+<div id="tabs-3">
+</div>
+
+<a href="https://github.com/recap/pumpkin"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a><a href="https://github.com/recap/pumpkin"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+
+</div>
+
+
+<!--<div class="hh">
+<h2>State Diagram</h2>
+</div>
+<div id="states" class="box1">
+</div>
+
+<div class="hh">
+<h2>Function Network</h2>
+</div>
+<div id="funcs" class="box1">
+</div>
+
+
+<div class="hh">
+<h2>Node Network</h2>
+</div>
+<div id="eps" class="box1">
+</div>-->
+<body>
+
+<script id="worker1" type="javascript/worker">
+self.addEventListener('message', function(e){
+
+function doCall(){
+        var origin = e.data.origin;
+	var file = e.data.file;
+        var oXmlHttp = new XMLHttpRequest();
+        //oXmlHttp.overrideMimeType("application/json");
+	
+	oXmlHttp.open('GET', origin+file, true);
+	oXmlHttp.onreadystatechange = function () {
+          if (oXmlHttp.readyState == 4 && oXmlHttp.status == "200") {
+            //callback(oXmlHttp.responseText);
+	    //console.log(oXmlHttp.responseText);
+	    self.postMessage(oXmlHttp.responseText);
+          }
+    	};
+        oXmlHttp.send(null);
+        setTimeout(doCall,5000);
+}
+doCall();
+
+}, false);
+
+</script>
+
+<script type="text/javascript">
+var graph;
+    function myGraph(div_name, acolor){
+
+        // Add and remove elements on the graph object
+        //this.addNode = function (id) {
+	//    n = findNode(id);
+	//    if (n == null){
+        //    	nodes.push({"id": id});
+        //    	update();
+	//    }
+        //};
+        
+	this.addNode = function (id, cpu) {
+	    if(cpu == null){
+		cpu = 0;
+	    }
+	    n = findNode(id);
+	    if (n == null){
+            	nodes.push({"id": id, "cpu": cpu});
+            	update();
+	    }
+        };
+
+        this.removeNode = function (id) {
+            var i = 0;
+            var n = findNode(id);
+            while (i < links.length) {
+                if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    links.splice(i, 1);
+                }
+                else i++;
+            }
+            nodes.splice(findNodeIndex(id), 1);
+            update();
+        };
+	
+	this.findNodep = function(id) {
+		var n = findNode(id);
+		return n;
+	};
+
+        this.removeNodeWithNoLinks = function (id) {
+            var i = 0;
+            var n = findNode(id);
+	    found = false
+            for (var i = 0; i  < links.length;i++) {
+                if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    found = true;
+		    break;
+                }
+            }
+	    if (found == false){
+            	nodes.splice(findNodeIndex(id), 1);
+            	update();
+	    }
+        };
+
+	this.updateColor = function(id, color){
+		var tid = "Node;"+id;
+		var x=document.getElementById(tid);
+		//console.log(x);
+                 x.setAttribute("fill", color);
+	}
+
+        this.removeAnyNodeWithNoLinks = function () {
+	    remove = true;
+	    while(remove == true){
+            var i = 0;
+	
+	    remove = false;
+            for (var k in nodes){
+		n = nodes[k];
+		//console.log("NODE: "+JSON.stringify(n));
+	    	found = false;
+            	for (var i = 0; i  < links.length;i++) {
+                	if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    		found = true;
+				//console.log("FOUND: "+n["id"])
+		    		break;
+                	}
+            	}
+	    	if (found == false){
+			//console.log("REMOVING: "+n["id"]);
+            		nodes.splice(findNodeIndex(n["id"]), 1);
+             		update();
+			remove = true;
+	    	}
+	     }
+		}
+        };
+
+        var nodeHasLinks = function (node) {
+		n = node;
+	    	found = false;
+            	for (var i = 0; i  < links.length;i++) {
+                	if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    		found = true;
+				return found;
+                	}
+            	}
+		return found;
+        };
+
+
+
+        this.removeLink = function (source, target) {
+            for (var i = 0; i < links.length; i++) {
+                if (links[i].source.id == source && links[i].target.id == target) {
+                    links.splice(i, 1);
+                    break;
+                }
+            }
+            update();
+        };
+
+        this.removeallLinks = function () {
+            links.splice(0, links.length);
+            update();
+        };
+
+        this.removeAllNodes = function () {
+            nodes.splice(0, links.length);
+            update();
+        };
+
+        this.addLink = function (source, target, value) {
+            links.push({"source": findNode(source), "target": findNode(target), "value": value});
+            update();
+        };
+
+
+        var findNode = function (id) {
+            for (var i in nodes) {
+                if (nodes[i]["id"] === id) return nodes[i];
+            }
+            ;
+        };
+
+        var findNodeIndex = function (id) {
+            for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].id == id) {
+                    return i;
+                }
+            }
+            ;
+        };
+
+        // set up the D3 visualisation in the specified element
+	var w = window,
+    		d = document,
+    		e = d.documentElement,
+    		g = d.getElementsByClassName('body')[0],
+		x = w.innerWidth || e.clientWidth || g.clientWidth,
+    		y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+        var w = x - 50;
+        var h = y - 150;
+	var r = 15;
+
+        var color = d3.scale.category20c();
+
+        var vis = d3.select("#"+div_name)
+                .append("svg:svg")
+                .attr("width", w)
+                .attr("height", h)
+                .attr("id", "svg")
+                .attr("pointer-events", "all")
+                .attr("viewBox", "0 0 " + w + " " + h)
+                .attr("perserveAspectRatio", "xMinYMid")
+                .append('svg:g');
+
+        var force = d3.layout.force();
+			
+
+        var nodes = force.nodes(),
+                links = force.links();
+
+        var update = function () {
+            var link = vis.selectAll("line")
+                    .data(links, function (d) {
+                        return d.source.id + "-" + d.target.id;
+                    })
+		    .attr('marker-end','url(#arrowhead)');
+
+            link.enter().append("line")
+                    .attr("id", function (d) {
+                        return d.source.id + "-" + d.target.id;
+                    })
+                    .attr("stroke-width", function (d) {
+                        return d.value / 10;
+                    })
+                    .attr("class", "link");
+            link.append("title")
+                    .text(function (d) {
+                        return d.value;
+                    });
+            link.exit().remove();
+
+            var node = vis.selectAll("g.node")
+                    .data(nodes, function (d) {
+                        return d.id;
+                    });
+
+
+            var nodeEnter = node.enter().append("g")
+                    .attr("class", "node")
+                    .call(force.drag);
+
+            nodeEnter.append("svg:circle")
+                    .attr("r", r)
+		    .attr("opacity", 1)
+                    .attr("id", function (d) {
+                        return "Node;" + d.id;
+                    })
+                    .attr("class", "nodeStrokeClass")
+                    .attr("fill", function(d) {
+			var c = Math.round((255*parseInt(d.cpu)) / 100);
+			var nc = Math.round(255- c);
+			var s = "rgb("+c.toString()+",0,"+nc.toString()+")";
+			//console.log(s+" "+d.cpu+" "+d.id);
+			return s;  
+			//return color(d.cpu); 
+			});
+                    //.attr("fill", "rgb(255,0,0)");
+
+            nodeEnter.append("svg:text")
+                    .attr("class", "textClass")
+                    .attr("x", 14)
+                    .attr("y", ".31em")
+                    .text(function (d) {
+                        return d.id;
+                    });
+
+	    vis.append('defs').append('marker')
+        		.attr({'id':'arrowhead',
+               		'viewBox':'-0 -5 10 10',
+               		'refX':r+7,
+               		'refY':0,
+               		'orient':'auto',
+               		'markerWidth':7,
+               		'markerHeight':7,
+               		'xoverflow':'visible'})
+        	.append('svg:path')
+            		.attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            		.attr('fill', 'black')
+            		.attr('stroke','black');
+
+
+            node.exit().remove();
+
+
+            force.on("tick", function (e) {
+
+                //node.attr("transform", function (d) {
+                //    return "translate(" + d.x + "," + d.y + ")";
+                //});
+		var k = e.alpha * .1;
+		//console.log(k)
+		
+  		nodes.forEach(function(node) {
+			var n = node;
+	    		var found = false;
+			var mw = w/2;
+			var mh = h/2;
+			var corner = {'x': 10, 'y': 10};
+    			var center = {'x':mw,'y':mh}; 
+            		/*for (var i = 0; i  < links.length;i++) {
+                		if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                    		found = true;
+				//console.log("FOUND: "+n["id"])
+		    		break;
+                		}
+            		}
+	    		if (found == false){
+    				node.x += (corner.x - node.x) * k;
+    				node.y += (corner.y - node.y) * k;
+	    		}else{
+    				node.x += (center.x - node.x) * k;
+    				node.y += (center.y - node.y) * k;
+			}*/
+			
+			if (nodeHasLinks(node) == false){
+    				node.x += (corner.x - node.x) * k;
+    				node.y += (corner.y - node.y) * k;
+			}else{
+    				node.x += (center.x - node.x) * k;
+    				node.y += (center.y - node.y) * k;
+			}
+  		});
+
+		d3.selectAll("circle").attr({"cx":function(d){return d.x = Math.max(r, Math.min(w - r, d.x));},
+                    "cy":function(d){return d.y = Math.max(r, Math.min(h - r, d.y));}
+        	});
+
+
+
+                  link.attr("x1", function (d) {
+                    return d.source.x;
+                })
+                        .attr("y1", function (d) {
+                            return d.source.y;
+                        })
+                        .attr("x2", function (d) {
+                            return d.target.x;
+                        })
+                        .attr("y2", function (d) {
+                            return d.target.y;
+                        });
+
+		d3.selectAll(".textClass").attr("x", function(d) { return d.x; })
+                  .attr("y", function(d) { return d.y; });
+            	});
+		
+
+
+
+	    force.charge(function(d,i){
+		//console.log(JSON.stringify(d))
+		if (nodeHasLinks(d) == true){
+			return -1500;
+		}else{
+			return -50;
+		}
+	    });
+            // Restart the force layout.
+            force
+                    .gravity(0.05)
+                    //.charge(-800)
+                    //.friction(0)
+		    .theta(1)
+                    .linkDistance([150])
+                    //.linkDistance( function(d) { return d.value * 10 } )
+                    .size([w, h])
+                    .start();
+        };
+
+
+        // Make it all go
+        update();
+    }
+
+function keepNodesOnTop() {
+        $(".nodeStrokeClass").each(function( index ) {
+            var gnode = this.parentNode;
+            gnode.parentNode.appendChild(gnode);
+        });
+    }
+</script>
+
+<script>
+var getLocation = function(href) {
+    var l = document.createElement("a");
+    l.href = href;
+    return l;
+};
+
+function init() {
+var l = getLocation(document.URL);
+var origin = l.protocol+"//"+l.hostname+":"+l.port+"/";
+
+pdata1 = null;
+pdata2 = null;
+pdata3 = null;
+graph1 = null;
+graph2 = null;
+graph3 = null;
+
+function render(graph, data, pdata, div_name, acolor, dangling){
+	if (graph == null){
+		//console.log("NULL");
+      		graph = new myGraph(div_name, acolor);
+	}
+
+	if(pdata == null){	
+      		for(var i=0;i<data.links.length;i++){
+			l = data.links[i];
+			s = l["source"];
+			t = l["target"];
+			ns = data.nodes[s];
+			nt = data.nodes[t];
+			graph.addNode(ns["id"],ns["cpu"]);
+			graph.addNode(nt["id"],nt["cpu"]);
+			graph.addLink(ns["id"],nt["id"],'20');
+		}
+	
+		keepNodesOnTop();
+		pdata = data;
+	}else{
+      		for(var i=0;i<data.links.length;i++){
+			l1 = data.links[i];
+			found = false
+      			for(var k=0;k<pdata.links.length;k++){
+				l2 = pdata.links[k];
+				if (l1["id"] == l2["id"]){
+					found = true;
+				}
+			}
+			if (found == false){
+				l = l1;
+				s = l["source"];
+				t = l["target"];
+				ns = data.nodes[s];
+				nt = data.nodes[t];
+				
+				graph.addNode(ns["id"],ns["cpu"]);
+				graph.addNode(nt["id"],nt["cpu"]);
+				graph.addLink(ns["id"],nt["id"],'20');
+				
+			}
+		}
+      		for(var k=0;k<pdata.links.length;k++){
+			l2 = pdata.links[k];
+			found = false
+      			for(var i=0;i<data.links.length;i++){
+				l1 = data.links[i];
+				if (l1["id"] == l2["id"]){
+					found = true;
+				}
+			}
+			if(found == false){
+				l = l2;
+				s = l["source"];
+				t = l["target"];
+				ns = pdata.nodes[s];
+				nt = pdata.nodes[t];
+				graph.removeLink(ns["id"],nt["id"]);
+				
+			}
+		}
+		
+		keepNodesOnTop();
+
+		
+	}
+	if(dangling == false){
+		graph.removeAnyNodeWithNoLinks();
+	}else{
+	     for(var k in data.nodes){
+		nk = data.nodes[k];
+		graph.addNode(nk["id"],nk["cpu"]);
+	     }	
+	     for(var b in pdata.nodes){
+		nb = pdata.nodes[b];
+		found = false;
+		for(var j in data.nodes){
+			nj = data.nodes[j];
+			if(nj["id"] == nb["id"]){
+				found = true;
+				break;
+			}
+		}
+		if(found == false){
+			graph.removeNode(nb["id"]);
+		}
+	     }
+	}
+
+	pdata = data;
+	for (var y in pdata.nodes){
+		pn = pdata.nodes[y];
+		var n = graph.findNodep(pn["id"])
+		if (n != null){
+			//console.log(n);
+			
+			//n.attr("fill", "red");
+		        if ("cpu" in pn){	
+				var c = Math.round((255*parseInt(pn["cpu"])) / 100);
+				var nc = Math.round(255- c);
+				var s = "rgb("+c.toString()+",0,"+nc.toString()+")";
+				graph.updateColor(pn["id"],s);
+			}
+		}
+	}
+	keepNodesOnTop();
+	return[graph, pdata];
+     }
+
+var blob = new Blob([
+      document.querySelector('#worker1').textContent
+    ], { type: "text/javascript" })
+
+var worker = new Worker(window.URL.createObjectURL(blob));
+    worker.onmessage = function(e) {
+      //console.log("DATA: "+e.data);
+      if (e.data != null){
+      	data = JSON.parse(e.data);
+	ret = render(graph1,data,pdata1,"tabs-1","blue",false);
+	graph1 = ret[0];
+	pdata1 = ret[1];
+    	}
+    }
+
+worker.postMessage({
+	'origin': origin,
+	'file' : "states.json"
+});
+
+
+var worker_funcs = new Worker(window.URL.createObjectURL(blob));
+    worker_funcs.onmessage = function(e) {
+      //console.log("DATA: "+e.data);
+      if (e.data != null){
+      	data_funcs = JSON.parse(e.data);
+	ret = render(graph2,data_funcs,pdata2,"tabs-2", "blue",false);
+	graph2 = ret[0];
+	pdata2 = ret[1];
+    	}
+    }
+
+worker_funcs.postMessage({
+	'origin': origin,
+	'file' : "funcs.json"
+});
+var worker_eps = new Worker(window.URL.createObjectURL(blob));
+    worker_eps.onmessage = function(e) {
+      //console.log("DATA: "+e.data);
+      if (e.data != null){
+      	data_eps = JSON.parse(e.data);
+	ret = render(graph3,data_eps,pdata3,"tabs-3","blue",true);
+	graph3 = ret[0];
+	pdata3 = ret[1];
+    	}
+    }
+
+worker_eps.postMessage({
+	'origin': origin,
+	'file' : "eps.json"
+});
+
+
+}
+init();
+</script>
+
+</body>
+</html>
