@@ -124,7 +124,7 @@ class MainContext(object):
 
 
         def store_seed(self, name, seed):
-            seedb64 = base64.encode(seed)
+            seedb64 = base64.encodestring(seed)
             self.registry[name] = seedb64
 
         def get_migratable_seed(self):
@@ -145,7 +145,7 @@ class MainContext(object):
                 fh = open(file, "r")
                 fhd = fh.read()
                 logging.debug("Storing seed: " + modname)
-                self.store_seed(modname, fh)
+                self.store_seed(modname, fhd)
                 if (migration == 100):
                     self.__migration_q.append(modname)
                     return None
