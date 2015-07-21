@@ -500,7 +500,7 @@ def initialize_pumpkin(cli=True):
                        help='turn on data packet acknowledgments.')
     parser.add_argument('--persistent',action="store_true",
                        help='keep packets on disk.')
-    parser.add_argument('--brate', action='store', dest="brate", default=30,
+    parser.add_argument('--brate', action='store', dest="brate", default=10,
                        help='broadcast UDP port.')
     parser.add_argument('--ghost', action='store_true',
                        help='run on a node with another pumpkin.')
@@ -523,7 +523,7 @@ def initialize_pumpkin(cli=True):
 
     parser.add_argument('--gonzales', action='store_true',
                        help='disable certain slow features for faster streaming.')
-    parser.add_argument('--buffer_size', action='store', dest="bsize", default=200,
+    parser.add_argument('--buffer_size', action='store', dest="bsize", default=2000,
                        help='queue size for rx/tx buffers in number of messages')
 
     parser.add_argument('--nocompress', action='store_true',
