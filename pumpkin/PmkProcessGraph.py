@@ -38,9 +38,10 @@ class ProcessGraph(object):
     def __key(self,name, ep):
         return name+":|:"+ep
 
-    def __reset_ep_ttl(self, name, ep):
-        key = self.__key(name, ep)
-        self.ttl[key] = self.MAX_TTL
+    def __reset_ep_ttl(self, name, ep, ttl = MAX_TTL):
+        if ttl != 9999:
+            key = self.__key(name, ep)
+            self.ttl[key] = self.MAX_TTL
         pass
 
     def __subtract_ep_ttl(self, name, ep, sub_count):
@@ -73,7 +74,8 @@ class ProcessGraph(object):
         self.rlock.acquire()
         keys_for_removal = []
         for key in self.ttl.keys():
-            self.ttl[key] -= self.INT_TTL
+            if self.ttl[key] != 9999:
+                self.ttl[key] -= self.INT_TTL
             if self.ttl[key] <= 0:
                 self.__del_ep(key)
                 self.__reg_update = True
@@ -117,7 +119,10 @@ class ProcessGraph(object):
                                 self.__reg_update = True
 
                         found = True
-                        self.__reset_ep_ttl(e["name"], eep["ep"])
+                        if loc is "locallocal":
+                            self.__reset_ep_ttl(e["name"], eep["ep"], ttl=9999)
+                        else:
+                            self.__reset_ep_ttl(e["name"], eep["ep"])
 
 
                 if not found:
@@ -133,7 +138,11 @@ class ProcessGraph(object):
             if loc == "remote":
                 for ep in e["endpoints"]:
                     ep["priority"] = 10
-                    self.__reset_ep_ttl(e["name"], ep["ep"])
+
+                    if loc is "locallocal":
+                        self.__reset_ep_ttl(e["name"], ep["ep"], ttl=9999)
+                    else:
+                        self.__reset_ep_ttl(e["name"], ep["ep"])
 
             registry[e["name"]] = e
             self.__reg_update = True
