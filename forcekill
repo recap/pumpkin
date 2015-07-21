@@ -1,6 +1,7 @@
 #! /bin/bash
 
-PID=`ps aux | grep DRH | grep -v grep | awk '{print $2}'`
+#PID=`ps aux | grep DRH | grep -v grep | awk '{print $2}'`
+PID=`ps aux | grep pumpkin | grep -v grep | awk '{print $2}'`
 K=${#PID}
 if [ $K -ne 0 ];
 then

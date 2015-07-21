@@ -137,15 +137,33 @@ class ExternalDispatch(SThread):
         header = pkt[0]
 
         if pkt[1] and not self.context.is_speedy():
+
+            G = json_graph.node_link_graph(pkt[1])
+            #d = pkt[1]
+            #G.add_nodes_from(d['nodes'])
+            #G.add_edges_from(d['edges'])
             #TODO: some nodes complain that loads does not exist
-            #g = json_graph.loads(pkt[1])
-            g = {}
+            #a_nodes = pkt[1]["nodes"]
+            #x = next((item for item in a_nodes if item["id"] == otag), None)
+            #if not x:
+            #    logging.info("state not found: "+otag)
+            #    return
+            #for n in a_nodes.values():
+            #    print n
 
-            if otag in g:
-                d = g[otag]
-
-                if d:
-                    ntag = d.keys()[0]
+            #if otag in a_nodes.values():
+            #    print "OK: "+otag
+            #else:
+            #    print "not allowed: "+otag
+            #    return
+            #for k in a.keys():
+            #    print k
+            #g = json_graph.loads(str(pkt[1]))
+            #g = {}
+            #if otag in g.nodes():
+            #    d = g[otag]
+            #    if d:
+            #        ntag = d.keys()[0]
 
         routes = None
         found = False
@@ -165,17 +183,34 @@ class ExternalDispatch(SThread):
                     #if "code" in header.keys():
                     #    tracer_tag = self.context.get_group()+":Internal:TRACE"
                     #    routes = self.graph.getRoutes(tracer_tag)
-
                     if routes:
                         break
 
-                    logging.debug("No Route: "+str(otag))
+                    logging.warning("No Route to: "+str(otag))
                     time.sleep(5)
-            #print "HERE2"
             if routes:
-
                 for r in routes:
-                    #print "HERE3"
+                    if pkt[1] and not self.context.is_speedy():
+                        found_edge = False
+                        tag_list = r["ostate"].split("|")
+                        for tag in tag_list:
+                            next_state = r["group"]+":"+r["otype"]+":"+tag
+                            if G.has_edge(otag, next_state):
+                                found_edge = True
+                            else:
+                                logging.warning("no edge: "+otag+" -> "+next_state)
+
+
+                        if not found_edge:
+                            continue
+
+                            #a_nodes = pkt[1]["nodes"]
+                            #s = str(pkt[1])
+                            #print s
+                            #x = next((item for item in a_nodes if item["id"] == next_state), None)
+                            #if not x:
+                            #    continue
+
 
 
                     if len(routes) > 1:

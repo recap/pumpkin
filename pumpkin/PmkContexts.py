@@ -55,6 +55,7 @@ class MainContext(object):
 
             self.cmd = cmd()
             self.registry = {}
+            self.__migration_q = []
             self.__ip = "127.0.0.1"
             self.endpoints = []
             self.__reg_update = False
@@ -120,31 +121,62 @@ class MainContext(object):
         def with_broadcast(self):
             return self.__attrs.broadcast
 
-        def load_seed(self, file):
+
+
+        def store_seed(self, name, seed):
+            seedb64 = base64.encode(seed)
+            self.registry[name] = seedb64
+
+        def get_migratable_seed(self):
+            seed = self.__migration_q.pop()
+            if seed:
+                return seed
+            else:
+                return None
+
+
+        def load_seed(self, file, migration=0):
 
             _,tail = os.path.split(file)
             modname = tail[:-3]
             if( file[-2:] == "py"):
-                logging.debug("Found seed: "+file)
+
                 file_header = ""
                 fh = open(file, "r")
                 fhd = fh.read()
-                m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+                logging.debug("Storing seed: " + modname)
+                self.store_seed(modname, fh)
+                if (migration == 100):
+                    self.__migration_q.append(modname)
+                    return None
+                else:
+                    logging.debug("Found seed: "+file)
+                    m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
 
-                if m:
-                    conf = m.group(1).replace("##","")
-                    if conf:
-                        d = json.loads(conf)
-                        if not "auto-load" in d.keys() or d["auto-load"] == True:
-                            imp.load_source(modname,file)
+                    if m:
+                        conf = m.group(1).replace("##","")
+                        if conf:
+                            d = json.loads(conf)
+                            if not "auto-load" in d.keys() or d["auto-load"] == True:
+                                imp.load_source(modname,file)
 
-                            klass = PmkSeed.hplugins[modname](self)
-                            PmkSeed.iplugins[modname] = klass
-                            klass.pre_load(d)
-                            klass.on_load()
-                            klass.post_load()
+                                klass = PmkSeed.hplugins[modname](self)
+                                PmkSeed.iplugins[modname] = klass
+                                klass.pre_load(d)
+                                klass.on_load()
+                                klass.post_load()
 
-            return modname
+                    return klass
+            return None
+
+        def load_class(self, seed):
+            klass = seed(self)
+            modname = klass.__class__.__name__
+            PmkSeed.iplugins[modname] = klass
+            klass.pre_load(None)
+            klass.on_load()
+            klass.post_load()
+            return klass
 
         def load_seed_from_string(self, seed):
 
@@ -361,10 +393,14 @@ class MainContext(object):
         def get_public_ip(self):
             return self.__pip
 
+        def get_state_network(self):
+            sn = self.proc_graph.get_state_graph().copy()
+            return sn
+
         def getProcGraph(self):
             return self.proc_graph
 
-        def funcExists(self, func_name):
+        def func_exists(self, func_name):
             if func_name in self.registry.keys():
                 return True
 

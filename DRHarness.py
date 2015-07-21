@@ -8,7 +8,7 @@ import logging
 
 from pumpkin import *
 
-main()
+initialize_pumpkin()
 
 #
 #log = logging.getLogger("root")

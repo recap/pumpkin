@@ -150,34 +150,48 @@ class Pumpkin(Daemon):
 
         pass
 
-    def load_seed(self, file):
-        context = self.context
-        _,tail = os.path.split(file)
-        modname = tail[:-3]
-        if( file[-2:] == "py"):
-            logging.debug("Found seed: "+file)
-            file_header = ""
-            fh = open(file, "r")
-            fhd = fh.read()
-            m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+    #def get_state_network(self):
+    #    g = self.context
 
-            if m:
-                conf = m.group(1).replace("##","")
-                if conf:
-                    d = json.loads(conf)
-                    if not "auto-load" in d.keys() or d["auto-load"] == True:
-                        imp.load_source(modname,file)
+    #def load_class(self, seed):
+    #        context = self.context
+    #        klass = seed(context)
+    #        modname = klass.__class__.__name__
+    #        #klass = PmkSeed.hplugins[modname](self)
+    #        PmkSeed.iplugins[modname] = klass
+    #        klass.pre_load(None)
+    #        klass.on_load()
+    #        klass.post_load()
 
-                        klass = PmkSeed.hplugins[modname](context)
-                        PmkSeed.iplugins[modname] = klass
-                        klass.pre_load(d)
-                        klass.on_load()
-                        klass.post_load()
+    #def load_seed(self, file):
+    #    context = self.context
+    #     _,tail = os.path.split(file)
+    #     modname = tail[:-3]
+    #     if( file[-2:] == "py"):
+    #         logging.debug("Found seed: "+file)
+    #         print "Found seed: "+file
+    #         file_header = ""
+    #         fh = open(file, "r")
+    #         fhd = fh.read()
+    #         m = re.search('##START-CONF(.+?)##END-CONF(.*)', fhd, re.S)
+    #
+    #         if m:
+    #             conf = m.group(1).replace("##","")
+    #             if conf:
+    #                 d = json.loads(conf)
+    #                 if not "auto-load" in d.keys() or d["auto-load"] == True:
+    #                     imp.load_source(modname,file)
+    #
+    #                     klass = PmkSeed.hplugins[modname](context)
+    #                     PmkSeed.iplugins[modname] = klass
+    #                     klass.pre_load(d)
+    #                     klass.on_load()
+    #                     klass.post_load()
+    #
+    #
+    #     return modname
 
-
-        return modname
-
-    def startContext(self):
+    def startContext(self, cli=True):
         context = self.context
         logging.info("Node assigned UID: "+context.getUuid())
         logging.info("Exec context: "+context.getExecContext())
@@ -322,21 +336,22 @@ class Pumpkin(Daemon):
             http.start()
             context.addThread(http)
 
-        for fd in listdir(context.getTaskDir()):
-                src = context.getTaskDir()+"/"+fd
-                if( src[-3:] == "pyc"):
-                    continue
+        if(cli is True):
+            for fd in listdir(context.getTaskDir()):
+                    src = context.getTaskDir()+"/"+fd
+                    if( src[-3:] == "pyc"):
+                        continue
 
-                if( src[-2:] == "py"):
-                    dst = context.getWorkingDir()+"/seeds/"+fd
-                else:
-                    dst = context.getWorkingDir()+"/"+fd
-                try:
-                    shutil.copytree(src, dst)
-                except OSError as exc: # python >2.5
-                    if exc.errno == errno.ENOTDIR:
-                        shutil.copy(src, dst)
-                    else: raise
+                    if( src[-2:] == "py"):
+                        dst = context.getWorkingDir()+"/seeds/"+fd
+                    else:
+                        dst = context.getWorkingDir()+"/"+fd
+                    try:
+                        shutil.copytree(src, dst)
+                    except OSError as exc: # python >2.5
+                        if exc.errno == errno.ENOTDIR:
+                            shutil.copy(src, dst)
+                        else: raise
 
 
         if not context.isWithNoPlugins():# and not context.isSupernode():
@@ -358,17 +373,18 @@ class Pumpkin(Daemon):
                 pass
 
             try:
-                if not context.singleSeed():
-                    onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
-                    for fl in onlyfiles:
-                        fullpath = context.getTaskDir()+"/"+fl
-                        modname = fl[:-3]
-                        #ext = fl[-2:]
-                        self.load_seed(fullpath)
+                if cli is True:
+                    if not context.singleSeed():
+                        onlyfiles = [ f for f in listdir(context.getTaskDir()) if isfile(join(context.getTaskDir(),f)) ]
+                        for fl in onlyfiles:
+                            fullpath = context.getTaskDir()+"/"+fl
+                            modname = fl[:-3]
+                            #ext = fl[-2:]
+                            self.load_seed(fullpath)
 
-                else:
-                    seedfp = context.singleSeed()
-                    self.load_seed(seedfp)
+                    else:
+                        seedfp = context.singleSeed()
+                        self.load_seed(seedfp)
 
 
             except Exception as e:
@@ -404,9 +420,9 @@ class Pumpkin(Daemon):
             self._checkLocalPeers(zmq_context)
 
             ##############START TASKS WITH NO INPUTS#############################
-            inj = Injector(context)
-            inj.start()
-            context.addThread(inj)
+            #inj = Injector(context)
+            #inj.start()
+            #context.addThread(inj)
             #####################################################################
 
             if context.hasShell():
@@ -422,8 +438,7 @@ from SocketServer import ThreadingMixIn
 #    """Handle requests in a separate thread."""
 
 
-
-def main():
+def initialize_pumpkin(cli=True):
 
 
 
@@ -489,7 +504,7 @@ def main():
                        help='broadcast UDP port.')
     parser.add_argument('--ghost', action='store_true',
                        help='run on a node with another pumpkin.')
-    parser.add_argument('--cores', action='store', dest="cores", default=cores,
+    parser.add_argument('--cores', action='store', dest="cores", default=1,
                         help='start multiple threads default for this machine is: '+str(cores))
 
     parser.add_argument('--group', action='store', dest="group", default="default",
@@ -547,6 +562,7 @@ def main():
         context.set_attributes(args)
         context.start_rxtx_buffer()
         P.start()
+        print "rerer"
         root = logging.getLogger()
 
     if args.daemon == "stop":
@@ -575,13 +591,23 @@ def main():
             if config.has_option("pumpkin","persistent"):
                 args.persistent = config.get("pumpkin", "persistent")
 
+            if config.has_option("broadcast","supernode"):
+                args.supernode = config.get("broadcast", "supernode")
+
+            if config.has_option("network", "endpoints"):
+                args.eps = config.get("network", "endpoints")
+
+
+
+
             pass
         context.set_attributes(args)
         context.start_rxtx_buffer()
         UDP_BROADCAST_PORT = int(context.getAttributeValue().bcport)
 
         if not args.profile:
-            P.startContext()
+            P.startContext(cli)
+            return P
         else:
             profiler = cProfile.Profile()
             profiler.runctx("P.startContext()", globals(), locals())
@@ -605,3 +631,5 @@ def main():
         #Catch Ctrl+C
         signal.signal(signal.SIGINT, signal_handler)
         signal.pause()
+
+

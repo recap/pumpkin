@@ -72,7 +72,7 @@ class Seed(object):
         self.context = context
         self.name = self.__class__.__name__
         self.poi = poi
-        self.conf = None
+        self.conf = {}
         self.tftp_sessions = {}
         self.flight_pkts = {}
         self._lock_fpkts = threading.Lock()
@@ -163,10 +163,10 @@ class Seed(object):
 
         #g.add_edge("DataString:RAW", "DataString:PROCESSED", function="processor")
 
-        d =  json_graph.node_link_data(g)
-        ds = json.dumps(d)
+        #d =  json_graph.node_link_data(g)
+        #ds = json.dumps(d)
 
-        pkt.append( ds )
+        pkt.append( None )
         pkt.append( {"stag" : "RAW", "exstate" : "0001", "ep" : "local"} )
 
         return pkt
@@ -680,47 +680,86 @@ class Seed(object):
         self.conf = jconf
         pass
 
+    def add_input_states(self, states):
+        type = "String"
+        p = {}
+        transition = self.get_group()+":"+type+":"+states
+        self._in_all_list.append(transition)
+        p["type"] = type
+        p["state"] = states
+        if "parameters" not in self.conf.keys():
+            self.conf["parameters"] = []
+        self.conf["parameters"].append(p)
+        #js = self.getConfEntry()
+        #self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+
+    def add_output_states(self, states):
+        type = "String"
+        p = {}
+        transition = self.get_group()+":"+type+":"+states
+        self._out_all_list.append(transition)
+        p["type"] = type
+        p["state"] = states
+        if "return" not in self.conf.keys():
+            self.conf["return"] = []
+        self.conf["return"].append(p)
+        #js = self.getConfEntry()
+        #self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+
+    def update_state_table(self):
+        js = self.getConfEntry()
+        self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
+
+
+
     def pre_load(self, jconf):
-        self.conf = jconf
-        #if not "enabled" in self.conf.keys():
-        self.conf["enabled"] = True
 
-        if len(self.conf["parameters"]) > 0:
-            for p in self.conf["parameters"]:
-                type = p["type"]
-                tag_list = p["state"].split("|")
-                for t in tag_list:
-                    if not "&" in t:
-                        transition = self.get_group()+":"+type+":"+t
-                        self._in_all_list.append(transition)
-                    else:
-                        and_list = t.split("&")
-                        for a in and_list:
-                            transition = self.get_group()+":"+type+":"+a
-                            self._in_and_list.append(transition)
+        if jconf is not None:
+            self.conf = jconf
+
+        if not "enabled" in self.conf.keys():
+            self.conf["enabled"] = True
+
+        if jconf is not None:
+            if len(self.conf["parameters"]) > 0:
+                for p in self.conf["parameters"]:
+                    type = p["type"]
+                    tag_list = p["state"].split("|")
+                    for t in tag_list:
+                        if not "&" in t:
+                            transition = self.get_group()+":"+type+":"+t
                             self._in_all_list.append(transition)
-        else:
-            self._in_all_list.append("NONE:NONE")
+                        else:
+                            and_list = t.split("&")
+                            for a in and_list:
+                                transition = self.get_group()+":"+type+":"+a
+                                self._in_and_list.append(transition)
+                                self._in_all_list.append(transition)
+            else:
+                self._in_all_list.append("NONE:NONE")
 
 
 
-        if len(self.conf["return"]) > 0:
-            for p in self.conf["return"]:
-                type = p["type"]
-                tag_list = p["state"].split("|")
-                for t in tag_list:
-                    if not "&" in t:
-                        transition = self.get_group()+":"+type+":"+t
-                        self._out_all_list.append(transition)
-                    else:
-                        and_list = t.split("&")
-                        for a in and_list:
-                            transition = self.get_group()+":"+type+":"+a
-                            self._out_and_list.append(transition)
+            if len(self.conf["return"]) > 0:
+                for p in self.conf["return"]:
+                    type = p["type"]
+                    tag_list = p["state"].split("|")
+                    for t in tag_list:
+                        if not "&" in t:
+                            transition = self.get_group()+":"+type+":"+t
                             self._out_all_list.append(transition)
+                        else:
+                            and_list = t.split("&")
+                            for a in and_list:
+                                transition = self.get_group()+":"+type+":"+a
+                                self._out_and_list.append(transition)
+                                self._out_all_list.append(transition)
 
-        else:
-            self._out_all_list.append("NONE:NONE")
+            else:
+                self._out_all_list.append("NONE:NONE")
+
+
+        self.update_state_table()
 
         pass
 
@@ -738,6 +777,14 @@ class Seed(object):
             return True
 
         return False
+
+    def add_msg_item(self, payload, data):
+        if payload is None:
+            payload = str(data)
+        else:
+            payload = payload+"|,|"+str(data)
+        return payload
+
 
     def pkt_checker_t(self):
         if self.context.with_acks():
@@ -764,6 +811,10 @@ class Seed(object):
             threading.Timer(interval, self.pkt_checker_t).start()
 
         pass
+
+    def get_id(self):
+        id = self.context.getUuid()+":"+self.get_name()
+        return id
 
     def getConfEntry(self):
         js = '{ "name" : "'+self.get_group()+':'+self.get_name()+'", \
@@ -970,8 +1021,9 @@ class Seed(object):
         mx = self.context.get_mx()
         mx.put(data)
 
-    def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True):
-
+    def dispatch(self, dpkt, msg, tag, type=None, fragment = False, dispatch = True, automaton=None):
+        if dpkt == None:
+            dpkt = self.__rawpacket()
         pkt = dpkt
         lpkt = dpkt
         caller = "run"
@@ -990,6 +1042,9 @@ class Seed(object):
         if not self.context.is_speedy():
             pkt = copy.deepcopy(dpkt)
             caller = inspect.stack()[1][3]
+            if automaton is not None:
+                a = json_graph.node_link_data(automaton)
+                pkt[1] = a
             #logging.debug("Caller for dispatch function: "+inspect.stack()[1][3])
             if str(msg).startswith("file://") and not self.is_final(pkt):
                 dst = self.context.getFileDir()

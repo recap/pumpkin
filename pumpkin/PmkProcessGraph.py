@@ -349,6 +349,13 @@ class ProcessGraph(object):
         self.rlock.release()
         pass
 
+    def dump_state_graph(self):
+        d = json_graph.node_link_data(self.graph)
+        return json.dumps(d)
+
+    def get_state_graph(self):
+        return self.graph
+
     def dumpGraph(self):
         d = json_graph.node_link_data(self.graph)
         return json.dumps(d)

@@ -103,7 +103,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_header("Content-type", "text/html")
             s.end_headers()
             context.getProcGraph().dump_ep_graph_to_file("force.json")
-            with open("force.html") as f:
+            with open("../force.html") as f:
                 content = f.read()
                 f.close()
             s.wfile.write(content)
@@ -113,7 +113,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.send_header("Content-type", "text/html")
             s.end_headers()
             context.getProcGraph().dump_func_graph_to_file("force.json")
-            with open("force.html") as f:
+            with open("../force.html") as f:
                 content = f.read()
                 f.close()
             s.wfile.write(content)
@@ -124,7 +124,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
 
             #context.getProcGraph().dumpGraphToFile("force.json")
-            with open("funcs.json") as f:
+            with open("/funcs.json") as f:
                 content = f.read()
             f.close()
             s.wfile.write(content)
@@ -135,7 +135,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             s.end_headers()
 
             #context.getProcGraph().dumpGraphToFile("force.json")
-            with open("eps.json") as f:
+            with open("/eps.json") as f:
                 content = f.read()
             f.close()
             s.wfile.write(content)

@@ -98,7 +98,7 @@ class PacketFileMonitor(SThread):
             def load_seed(self, seed_fp):
                 if( seed_fp[-2:] == "py"):
                     context = self.context
-                    seed_name = context.load_seed(seed_fp)
+                    seed_name = context.load_seed(seed_fp).__class__.__name__
                     klass = PmkSeed.iplugins[seed_name]
                     js = klass.getConfEntry()
                     self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
