@@ -380,11 +380,11 @@ class Pumpkin(Daemon):
                             fullpath = context.getTaskDir()+"/"+fl
                             modname = fl[:-3]
                             #ext = fl[-2:]
-                            self.load_seed(fullpath)
+                            self.context.load_seed(fullpath)
 
                     else:
                         seedfp = context.singleSeed()
-                        self.load_seed(seedfp)
+                        self.context.load_seed(seedfp)
 
 
             except Exception as e:
