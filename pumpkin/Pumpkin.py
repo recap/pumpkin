@@ -233,6 +233,7 @@ class Pumpkin(Daemon):
 
         if context.with_broadcast():
             #Listen for UDP broadcasts on LAN
+            print "BROADCAST"
             udplisten = BroadcastListener(context, int(context.getAttributeValue().bcport), zmq_context)
             udplisten.start()
             context.addThread(udplisten)
