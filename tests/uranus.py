@@ -9,7 +9,7 @@ __author__ = 'reggie'
 ##                  "name": "name",
 ##                  "description": "name to uranus",
 ##                  "required": true,
-##                  "type": "String",
+##                  "type": "X",
 ##                  "state" : "URANUS"
 ##              } ],
 ##"return": [
@@ -17,7 +17,7 @@ __author__ = 'reggie'
 ##                  "name": "greeting",
 ##                  "description": "a greeting",
 ##                  "required": true,
-##                  "type": "String",
+##                  "type": "X",
 ##                  "state" : "NEPTUNE|EARTH"
 ##               }
 ##
@@ -37,11 +37,6 @@ class uranus(PmkSeed.Seed):
 
 
     def run(self, pkt, data):
-        """ Data is transformed at intermediate points on its way
-        to a destination. In this case we are simply adding
-        "hello" to a name to form a greeting. This will be
-        dispatched and received by a collector.
-        """
 
         name = str(data[0])
         fuel = int(data[1])

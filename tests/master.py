@@ -9,8 +9,8 @@ class master(PmkSeed.Seed):
 
     def __init__(self, context, poi=None):
         PmkSeed.Seed.__init__(self, context,poi)
-        self.add_input_states("MASTER")
-        self.add_output_states("SLAVE")
+        self.add_input_states("MASTER",type="X")
+        self.add_output_states("SLAVE",type="X")
         pass
 
     def on_load(self):
@@ -37,6 +37,9 @@ class master(PmkSeed.Seed):
         for k in dict.keys():
             if dict[k] > 10:
                 print k+" "+str(dict[k])
+
+
+
 
 
 pmk = pumpkin.initialize_pumpkin(cli=False)

@@ -9,7 +9,7 @@ __author__ = 'reggie'
 ##                  "name": "name",
 ##                  "description": "name to mars",
 ##                  "required": true,
-##                  "type": "String",
+##                  "type": "X",
 ##                  "state" : "MARS"
 ##              } ],
 ##"return": [
@@ -17,8 +17,8 @@ __author__ = 'reggie'
 ##                  "name": "greeting",
 ##                  "description": "a greeting",
 ##                  "required": true,
-##                  "type": "String",
-##                  "state" : "JUPITER|EARTH|MARS"
+##                  "type": "X",
+##                  "state" : "JUPITER|EARTH"
 ##               }
 ##
 ##          ] }

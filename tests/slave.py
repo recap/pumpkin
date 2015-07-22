@@ -9,7 +9,7 @@ __author__ = 'reggie'
 ##                  "name": "name",
 ##                  "description": "name to slave",
 ##                  "required": true,
-##                  "type": "String",
+##                  "type": "X",
 ##                  "state" : "SLAVE"
 ##              } ],
 ##"return": [
@@ -17,7 +17,7 @@ __author__ = 'reggie'
 ##                  "name": "greeting",
 ##                  "description": "a greeting",
 ##                  "required": true,
-##                  "type": "String",
+##                  "type": "X",
 ##                  "state" : "MASTER"
 ##               }
 ##
@@ -44,8 +44,6 @@ class slave(PmkSeed.Seed):
         tokens = str(data[0]).split()
         for t in tokens:
             self.update_dict(t, self.dict_count)
-
-        #self.dump_dict(self.dict_count)
 
         self.dispatch(pkt, json.dumps(self.dict_count), "MASTER")
         self.dict_count = {}
