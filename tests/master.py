@@ -55,7 +55,9 @@ for i in range(0,100):
     for s in sentences_list:
         whole_text += s
 
-    master_seed.dispatch(None, whole_text, "SLAVE")
+    master_seed.dispatch(None, whole_text, "SLAVE-1")
+    master_seed.dispatch(None, whole_text, "SLAVE-2")
+    master_seed.dispatch(None, whole_text, "SLAVE-3")
 
 a = 10
 while True:

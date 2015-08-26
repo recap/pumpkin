@@ -17,6 +17,9 @@ import inspect
 import zmq
 from numpy import arange,array,ones,linalg
 
+import PmkStateParsing as pmksp
+from PmkStateParsing import boolExpr
+
 import PmkShared
 
 from PmkShared import *
@@ -50,10 +53,7 @@ class SeedType(type):
 class Seed(object):
     __metaclass__ = SeedType
 
-
-
     _pkt_counter_interval = 10.0
-
 
     def __init__(self, context, poi="Unset"):
         #logging.basicConfig(filename=context.getWorkingDir()+self.get_name()+".log", format='%(levelname)s:%(message)s', level=logging.DEBUG)
@@ -99,13 +99,15 @@ class Seed(object):
         self._in_all_list = []
         self._out_all_list = []
         self._out_and_list = []
+        self._input_expr = ""
+        self._output_expr = ""
+        self._state_barrier = {}
 
 
         self.__routine_checks_t()
         if self.context.with_acks():
             self.pkt_checker_t()
         pass
-
 
     def __routine_checks_t(self):
         self._lock_telemetrics.acquire()
@@ -128,7 +130,6 @@ class Seed(object):
         self._lock_telemetrics.release()
 
         threading.Timer(self._pkt_counter_interval, self.__routine_checks_t).start()
-
 
     def _blankpacket(self):
         pkt = []
@@ -174,7 +175,6 @@ class Seed(object):
     def get_new_box(self):
         return str(uuid.uuid4())[:8]
 
-
     def get_new_container(self):
         return str(uuid.uuid4())[:8]
 
@@ -190,6 +190,10 @@ class Seed(object):
 
     def get_state(self, pkt):
         return pkt[0]["state"]
+
+    def has_input_state(self, istate):
+       # if istate is not None:
+        pass
 
     def _tar_to_gz(self, source, destination=None, suffix=None):
         src = self.context.getWorkingDir()+source
@@ -270,7 +274,6 @@ class Seed(object):
 
         return outf
 
-
     def _untar_to_wd(self, source, destination=None, rename=None):
         fp = source
 
@@ -297,13 +300,11 @@ class Seed(object):
         else:
             logging.error("Input file not found ["+source+"]")
 
-
     def moveto_fileserver(self, filename):
         fullpath = self.context.getWorkingDir()+"/"+filename
         if os.path.exists(fullpath):
             dst = self.context.getFileDir()+"/"+filename
         pass
-
 
     def __endpoint_parts(self, ep):
         p1 = ep.split("://")
@@ -330,7 +331,6 @@ class Seed(object):
                  exdisp = self.context.getExternalDispatch()
                  exdisp.send_to_last(dpkt)
             pass
-
 
     def pack_ok(self, pkt):
         pkt_id = self.get_pkt_id(pkt)
@@ -393,7 +393,6 @@ class Seed(object):
 
         return (total_in, total_out)
 
-
     def __inc_pkt_counter(self):
         self._lock_telemetrics.acquire()
         self._pkt_counter += 1
@@ -403,7 +402,6 @@ class Seed(object):
         self._lock_telemetrics.acquire()
         self._pkt_counter -= 1
         self._lock_telemetrics.release()
-
 
     def _stage_run(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
@@ -569,7 +567,6 @@ class Seed(object):
                 forecast["npkts"] -= 1
                 self._forecast_lock.release()
 
-
     def _stage_run_express(self,pkt, *args):
         pkt_id = self.get_pkt_id(pkt)
         pstate =  pkt[0]["state"]
@@ -613,6 +610,7 @@ class Seed(object):
         self.adj_forecast(pkt)
 
         pass
+
     def stop_recording(self):
         self._complexity_record = False
 
@@ -624,7 +622,6 @@ class Seed(object):
 
     def split(self, pkt, *args):
         return False
-
 
     def run(self, pkt, *args):
         pass
@@ -655,7 +652,6 @@ class Seed(object):
         if "enabled" in self.conf.keys():
             self.conf["enabled"] = True
 
-
     def is_enabled(self):
         if "enabled" in self.conf.keys():
             if self.conf["enabled"] == True:
@@ -675,13 +671,11 @@ class Seed(object):
     def get_conf(self):
         return self.conf
 
-
     def set_conf(self, jconf):
         self.conf = jconf
         pass
 
-    def add_input_states(self, states):
-        type = "String"
+    def add_input_states(self, states, type="String"):
         p = {}
         transition = self.get_group()+":"+type+":"+states
         self._in_all_list.append(transition)
@@ -693,8 +687,7 @@ class Seed(object):
         #js = self.getConfEntry()
         #self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
 
-    def add_output_states(self, states):
-        type = "String"
+    def add_output_states(self, states, type="String"):
         p = {}
         transition = self.get_group()+":"+type+":"+states
         self._out_all_list.append(transition)
@@ -709,8 +702,6 @@ class Seed(object):
     def update_state_table(self):
         js = self.getConfEntry()
         self.context.getProcGraph().updateRegistry(json.loads(js), loc="locallocal")
-
-
 
     def pre_load(self, jconf):
 
@@ -785,7 +776,6 @@ class Seed(object):
             payload = payload+"|,|"+str(data)
         return payload
 
-
     def pkt_checker_t(self):
         if self.context.with_acks():
             self.logger.debug("Starting pkt checker thread")
@@ -833,6 +823,26 @@ class Seed(object):
         l2 = len(stag) - 1
         return str(stag[l2])
 
+    def get_state(self, pkt):
+        return self.get_last_stag(pkt)
+
+    def get_state_uid(self, pkt):
+        state_uid = self.get_last_stag(pkt)+":"+self.get_ship_id(pkt)
+        return state_uid
+
+    def check_state_barrier(self, pkt, expr):
+        # ship = self.get_ship_id(pkt)
+        # state = self.get_last_stag(pkt)
+        # lexpr = expr
+        # if not ship in self._state_barrier.keys():
+        #     self._state_barrier[ship] = {}
+        #
+        # self._state_barrier[ship][state] = True
+        #
+        # for k in self._state_barrier[ship].keys():
+        #     lexpr
+        print pmksp.tokenize(expr)
+
     def _ensure_dir(self, f):
         if not f[len(f)-1] == "/":
                 f = f +"/"
@@ -854,6 +864,11 @@ class Seed(object):
         aep = aep[:len(aep)-1]
         return aep
 
+    def parse_boolean_state(self, exp):
+        res = boolExpr.parseString(exp)[0]
+        print bool(res)
+        return res
+
     def get_in_tag_list(self):
         return self._in_all_list
 
@@ -864,6 +879,7 @@ class Seed(object):
         if len(self.conf["parameters"]) > 0:
             for p in self.conf["parameters"]:
                 sret =  '"itype" : "'+p["type"]+'", "istate" : "'+p["state"]+'"'
+                self._input_expr = p["state"]
             return sret
         return ' "itype" : "NONE", "istate" : "NONE" '
 
@@ -871,6 +887,7 @@ class Seed(object):
         if len(self.conf["return"]) > 0:
             for p in self.conf["return"]:
                 sret =  '"otype" : "'+p["type"]+'", "ostate" : "'+p["state"]+'"'
+                self._output_expr = p["state"]
             return sret
         return ' "otype" : "NONE", "ostate" : "NONE" '
 
@@ -931,8 +948,6 @@ class Seed(object):
         header = lpkt[0]
         header["container"] = cont
         return lpkt
-
-
 
     def get_pkt_fragment_no(self, pkt):
         lpkt = copy.deepcopy(pkt)
@@ -1187,7 +1202,6 @@ class Seed(object):
         self.context.getTx().put((stag_spl[0], stag_spl[2],stag_spl[1], pkt), True)
         return pkt
 
-
     def error(self,pkt, msg=None, type="ERROR", tag="ERROR"):
 
         lpkt = pkt
@@ -1231,8 +1245,6 @@ class Seed(object):
 
 
         pass
-
-
 
     def finalize(self,pkt, msg=None, type="END", tag="END"):
 
@@ -1290,8 +1302,6 @@ class Seed(object):
 
         pass
 
-
-
     def add_flight_pkt(self,pkt):
         """
             Add packet to ACK buffer.
@@ -1310,11 +1320,9 @@ class Seed(object):
         fname = self.get_group()+":"+self.__class__.__name__
         return fname
 
-
     def on_load(self):
         logging.warn("Class \""+self.__class__.__name__+"\" called on_load but not implimented.")
         pass
-
 
     def on_unload(self):
         logging.warn("Class \""+self.__class__.__name__+"\" called on_unload but not implimented.")

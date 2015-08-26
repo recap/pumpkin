@@ -10,7 +10,7 @@ __author__ = 'reggie'
 ##                  "description": "name to slave",
 ##                  "required": true,
 ##                  "type": "X",
-##                  "state" : "SLAVE"
+##                  "state" : "SLAVE-1&SLAVE-2&SLAVE-3"
 ##              } ],
 ##"return": [
 ##              {
@@ -37,7 +37,19 @@ class slave(PmkSeed.Seed):
 
     def on_load(self):
         self.dict_count = {}
+        # SLAVE1 = True
+        # SLAVE2 = True
+        # SLAVE3 = False
+        #
+        # expr = str(SLAVE1)+" | "+str(SLAVE2)+" | "+str(SLAVE3)
+        # self.parse_boolean_state(expr)
+
         pass
+
+    def pre_run(self, pkt, *args):
+        self.check_state_barrier(pkt, "SLAVE-1&SLAVE-2&SLAVE-3")
+        print self.get_state_uid(pkt)
+
 
 
     def run(self, pkt, data):
