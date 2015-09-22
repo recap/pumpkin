@@ -10,7 +10,7 @@ __author__ = 'reggie'
 ##                  "description": "name to greet",
 ##                  "required": true,
 ##                  "type": "X",
-##                  "state" : "SATURN|JUPITER"
+##                  "state" : "{*}"
 ##              } ],
 ##"return": [
 ##              {

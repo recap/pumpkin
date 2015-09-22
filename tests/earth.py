@@ -5,12 +5,12 @@ from pumpkin import PmkSeed
 
 pmk = pumpkin.initialize_pumpkin(cli=False)
 
-pmk.context.load_seed("mars.py")
-pmk.context.load_seed("jupiter.py")
-pmk.context.load_seed("saturn.py")
-pmk.context.load_seed("uranus.py")
-pmk.context.load_seed("neptune.py")
-pmk.context.load_seed("pluto.py")
+# pmk.context.load_seed("mars.py")
+# pmk.context.load_seed("jupiter.py")
+# pmk.context.load_seed("saturn.py")
+# pmk.context.load_seed("uranus.py")
+# pmk.context.load_seed("neptune.py")
+# pmk.context.load_seed("pluto.py")
 pmk.context.load_seed("blackhole.py")
 
 
@@ -44,7 +44,7 @@ payload = e_seed.add_msg_item(None, "New Horizon")
 payload = e_seed.add_msg_item(payload, 3000)
 G = pmk.context.get_state_network()
 #G.remove_node("DEV:X:5THDIMENSION")
-
+# print "dispatch"
 e_seed.dispatch(None, payload, "MARS", automaton=G)
 
 

@@ -17,6 +17,7 @@ class ProcessGraph(object):
 
     MAX_TTL = 60 #seconds
     INT_TTL = 15 #seconds
+
     def __init__(self, context):
 
         self.registry = {}
@@ -29,6 +30,7 @@ class ProcessGraph(object):
         self.func_graph = nx.DiGraph()
         self.tagroute = {}
         self.ttl = {}
+
         self.context = context
 
         threading.Timer(self.INT_TTL, self.__update_registry_t).start()
@@ -233,6 +235,10 @@ class ProcessGraph(object):
         self.graph = nx.DiGraph()
         self.ep_graph = nx.DiGraph()
         self.func_graph = nx.DiGraph()
+
+
+        delayed_build = []
+
         G = self.graph
         E = self.ep_graph
         F = self.func_graph
@@ -247,6 +253,8 @@ class ProcessGraph(object):
                     for osp in re.split('\||\&', eo["ostate"]):
 
                         istype = eo["itype"]+":"+isp
+
+
                         if istype == "NONE:NONE":
                                istype = eo["name"]+":INJECTION"
                         else:
@@ -263,11 +271,60 @@ class ProcessGraph(object):
                         else:
                             G.add_edge(istype, ostype, function=eo["name"], id=s_id)
 
+                    if "{" in istype and "}" in istype:
+                            delayed_build.append((istype, eo))
+                            continue
+
                     if istype in self.tagroute.keys():
                         self.tagroute[istype].append(eo)
                     else:
                         self.tagroute[istype] = []
                         self.tagroute[istype].append(eo)
+
+
+        ########reparse for regular expressions###########
+        print G.nodes()
+
+        for x in delayed_build:
+            it = x[0]
+            eo = x[1]
+            it = it.replace("{","")
+            it = it.replace("}","")
+            print "regex: "+it
+            p = re.compile(it)
+            #G.remove_node(it)
+            for n in G.nodes():
+                if p.match(str(n)):
+                    for osp in re.split('\||\&', eo["ostate"]):
+
+                        istype = str(n)
+
+
+                        ostype = eo["otype"]+":"+osp
+                        if ostype == "NONE:NONE":
+                            ostype = eo["name"]+":EXTRACTION"
+                        else:
+                            ostype = eo["group"] +":"+ ostype
+
+                        lep = self.get_ep_with_priority(eo["endpoints"], 0)
+                        s_id= istype+":"+ostype
+                        if lep:
+                            G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"], id=s_id)
+                        else:
+                            G.add_edge(istype, ostype, function=eo["name"], id=s_id)
+
+                if istype in self.tagroute.keys():
+                    self.tagroute[istype].append(eo)
+                else:
+                    self.tagroute[istype] = []
+                    self.tagroute[istype].append(eo)
+
+        print "edges: "
+        print G.edges()
+
+
+
+        ##################################################
 
         if not self.context.is_speedy():
             for edge in G.edges(data=True):
@@ -335,6 +392,7 @@ class ProcessGraph(object):
                                     F.add_edge(n1_name, n2_name, id=f_id)
 
 
+                #########delay build##########
                 self.dump_ep_graph_to_file("eps.json")
                 self.dump_func_graph_to_file("funcs.json")
                 self.dumpGraphToFile("states.json")

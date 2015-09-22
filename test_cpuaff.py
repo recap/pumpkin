@@ -8,7 +8,29 @@ import zmq
 import mmap
 import struct
 import ctypes
+#from ctypes import *
 
+#SMB_MAX_DATA_SIZE = 5
+#ARRAY5 = c_char * SMB_MAX_DATA_SIZE
+
+
+#class SMB_REQUEST(Structure):
+#    _fields_ = [
+#        ("Address", c_int),
+#        ("Command", c_int),
+#        ("BlockLength", c_int),
+#        ("Data", ARRAY5)]
+
+JUMBO = ctypes.c_char * 9000
+
+class ADP_PACKET(ctypes.Structure):
+  _fields_ = [
+    ("state", ctypes.c_int),
+    ("ah_length", ctypes.c_int),
+    ("pl_length", ctypes.c_int),
+    ("checksum", ctypes.c_int),
+    ("data", ctypes.c_char*1024)
+  ]
 
 def spin(cpu_id):
     my_id = cpu_id.value
@@ -49,6 +71,9 @@ def pump(cpu_id, uexec, peers, p1, p2, mm):
 
 
     #assert mm[0] == '\x00'
+
+
+
     i = ctypes.c_int.from_buffer(mm)
     i.value = 10
     offset = struct.calcsize(i._type_)
@@ -203,7 +228,26 @@ buf = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
 #mm.write("CHUNK1:CHUNK2")
 #arr = [0,0]
 
+#################3
+buffer = (ctypes.c_byte * 2024)()
+pkt = ctypes.cast(buffer, ctypes.POINTER(ADP_PACKET))
+pkt.contents.state = 1234
 
+#size1 = size2 = 4
+#size3 = len(buf) - size1 - size2
+
+#part1 = (ctypes.c_char * size1).from_buffer(buf)
+#part2 = (ctypes.c_char * size2).from_buffer(buf)
+#part3 = (ctypes.c_char * size3).from_buffer(buf)
+
+#struct.pack_into('4I', part3, 0,1,2,3,4)
+
+#p = struct.unpack_from('4I', part3)
+#print p
+
+sys.exit()
+print "kkk"
+#################3
 
 
 for i in range(1,cpu_count):
