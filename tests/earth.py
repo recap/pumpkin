@@ -5,12 +5,12 @@ from pumpkin import PmkSeed
 
 pmk = pumpkin.initialize_pumpkin(cli=False)
 
-# pmk.context.load_seed("mars.py")
-# pmk.context.load_seed("jupiter.py")
-# pmk.context.load_seed("saturn.py")
-# pmk.context.load_seed("uranus.py")
-# pmk.context.load_seed("neptune.py")
-# pmk.context.load_seed("pluto.py")
+pmk.context.load_seed("mars.py")
+pmk.context.load_seed("jupiter.py")
+pmk.context.load_seed("saturn.py")
+pmk.context.load_seed("uranus.py")
+pmk.context.load_seed("neptune.py")
+pmk.context.load_seed("pluto.py")
 pmk.context.load_seed("blackhole.py")
 
 

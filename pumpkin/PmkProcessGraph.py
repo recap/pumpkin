@@ -292,7 +292,7 @@ class ProcessGraph(object):
             it = it.replace("}","")
             print "regex: "+it
             p = re.compile(it)
-            #G.remove_node(it)
+            G.remove_node(x[0])
             for n in G.nodes():
                 if p.match(str(n)):
                     for osp in re.split('\||\&', eo["ostate"]):

@@ -10,7 +10,7 @@ __author__ = 'reggie'
 ##                  "description": "name to greet",
 ##                  "required": true,
 ##                  "type": "X",
-##                  "state" : "{*}"
+##                  "state" : "{(.)+S$}"
 ##              } ],
 ##"return": [
 ##              {
@@ -39,5 +39,6 @@ class blackhole(PmkSeed.Seed):
     def run(self, pkt, data):
 
         name = str(data[0])
-        print name+" lost in blackhole"
+        stag = self.get_last_stag(pkt)
+        print name+" "+stag+" lost in blackhole"
         pass
