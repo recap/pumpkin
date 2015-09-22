@@ -313,16 +313,16 @@ class ProcessGraph(object):
                         else:
                             G.add_edge(istype, ostype, function=eo["name"], id=s_id)
 
-                if istype in self.tagroute.keys():
-                    self.tagroute[istype].append(eo)
-                else:
-                    self.tagroute[istype] = []
-                    self.tagroute[istype].append(eo)
+                    if istype in self.tagroute.keys():
+                        self.tagroute[istype].append(eo)
+                    else:
+                        self.tagroute[istype] = []
+                        self.tagroute[istype].append(eo)
 
-        print "edges: "
-        print G.edges()
+        #print "edges: "
+        #print G.edges()
 
-
+        delayed_build = []
 
         ##################################################
 
