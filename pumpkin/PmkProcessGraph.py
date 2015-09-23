@@ -252,24 +252,49 @@ class ProcessGraph(object):
                 for isp in re.split('\||\&', eo["istate"]):
                     for osp in re.split('\||\&', eo["ostate"]):
 
-                        istype = eo["itype"]+":"+isp
+                        if '[' in osp and ']' in osp:
+
+                            a = re.search('\[(.*)\]',osp).group(1).split(',')
+                            osp  = osp.replace(osp[osp.find('['):osp.rfind(']')+1],"")
+                            for x in range(int(a[0]),int(a[1])):
+                                istype = eo["itype"]+":"+isp
 
 
-                        if istype == "NONE:NONE":
-                               istype = eo["name"]+":INJECTION"
+                                if istype == "NONE:NONE":
+                                       istype = eo["name"]+":INJECTION"
+                                else:
+                                    istype = eo["group"] +":"+ istype
+                                ostype = eo["otype"]+":"+osp
+                                if ostype == "NONE:NONE":
+                                    ostype = eo["name"]+":EXTRACTION"
+                                else:
+                                    ostype = eo["group"] +":"+ ostype+str(x)
+                                lep = self.get_ep_with_priority(eo["endpoints"], 0)
+                                s_id= istype+":"+ostype
+                                if lep:
+                                    G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"], id=s_id)
+                                else:
+                                    G.add_edge(istype, ostype, function=eo["name"], id=s_id)
+                                ####################################
                         else:
-                            istype = eo["group"] +":"+ istype
-                        ostype = eo["otype"]+":"+osp
-                        if ostype == "NONE:NONE":
-                            ostype = eo["name"]+":EXTRACTION"
-                        else:
-                            ostype = eo["group"] +":"+ ostype
-                        lep = self.get_ep_with_priority(eo["endpoints"], 0)
-                        s_id= istype+":"+ostype
-                        if lep:
-                            G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"], id=s_id)
-                        else:
-                            G.add_edge(istype, ostype, function=eo["name"], id=s_id)
+                            istype = eo["itype"]+":"+isp
+
+
+                            if istype == "NONE:NONE":
+                                   istype = eo["name"]+":INJECTION"
+                            else:
+                                istype = eo["group"] +":"+ istype
+                            ostype = eo["otype"]+":"+osp
+                            if ostype == "NONE:NONE":
+                                ostype = eo["name"]+":EXTRACTION"
+                            else:
+                                ostype = eo["group"] +":"+ ostype
+                            lep = self.get_ep_with_priority(eo["endpoints"], 0)
+                            s_id= istype+":"+ostype
+                            if lep:
+                                G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"], id=s_id)
+                            else:
+                                G.add_edge(istype, ostype, function=eo["name"], id=s_id)
 
                     if "{" in istype and "}" in istype:
                             delayed_build.append((istype, eo))
