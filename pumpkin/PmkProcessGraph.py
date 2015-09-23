@@ -249,6 +249,7 @@ class ProcessGraph(object):
             if (eo["enabled"] == "True") and (len(eo["endpoints"]) > 0):
                 #for isp in eo["istate"].split('|'):
                 #    for osp in eo["ostate"].split('|'):
+                nostate = None
                 for isp in re.split('\||\&', eo["istate"]):
                     for osp in re.split('\||\&', eo["ostate"]):
 
@@ -256,7 +257,10 @@ class ProcessGraph(object):
 
                             a = re.search('\[(.*)\]',osp).group(1).split(',')
                             osp  = osp.replace(osp[osp.find('['):osp.rfind(']')+1],"")
-                            for x in range(int(a[0]),int(a[1])):
+                            nostate = ""
+                            for x in range(int(a[0]),int(a[1])+1):
+                                nosp = osp+str(x)
+                                nostate += nosp +"|"
                                 istype = eo["itype"]+":"+isp
 
 
@@ -264,11 +268,11 @@ class ProcessGraph(object):
                                        istype = eo["name"]+":INJECTION"
                                 else:
                                     istype = eo["group"] +":"+ istype
-                                ostype = eo["otype"]+":"+osp
+                                ostype = eo["otype"]+":"+nosp
                                 if ostype == "NONE:NONE":
                                     ostype = eo["name"]+":EXTRACTION"
                                 else:
-                                    ostype = eo["group"] +":"+ ostype+str(x)
+                                    ostype = eo["group"] +":"+ ostype
                                 lep = self.get_ep_with_priority(eo["endpoints"], 0)
                                 s_id= istype+":"+ostype
                                 if lep:
@@ -295,6 +299,10 @@ class ProcessGraph(object):
                                 G.add_edge(istype, ostype, function=eo["name"], ep=lep["ep"], id=s_id)
                             else:
                                 G.add_edge(istype, ostype, function=eo["name"], id=s_id)
+
+                    if nostate:
+                        nostate = nostate[0:len(nostate)-1]
+                        eo["ostate"] = nostate
 
                     if "{" in istype and "}" in istype:
                             delayed_build.append((istype, eo))

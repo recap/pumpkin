@@ -18,7 +18,7 @@ __author__ = 'reggie'
 ##                  "description": "a greeting",
 ##                  "required": true,
 ##                  "type": "X",
-##                  "state" : "S2.[0,9]"
+##                  "state" : "S1.[0,9]"
 ##               }
 ##
 ##          ] }
