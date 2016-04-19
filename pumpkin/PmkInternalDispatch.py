@@ -345,7 +345,7 @@ class ZMQPacketMonitor(SThread):
         #context = zmq.Context()
         soc = self.zmq_cntx.socket(zmq.PULL)
         soc.setsockopt(zmq.RCVBUF, 2000)
-        soc.setsockopt(zmq.RCVHWM, 2000)
+        #soc.setsockopt(zmq.RCVHWM, 2000)
         try:
             soc.bind(self.bind_to)
         except zmq.ZMQError as e:
