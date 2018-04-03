@@ -11,7 +11,7 @@ from setuptools import setup
 __version__ = 1.0
 
 if version > '2.4' and version < '3.0':
-    requires=['ujson','pyinotify','tftpy','networkx','zmq','pika','pystun','netaddr','pyftpdlib']
+    requires=['numpy', 'ujson','pyinotify','tftpy','networkx','zmq','pika','pystun','netaddr','pyftpdlib']
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()

@@ -18,7 +18,7 @@ __author__ = 'reggie'
 ##                  "description": "a plotcalphasesing",
 ##                  "required": true,
 ##                  "type": "String",
-##                  "state" : "H5IMP"
+##                  "state" : "PLOTCALPHASES"
 ##               }
 ##
 ##          ] }
@@ -43,13 +43,7 @@ class plotcalphases(PmkSeed.Seed):
 
 
     def run(self, pkt, name):
-#	--env=TMPDIR=/tmp \
- #   --env=HOME=/var/spool/cwl \
-  #  kernsuite/prefactor \
-  #  losoto \
-  #  /var/spool/cwl/losoto.h5 \
-  #  losoto.parset
-	
+        print('[plotcalphases] start')
 	losoto_parset = """flags                        =  [hdf5file]
 LoSoTo.Steps                 =  [plot]
 LoSoTo.Solset                =  [sol000]
@@ -81,4 +75,5 @@ LoSoTo.Steps.plot.Prefix     =  cwl_"""
 	Popen(cmd, cwd=workingdir).communicate()
 	print('[plotcalphases] output at ' + workingdir)
 	print('[plotcalphases] done.')
+        self.dispatch(pkt, workingdir, 'PLOTCALPHASES')
 	pass

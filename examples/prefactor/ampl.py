@@ -2,8 +2,8 @@ __author__ = 'reggie'
 
 ###START-CONF
 ##{
-##"object_name": "phase",
-##"object_poi": "my-phase-1234",
+##"object_name": "ampl",
+##"object_poi": "my-ampl-1234",
 ##"auto-load" : true,
 ##"parameters": [ {
 ##                  "name": "name",
@@ -14,11 +14,11 @@ __author__ = 'reggie'
 ##              } ],
 ##"return": [
 ##              {
-##                  "name": "phaseing",
-##                  "description": "a phaseing",
+##                  "name": "ampling",
+##                  "description": "a ampling",
 ##                  "required": true,
 ##                  "type": "String",
-##                  "state" : "PHASE"
+##                  "state" : "AMPL"
 ##               }
 ##
 ##          ] }
@@ -32,9 +32,9 @@ from pumpkin import *
 import tempfile
 import datetime
 import os
-from find_cal_global_phaseoffset_losoto import main
+from subprocess import Popen
 
-class phase(PmkSeed.Seed):
+class ampl(PmkSeed.Seed):
 
 
     def __init__(self, context, poi=None):
@@ -43,14 +43,17 @@ class phase(PmkSeed.Seed):
 
 
     def run(self, pkt, name):
-        print('[phase] start')
+        print('[amql] start')
 	workingdir = tempfile.mkdtemp()
 	losoto = str(name[0]) + '/losoto.h5'
 	currentdir = os.getcwd()
-	os.chdir(workingdir)
-	main(losotoname=losoto, store_basename="cwl", refstationID=2, sourceID=0)
-	os.chdir(currentdir)
-	print('[phase] output at ' + workingdir)
-	print('[phase] done.')
-        self.dispatch(pkt, workingdir, "PHASE")
+	cmd = ['python',
+            '/usr/lib/prefactor/scripts/amplitudes_losoto_3.py',
+            losoto,
+            'fitclock',
+            '4']
+	Popen(cmd, cwd=workingdir).communicate()
+	print('[ampl] output at ' + workingdir)
+	print('[ampl] done.')
+        self.dispatch(pkt, workingdir, "AMPL")
 	pass
