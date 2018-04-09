@@ -15,7 +15,7 @@ TMPMOUNT=/tmp/pmk-tmp-mount
 dirs:
 	[ -d output ] || mkdir ./output
 	[ -d data ] || mkdir ./data
-	[ -d $(TMPMOUNT) || mkdir $(TMPMOUNT)
+	[ -d $(TMPMOUNT) ] || mkdir $(TMPMOUNT)
 
 data/$(PULSAR): dirs
 	cd data && wget $(ARCHIVE)$(PULSAR)
