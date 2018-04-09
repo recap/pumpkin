@@ -41,6 +41,11 @@ run: dirs
 test:
 	echo $(PWD)
 
+stop-docker:
+	docker ps | grep prefactor-pmk | awk '{print $$1}' > docker_id
+	if [ -f docker_id ]; then cat docker_id | xargs docker kill; fi
+	rm docker_id
+
 docker:
 	docker build docker/ -t kernsuite/prefactor-pmk
 
