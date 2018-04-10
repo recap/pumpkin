@@ -46,9 +46,9 @@ class skycal(PmkSeed.Seed):
     def run(self, pkt, calibrated_data):
 	input_folder = calibrated_data[0]
         self.logger.info("[skymodel] processing: " + str(input_folder))
-	SkymodelCal = main(ms_input=input_folder, DirSkymodelCal=DirSkymodelCal, extensionSky=".skymodel",)["SkymodelCal"]
+	SkymodelCal = main(ms_input=str(input_folder), DirSkymodelCal=DirSkymodelCal, extensionSky=".skymodel",)["SkymodelCal"]
 	self.logger.info("[skymodel] skymodelCal: {}".format(SkymodelCal))
 	copyfile(path.join(DirSkymodelCal, SkymodelCal), str(input_folder) + "/selected.skymodel")
 	
-        self.dispatch(pkt, input_folder, "SKYMODEL")
+        self.dispatch(pkt, str(input_folder), "SKYMODEL")
         pass
