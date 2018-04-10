@@ -119,8 +119,8 @@ def get_lan_ip():
     return ip
 
 def get_public_ip():
-    nat_type, external_ip, external_port = stun.get_ip_info()
-    return str(external_ip)
+    #nat_type, external_ip, external_port = stun.get_ip_info()
+    return str("127.0.0.1")
 
 def is_private(ip):
     ipa = netaddr.IPAddress(ip)
