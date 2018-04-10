@@ -34,9 +34,23 @@ data/$(SMALL)/: data/$(SMALL_ARCHIVE)
 
 small: data/$(SMALL)/
 	echo "data/$(SMALL)/ is downloaded"
+	
+split_tasks:
+	[ -d tasks1 ] || mkdir tasks1
+	[ -d tasks2 ] || mkdir tasks2
+	cp tasks/* tasks1/
+	cp tasks/ndppp.py tasks2/
+	cp tasks/ampl.py tasks2/
+	cp tasks/calibcalc.py tasks2/
 
 run: dirs
-	docker run  --volume=$(PWD)/data/:/data/ --volume=$(PWD)/output/:/output/ --volume=/tmp/pmk-tmp-mount:/tmp/ --volume=$(PWD)/tasks/:/tasks kernsuite/prefactor-pmk /root/pumpkin/bin/pmk --taskdir /tasks/ --endpoint.type zmq.IPC
+	docker run  --volume=$(PWD)/data/:/data/ --volume=$(PWD)/output/:/output/ --volume=/tmp/pmk-tmp-mount:/tmp/ --volume=$(PWD)/tasks/:/tasks kernsuite/prefactor-pmk /root/pumpkin/bin/pmk --taskdir /tasks/ --endpoints \"inqueue://*\"
+
+run_one: dirs split_tasks
+	docker run  --volume=$(PWD)/data/:/data/ --volume=$(PWD)/output/:/output/ --volume=/tmp/pmk-tmp-mount:/tmp/ --volume=$(PWD)/tasks1/:/tasks kernsuite/prefactor-pmk /root/pumpkin/bin/pmk --taskdir /tasks/ --endpoints \"tcp://*:*\" --broadcast
+
+run_two: dirs split_tasks
+	docker run  --volume=$(PWD)/data/:/data/ --volume=$(PWD)/output/:/output/ --volume=/tmp/pmk-tmp-mount:/tmp/ --volume=$(PWD)/tasks2/:/tasks kernsuite/prefactor-pmk /root/pumpkin/bin/pmk --taskdir /tasks/ --endpoints \"tcp://*:*\" --broadcast
 
 test:
 	echo $(PWD)
