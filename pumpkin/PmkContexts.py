@@ -56,6 +56,7 @@ class MainContext(object):
             self.cmd = cmd()
             self.registry = {}
             self.__ip = "127.0.0.1"
+            self.__pip = "127.0.0.1"
             self.endpoints = []
             self.__reg_update = False
             self.rlock = threading.RLock()

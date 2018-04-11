@@ -99,38 +99,28 @@ def get_llan_ip():
 
 def get_lan_ip():
 
-    #FIXME get_cloud_ip() is a hack for SC should be removed
-    ip = get_cloud_ip()
-
-    if not ip:
-
-        pip = get_public_ip()
-        if is_amazon(pip) or is_azure(pip):
-            #if it is an amazon Public IP return it else get interface IP
-            return pip
-
-        interfaces = [
-            "eth0",
-            "eth1",
-            "eth2",
-            "wlan0",
-            "wlan1",
-            "wifi0",
-            "ath0",
-            "ath1",
-            "ppp0",
-            ]
-        for ifname in interfaces:
-            try:
-                ip = get_interface_ip(ifname)
-                break
-            except:
-                pass
+    interfaces = [
+        "eth0",
+        "eth1",
+        "eth2",
+        "wlan0",
+        "wlan1",
+        "wifi0",
+        "ath0",
+        "ath1",
+        "ppp0",
+        ]
+    for ifname in interfaces:
+        try:
+            ip = get_interface_ip(ifname)
+            break
+        except:
+            pass
     return ip
 
 def get_public_ip():
-    nat_type, external_ip, external_port = stun.get_ip_info()
-    return str(external_ip)
+    #nat_type, external_ip, external_port = stun.get_ip_info()
+    return str("127.0.0.1")
 
 def is_private(ip):
     ipa = netaddr.IPAddress(ip)
@@ -522,7 +512,7 @@ class Broadcaster(SThread):
         pass
 
     def run(self):
-        logging.debug("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
+        logging.info("Shouting presence to port "+str(self.__port)+" at rate "+str(self.__rate))
         #sok = socket(AF_INET, SOCK_DGRAM)
         #sok.bind(('', 0))
         #sok.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
